@@ -9,7 +9,8 @@ struct Config {
   char *target;
 };
 
-enum Err_Table {
+// Errors specific to main, which the program outputs.
+enum Err_Main {
   ERR_NO_ERROR = 0,
   ERR_INVALID_INPUT_FILE = 1,
   ERR_INVALID_OUTPUT_FILE = 2,

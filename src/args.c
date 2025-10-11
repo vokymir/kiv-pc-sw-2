@@ -1,10 +1,11 @@
 #include "args.h"
+#include "common.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-int args_parse(int argc, char **argv, struct Config *config) {
+enum Err_Main args_parse(int argc, char **argv, struct Config *config) {
   size_t i, j;
   char *arg;
   char flag, unknown, verbose, instruction;
