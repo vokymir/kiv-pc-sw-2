@@ -7,7 +7,7 @@
 int main(int argc, char **argv) {
   struct Config config;
 
-  parse_args(argc, argv, &config);
+  args_parse(argc, argv, &config);
 
   printf("Source: %s\nTarget: %s\nVerbose: %s\nInstructions: %s\n",
          config.source, config.target, config.flag_verbose ? "yes" : "no",

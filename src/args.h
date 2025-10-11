@@ -5,6 +5,10 @@
 
 /* Parse all arguments given and write the results into
   the given Config structure. Returns EXIT_SUCCESS/FAILURE.*/
-int parse_args(int argc, char **argv, struct Config *config);
+int args_parse(int argc, char **argv, struct Config *config);
+
+/* Free target in config.
+ * */
+void args_free_config(struct Config *config);
 
 #endif

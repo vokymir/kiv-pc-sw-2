@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int parse_args(int argc, char **argv, struct Config *config) {
+int args_parse(int argc, char **argv, struct Config *config) {
   size_t i, j;
   char *arg;
   char flag, unknown, verbose, instruction;
@@ -37,4 +37,10 @@ int parse_args(int argc, char **argv, struct Config *config) {
   }
 
   return EXIT_SUCCESS;
+}
+
+void args_free_config(struct Config *config) {
+  if (!config || !config->target)
+    return;
+  free(config->target);
 }
