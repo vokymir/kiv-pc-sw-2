@@ -94,6 +94,7 @@ int args_config_init(struct Config *config, const char *target) {
     return 1;
   }
   strcpy(config->target, target);
+  config->target[len] = '\0';
 
   return 0;
 }
@@ -106,9 +107,9 @@ void args_config_free(struct Config *config) {
 
 enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
   int res;
-  if (strcmp(arg, "-v")) { // is verbose?
+  if (strcmp(arg, "-v") == 0) { // is verbose?
     config->flag_verbose = 1;
-  } else if (strcmp(arg, "-i")) { // Is instruction?
+  } else if (strcmp(arg, "-i") == 0) { // Is instruction?
     config->flag_instruction = 1;
   } else if (!config->target) { // Is target still empty?
     res = args_config_init(config, arg);
