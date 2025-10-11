@@ -6,8 +6,11 @@
 
 int main(int argc, char **argv) {
   struct Config config;
+  enum Err_Main err;
 
-  args_parse(argc, argv, &config);
+  if ((err = args_parse(argc, argv, &config)) != ERR_NO_ERROR) {
+    return err;
+  }
 
   printf("Source: %s\nTarget: %s\nVerbose: %s\nInstructions: %s\n",
          config.source, config.target, config.flag_verbose ? "yes" : "no",

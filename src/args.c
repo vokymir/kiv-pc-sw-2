@@ -9,12 +9,9 @@ enum Err_Main args_parse(int argc, char **argv, struct Config *config) {
   size_t i, j;
   char *arg;
   char flag, unknown, verbose, instruction;
-  if (argc < 2) {
+  if (argc < 2 || !argv || !config) { // Never could happen config == NULL
     printf("Usage: ./kmas.exe <source.kas> [target.kmx] [-v] [-i]\n");
-    return EXIT_FAILURE;
-  }
-  if (!argv || !config) {
-    return EXIT_FAILURE;
+    return ERR_INVALID_INPUT_FILE;
   }
 
   config->source = argv[1];
@@ -37,7 +34,7 @@ enum Err_Main args_parse(int argc, char **argv, struct Config *config) {
     }
   }
 
-  return EXIT_SUCCESS;
+  return ERR_NO_ERROR;
 }
 
 void args_free_config(struct Config *config) {
