@@ -13,9 +13,12 @@ enum Err_Args {
 };
 
 // Parse all arguments given and write the results into
-//  the given Config structure. Returns adequate Err_Main
+// the given Config structure. Performs static syntax check
+// on source/target by calling args_path_syntax_check.
+// Returns adequate Err_Main
 enum Err_Main args_parse(int argc, char **argv, struct Config *config);
 
+// Perform static syntax check on any path.
 enum Err_Args args_path_syntax_check(char *path);
 
 // Free target in config.
