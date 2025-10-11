@@ -12,6 +12,7 @@ enum Err_Args {
   ARGS_PATH_EMPTY = 2,
   ARGS_PATH_BAD_EXTENSION = 3,
   ARGS_PATH_SPECIAL_CHARS = 4, // only on Windows
+  ARGS_PATH_BAD_PREFIX = 5,    // only for completeness
 };
 
 // Parse all arguments given and write the results into
@@ -22,7 +23,10 @@ enum Err_Main args_parse(const int argc, const char **argv,
                          struct Config *config);
 
 // Perform static syntax check on any path.
-enum Err_Args args_path_syntax_check(const char *path);
+// Checking prefix/suffix is omitted on empty string or NULL
+// Use suffix e.g. for file extension.
+enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
+                                     const char *suffix);
 
 // Clear all config members to 0.
 // Danger: Don't call after init, or any allocation.
@@ -34,5 +38,9 @@ int args_config_init(struct Config *config, const char *target);
 
 // Free target in config.
 void args_config_free(struct Config *config);
+
+// Parse one argument. Set flags or target path in config.
+// Return ERR_NO_ERROR on success.
+enum Err_Main _args_parse_arg(const char *arg, struct Config *config);
 
 #endif

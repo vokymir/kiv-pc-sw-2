@@ -26,4 +26,4 @@ void jree(void *memory) {
   free(memory);
 }
 
-size_t jemory() { return alloc_count; }
+size_t jemory(void) { return alloc_count; }

@@ -11,6 +11,6 @@ void *jalloc(const size_t bytes);
 void jree(void *memory);
 
 // Return how many allocations are active right now.
-size_t jemory();
+size_t jemory(void);
 
 #endif

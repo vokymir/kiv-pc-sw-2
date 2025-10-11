@@ -18,8 +18,9 @@ enum Err_Main {
 struct Config {
   char flag_verbose;
   char flag_instruction;
-  char *source;
-  char *target;
+  const char *source; // only assign, never modify
+  char *target; // This is dynamically allocated, so cannot be const because of
+                // free
 };
 
 #endif
