@@ -1,4 +1,6 @@
+#include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "memory.h"
@@ -7,7 +9,7 @@ static size_t alloc_count = 0;
 
 void *jalloc(const size_t bytes) {
   void *mem;
-  if (bytes == 0) {
+  if (bytes == 0 || bytes > SIZE_MAX / 1) {
     return NULL;
   }
   mem = calloc(bytes, 1);
@@ -22,8 +24,17 @@ void jree(void *memory) {
   if (!memory) {
     return;
   }
+  assert(alloc_count > 0);
   --alloc_count;
   free(memory);
+}
+
+void jree_clear(void **memory_ptr) {
+  if (!memory_ptr || !*memory_ptr) {
+    return;
+  }
+  jree(*memory_ptr);
+  *memory_ptr = NULL;
 }
 
 size_t jemory(void) { return alloc_count; }

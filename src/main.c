@@ -4,7 +4,7 @@
 #include "args.h"
 #include "common.h"
 
-int main(int argc, char **argv) {
+int main(const int argc, const char **argv) {
   struct Config config;
   enum Err_Main err;
 

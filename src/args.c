@@ -30,6 +30,7 @@ enum Err_Main args_parse(const int argc, const char **argv,
     }
   }
 
+  // TODO: SET DEFAULT as in assignment
   if (!config->target) { // if no target path, set default
     if (args_config_init(config, "INVALIDa")) {
       return ERR_INVALID_OUTPUT_FILE;
@@ -51,7 +52,7 @@ enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
 
   if (prefix) {
     len = strlen(prefix);
-    if (strncmp(path, prefix, len)) {
+    if (plen < len || strncmp(path, prefix, len)) {
       return ARGS_PATH_BAD_PREFIX;
     }
   }
@@ -94,7 +95,6 @@ int args_config_init(struct Config *config, const char *target) {
     return 1;
   }
   strcpy(config->target, target);
-  config->target[len] = '\0';
 
   return 0;
 }
@@ -102,7 +102,7 @@ int args_config_init(struct Config *config, const char *target) {
 void args_config_free(struct Config *config) {
   if (!config || !config->target)
     return;
-  jree(config->target);
+  jree_clear((void **)&config->target); // free & clear the config->target
 }
 
 enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
