@@ -14,7 +14,7 @@ int main(const int argc, const char **argv) {
   }
 
   if (!fu_is_file(config.source)) {
-    printf("AJAJAJ, nevalidni vstup...");
+    printf("AJAJAJ, nevalidni vstup...\n");
   }
 
   printf("Source: %s\nTarget: %s\nVerbose: %s\nInstructions: %s\n",
