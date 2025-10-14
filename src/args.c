@@ -7,6 +7,8 @@
 #include "common.h"
 #include "memory.h"
 
+// ===== PARSING ARGS =====
+
 enum Err_Main args_parse(const int argc, const char **argv,
                          struct Config *config) {
   size_t i;
@@ -76,6 +78,8 @@ enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
   return ARGS_NO_ERROR;
 }
 
+// ===== WORKING w CONFIG =====
+
 void args_config_clear(struct Config *config) {
   if (!config) {
     return;
@@ -112,6 +116,8 @@ void args_config_free(struct Config *config) {
     return;
   jree_clear((void **)&config->target); // free & clear the config->target
 }
+
+// ===== (private) HELPERS =====
 
 enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
   if (strcmp(arg, "-v") == 0) { // is verbose?

@@ -15,6 +15,8 @@ enum Err_Args {
   ARGS_PATH_BAD_PREFIX = 5,    // only for completeness
 };
 
+// ===== PARSING/VALIDATING ARGS =====
+
 // Parse all arguments given and write the results into
 // the given Config structure. Performs static syntax check
 // on source/target by calling args_path_syntax_check.
@@ -27,6 +29,12 @@ enum Err_Main args_parse(const int argc, const char **argv,
 // Use suffix e.g. for file extension.
 enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
                                      const char *suffix);
+
+// Perform semantic check on source/target paths in config.
+// Return TODO: should be Err_Main or Err_Args?
+enum Err_Main args_check_config(const struct Config *config);
+
+// ===== WORKING w CONFIG =====
 
 // Clear all config members to 0.
 // Danger: if target was initialized, it is freed here.
@@ -42,6 +50,8 @@ int args_config_init(struct Config *config, const char *target);
 // Config is inited in Args, but should only be freed at the end of program,
 // which is at the end of Main.
 void args_config_free(struct Config *config);
+
+// ===== (private) HELPERS =====
 
 // Parse one argument. Set flags or target path in config.
 // Return ERR_NO_ERROR on success.
