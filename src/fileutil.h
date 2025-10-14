@@ -28,7 +28,4 @@ int fu_can_write_dir(const char *path);
 // valid.
 int fu_can_write_parent_dir(const char *path);
 
-// Return absolute path, caller must free.
-char *fu_cannonical_path(const char *path);
-
 #endif

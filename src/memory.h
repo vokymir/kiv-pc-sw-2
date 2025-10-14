@@ -17,4 +17,10 @@ void jree_clear(void **memory_ptr);
 // Return how many allocations are active right now.
 size_t jemory(void);
 
+// My implementation of POSIX's strdup().
+// Returns a pointer to a null-terminated byte string, which is a duplicate of
+// the string pointed to by str1. On error return NULL.
+// The caller must free!
+char *jtrdup(const char *str1);
+
 #endif

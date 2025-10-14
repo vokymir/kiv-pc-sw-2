@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "memory.h"
 
@@ -38,3 +39,17 @@ void jree_clear(void **memory_ptr) {
 }
 
 size_t jemory(void) { return alloc_count; }
+
+char *jtrdup(const char *str1) {
+  size_t len = 0;
+  char *dup = NULL;
+  if (!str1) {
+    return NULL;
+  }
+  len = strlen(str1) + 1;
+  dup = jalloc(len);
+  if (dup) {
+    memcpy(dup, str1, len);
+  }
+  return dup;
+}

@@ -12,6 +12,7 @@
 #endif
 
 #include "fileutil.h"
+#include "memory.h"
 
 int fu_path_exists(const char *path) {
   struct stat st;
@@ -67,14 +68,14 @@ int fu_can_write_parent_dir(const char *path) {
   if (!path) {
     return 0;
   }
-  dup = strdup(path);
+  dup = jtrdup(path);
   if (!dup) {
     return 0;
   }
 
   slash = strrchr(dup, '/');
-  char *backslash = strrchr(dup, '\\'); // alternative on WIN
 #if defined(_WIN32)
+  char *backslash = strrchr(dup, '\\'); // alternative on WIN
   if (backslash &&
       (!slash ||
        backslash >
