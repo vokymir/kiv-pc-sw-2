@@ -5,6 +5,7 @@
 
 #include "args.h"
 #include "common.h"
+#include "fileutil.h"
 #include "memory.h"
 
 // ===== PARSING ARGS =====
@@ -78,6 +79,27 @@ enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
   return ARGS_NO_ERROR;
 }
 
+enum Err_Main args_check_config(const struct Config *config) {
+  if (!config ||
+      !config
+           ->source) { // this shouldn't happen, so suspect first possible error
+    return ERR_INVALID_INPUT_FILE;
+  } else if (!config->target) {
+    return ERR_INVALID_OUTPUT_FILE;
+  }
+
+  if (!fu_is_file(config->source)) { // source must exist and be file
+    return ERR_INVALID_INPUT_FILE;
+  }
+
+  if (!fu_can_write(
+          config->target)) { // target must exist or be in writable directory
+    return ERR_INVALID_OUTPUT_FILE;
+  }
+
+  return ERR_NO_ERROR;
+}
+
 // ===== WORKING w CONFIG =====
 
 void args_config_clear(struct Config *config) {
@@ -112,8 +134,9 @@ int args_config_init(struct Config *config, const char *target) {
 }
 
 void args_config_free(struct Config *config) {
-  if (!config || !config->target)
+  if (!config || !config->target) {
     return;
+  }
   jree_clear((void **)&config->target); // free & clear the config->target
 }
 

@@ -31,7 +31,10 @@ enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
                                      const char *suffix);
 
 // Perform semantic check on source/target paths in config.
-// Return TODO: should be Err_Main or Err_Args?
+// Return Err_Main with adequate error code.
+// Source path must exist and be file. Target path doesn't have to exist, but at
+// least the parent directory must allows writing, so the target file can be
+// created later.
 enum Err_Main args_check_config(const struct Config *config);
 
 // ===== WORKING w CONFIG =====

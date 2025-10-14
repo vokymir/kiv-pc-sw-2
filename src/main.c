@@ -3,19 +3,17 @@
 
 #include "args.h"
 #include "common.h"
-#include "fileutil.h"
 #include "memory.h"
 
 int main(const int argc, const char **argv) {
-  struct Config config;
+  struct Config config = {0};
   enum Err_Main err = ERR_NO_ERROR;
 
   if ((err = args_parse(argc, argv, &config)) != ERR_NO_ERROR) {
     goto finalize;
   }
 
-  if (!fu_is_file(config.source)) {
-    err = ERR_INVALID_INPUT_FILE;
+  if ((err = args_check_config(&config)) != ERR_NO_ERROR) {
     goto finalize;
   }
 
