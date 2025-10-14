@@ -9,7 +9,7 @@
 static size_t alloc_count = 0;
 
 void *jalloc(const size_t bytes) {
-  void *mem;
+  void *mem = NULL;
   if (bytes == 0 || bytes > SIZE_MAX / 1) {
     return NULL;
   }

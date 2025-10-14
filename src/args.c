@@ -12,9 +12,9 @@
 
 enum Err_Main args_parse(const int argc, const char **argv,
                          struct Config *config) {
-  size_t i;
-  enum Err_Main merr;
-  enum Err_Args err;
+  size_t i = 0;
+  enum Err_Main merr = ERR_NO_ERROR;
+  enum Err_Args err = ARGS_NO_ERROR;
   if (argc < 2 || !argv || !config) { // Never could happen config == NULL
     printf("Usage: ./kmas.exe <source.kas> [target.kmx] [-v] [-i]\n");
     return ERR_INVALID_INPUT_FILE;
@@ -48,7 +48,7 @@ enum Err_Main args_parse(const int argc, const char **argv,
 
 enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
                                      const char *suffix) {
-  size_t plen, len;
+  size_t plen, len = 0;
   if (!path) {
     return ARGS_INVALID_POINTER;
   }
@@ -116,7 +116,7 @@ void args_config_clear(struct Config *config) {
 }
 
 int args_config_init(struct Config *config, const char *target) {
-  size_t len;
+  size_t len = 0;
   if (!config) {
     return 0;
   }
@@ -156,7 +156,7 @@ enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
 }
 
 int _args_change_extension(char *path) {
-  char *begin;
+  char *begin = NULL;
   if (!path) {
     return 0;
   }
