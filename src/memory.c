@@ -53,3 +53,13 @@ char *jtrdup(const char *str1) {
   }
   return dup;
 }
+
+char *jtrndup(const char *str, size_t size) {
+  char *dup = jalloc(size + 1);
+  if (!dup)
+    return NULL;
+
+  memcpy(dup, str, size);
+  dup[size] = '\0';
+  return dup;
+}

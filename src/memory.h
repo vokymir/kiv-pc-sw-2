@@ -23,4 +23,10 @@ size_t jemory(void);
 // The caller must free!
 char *jtrdup(const char *str1);
 
+// My implementation of POSIX's strndup().
+// Returns a pointer to a null-terminated byte string, which is a duplicate of
+// the first <size> bytes of string pointed to by str. On error return NULL.
+// The caller must free!
+char *jtrndup(const char *str, size_t size);
+
 #endif
