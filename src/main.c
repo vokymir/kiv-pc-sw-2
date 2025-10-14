@@ -3,6 +3,7 @@
 
 #include "args.h"
 #include "common.h"
+#include "fileutil.h"
 
 int main(const int argc, const char **argv) {
   struct Config config;
@@ -10,6 +11,10 @@ int main(const int argc, const char **argv) {
 
   if ((err = args_parse(argc, argv, &config)) != ERR_NO_ERROR) {
     return err;
+  }
+
+  if (!fu_is_file(config.source)) {
+    printf("AJAJAJ, nevalidni vstup...");
   }
 
   printf("Source: %s\nTarget: %s\nVerbose: %s\nInstructions: %s\n",
