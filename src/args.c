@@ -31,11 +31,11 @@ enum Err_Main args_parse(const int argc, const char **argv,
   }
 
   if (!config->target) { // if no target path, set default
-    if (!args_config_init(config,
-                          config->source)) { // set to the same as source
+    if (args_config_init(config,
+                         config->source) != 0) { // set to the same as source
       return ERR_INVALID_OUTPUT_FILE;
     }
-    if (!_args_change_extension(config->target)) { // only edit extension
+    if (_args_change_extension(config->target) != 0) { // only edit extension
       return ERR_INVALID_OUTPUT_FILE;
     }
   }
@@ -83,6 +83,9 @@ void args_config_clear(struct Config *config) {
   config->flag_verbose = 0;
   config->flag_instruction = 0;
   config->source = NULL;
+  if (config->target) {
+    args_config_free(config);
+  }
   config->target = NULL;
 }
 
@@ -123,7 +126,7 @@ enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
   return ERR_NO_ERROR;
 }
 
-int _args_change_extension(const char *path) {
+int _args_change_extension(char *path) {
   char *begin;
   if (!path) {
     return 1;

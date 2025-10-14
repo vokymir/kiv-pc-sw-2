@@ -29,7 +29,7 @@ enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
                                      const char *suffix);
 
 // Clear all config members to 0.
-// Danger: Don't call after init, or any allocation.
+// Danger: if target was initialized, it is freed here.
 void args_config_clear(struct Config *config);
 
 // Initialize target path in config;
@@ -38,6 +38,9 @@ void args_config_clear(struct Config *config);
 int args_config_init(struct Config *config, const char *target);
 
 // Free target in config.
+// This is responsibility of Main, contrary to its name.
+// Config is inited in Args, but should only be freed at the end of program,
+// which is at the end of Main.
 void args_config_free(struct Config *config);
 
 // Parse one argument. Set flags or target path in config.
@@ -46,6 +49,6 @@ enum Err_Main _args_parse_arg(const char *arg, struct Config *config);
 
 // Change extension from '.kas' to '.kmx'.
 // Return 0 on success, 1 on failure.
-int _args_change_extension(const char *path);
+int _args_change_extension(char *path);
 
 #endif
