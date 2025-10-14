@@ -30,9 +30,12 @@ enum Err_Main args_parse(const int argc, const char **argv,
     }
   }
 
-  // TODO: SET DEFAULT as in assignment
   if (!config->target) { // if no target path, set default
-    if (args_config_init(config, "INVALIDa")) {
+    if (!args_config_init(config,
+                          config->source)) { // set to the same as source
+      return ERR_INVALID_OUTPUT_FILE;
+    }
+    if (!_args_change_extension(config->target)) { // only edit extension
       return ERR_INVALID_OUTPUT_FILE;
     }
   }
@@ -118,4 +121,18 @@ enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
     }
   }
   return ERR_NO_ERROR;
+}
+
+int _args_change_extension(const char *path) {
+  char *begin;
+  if (!path) {
+    return 1;
+  }
+  begin = strstr(path, ".kas");
+  if (!begin) {
+    return 1;
+  }
+  *(char *)(begin + 2) = 'm'; // in .kas change a->m, s->x
+  *(char *)(begin + 3) = 'x';
+  return 0;
 }

@@ -33,6 +33,7 @@ enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
 void args_config_clear(struct Config *config);
 
 // Initialize target path in config;
+// Meaning it copies from target, allocating new memory.
 // Return 0 on success, 1 on failure.
 int args_config_init(struct Config *config, const char *target);
 
@@ -42,5 +43,9 @@ void args_config_free(struct Config *config);
 // Parse one argument. Set flags or target path in config.
 // Return ERR_NO_ERROR on success.
 enum Err_Main _args_parse_arg(const char *arg, struct Config *config);
+
+// Change extension from '.kas' to '.kmx'.
+// Return 0 on success, 1 on failure.
+int _args_change_extension(const char *path);
 
 #endif
