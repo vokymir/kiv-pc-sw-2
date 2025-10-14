@@ -67,7 +67,7 @@ enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
     }
   }
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
   if (strpbrk(path, "<>\"|?*") != NULL) {
     return ARGS_PATH_SPECIAL_CHARS;
   }
