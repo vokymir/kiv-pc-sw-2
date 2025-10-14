@@ -31,11 +31,11 @@ enum Err_Main args_parse(const int argc, const char **argv,
   }
 
   if (!config->target) { // if no target path, set default
-    if (args_config_init(config,
-                         config->source) != 0) { // set to the same as source
+    if (!args_config_init(config,
+                          config->source)) { // set to the same as source
       return ERR_INVALID_OUTPUT_FILE;
     }
-    if (_args_change_extension(config->target) != 0) { // only edit extension
+    if (!_args_change_extension(config->target)) { // only edit extension
       return ERR_INVALID_OUTPUT_FILE;
     }
   }
@@ -92,17 +92,19 @@ void args_config_clear(struct Config *config) {
 int args_config_init(struct Config *config, const char *target) {
   size_t len;
   if (!config) {
-    return 1;
+    return 0;
   }
 
   len = strlen(target) + 1;
   config->target = jalloc(len);
   if (!config->target) {
-    return 1;
+    return 0;
   }
-  strcpy(config->target, target);
+  if (!strcpy(config->target, target)) {
+    return 0;
+  }
 
-  return 0;
+  return 1;
 }
 
 void args_config_free(struct Config *config) {
@@ -112,14 +114,12 @@ void args_config_free(struct Config *config) {
 }
 
 enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
-  int res;
   if (strcmp(arg, "-v") == 0) { // is verbose?
     config->flag_verbose = 1;
   } else if (strcmp(arg, "-i") == 0) { // Is instruction?
     config->flag_instruction = 1;
-  } else if (!config->target) { // Is target still empty?
-    res = args_config_init(config, arg);
-    if (res) { // Was filling target a failure?
+  } else if (!config->target) {           // Is target still empty?
+    if (!args_config_init(config, arg)) { // Was filling target a failure?
       return ERR_INVALID_OUTPUT_FILE;
     }
   }
@@ -129,13 +129,13 @@ enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
 int _args_change_extension(char *path) {
   char *begin;
   if (!path) {
-    return 1;
+    return 0;
   }
   begin = strstr(path, ".kas");
   if (!begin) {
-    return 1;
+    return 0;
   }
   *(char *)(begin + 2) = 'm'; // in .kas change a->m, s->x
   *(char *)(begin + 3) = 'x';
-  return 0;
+  return 1;
 }

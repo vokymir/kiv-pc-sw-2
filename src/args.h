@@ -34,7 +34,7 @@ void args_config_clear(struct Config *config);
 
 // Initialize target path in config;
 // Meaning it copies from target, allocating new memory.
-// Return 0 on success, 1 on failure.
+// Return 1 on success, 0 on failure.
 int args_config_init(struct Config *config, const char *target);
 
 // Free target in config.
@@ -48,7 +48,7 @@ void args_config_free(struct Config *config);
 enum Err_Main _args_parse_arg(const char *arg, struct Config *config);
 
 // Change extension from '.kas' to '.kmx'.
-// Return 0 on success, 1 on failure.
+// Return 1 on success, 0 on failure.
 int _args_change_extension(char *path);
 
 #endif
