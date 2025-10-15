@@ -1,5 +1,5 @@
-#include "datastruc.h"
-#include "memory.h" // your jalloc/jree/jemory system
+#include "../src/datastruc.h"
+#include "../src/memory.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>

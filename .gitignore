@@ -1,3 +1,5 @@
 kmas.exe
+source.kas
 *.o
 /build/
+/bin/
