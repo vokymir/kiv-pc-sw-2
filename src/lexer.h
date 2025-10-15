@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#include "datastruc.h"
+
 // All possible types of token.
 enum TokenType {
   TOKEN_INSTRUCTION,
@@ -32,11 +34,30 @@ struct Token {
 };
 
 // Tokenize given line (ended by \0).
-// Return pointer to array of tokens, ended by TOKEN_EOF, or return NULL on
-// failure.
-struct Token *lexer_tokenize_line(const char *line, const size_t nl);
+// Return pointer to list of tokens, ended by TOKEN_EOF.
+// Return NULL on failure.
+struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl);
 
-// Free an array of tokens. Must be ended by TOKEN_EOF.
+// Free a list of tokens.
 void lexer_free_tokens(struct Token *tokens);
+
+// Create token with given parameters
+// Return pointer to token on success, NULL on failure.
+// Caller must free.
+struct Token *_lexer_create_token(const enum TokenType type, const char *value,
+                                  const int nl);
+
+// Get what type of string it is & save in Token. Return NULL on failure.
+// The string in DATA segments.
+struct Token *_lexer_parse_string(const char *);
+
+// Get number & save to Token.
+struct Token *_lexer_parse_number(const char *);
+
+// Get label & save to Token
+struct Token *_lexer_parse_label(const char *);
+
+// Get identifier & save to Token
+struct Token *_lexer_parse_word(const char *);
 
 #endif
