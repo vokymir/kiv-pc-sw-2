@@ -30,7 +30,7 @@ struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   len = strlen(line);
 
   // Process the whole line
-  while (!_lexer_skip_to_next_token(line, len, &pos)) {
+  while (_lexer_skip_to_next_token(line, len, &pos)) {
     token = _lexer_create_next_token(line, len, &pos, nl);
 
     if (!_lexer_add_token_to_list(tokens, token)) {
@@ -124,7 +124,7 @@ struct Token *_lexer_create_next_token(const char *line, size_t len,
 
   // String literal in .DATA segment
   if (current == '"') {
-    token = _lexer_create_token_string(&line[*pos], nl);
+    token = _lexer_create_token_string(&line[*pos + 1], nl);
     if (token && token->value) {
       (*pos) += strlen(token->value) + 2; // +2 for the quotes on begin/end
     }
@@ -232,9 +232,12 @@ struct Token *_lexer_create_token_string(const char *s, const size_t nl) {
     return NULL;
   }
 
-  while (*curr != '"') {
+  while (*curr && *curr != '"') {
     n_chars++;
-    curr = curr + 1;
+    curr++;
+  }
+  if (*curr == '\0') {
+    return NULL; // unterminated string
   }
 
   token = _lexer_create_token_n(TOKEN_STRING, s, nl, n_chars + 1); // 1 for \0
@@ -256,7 +259,7 @@ struct Token *_lexer_create_token_label(const char *s, const size_t nl) {
 
   while (!(isspace(*curr) || *curr == ':')) {
     n_chars++;
-    curr = curr + 1;
+    curr++;
   }
 
   token = _lexer_create_token_n(TOKEN_LABEL, s, nl, n_chars + 1); // 1 for \0
@@ -265,7 +268,7 @@ struct Token *_lexer_create_token_label(const char *s, const size_t nl) {
   }
   token->value[n_chars] = '\0';
 
-  return NULL;
+  return token;
 }
 
 struct Token *_lexer_create_token_number(const char *s, const size_t nl) {
@@ -276,9 +279,9 @@ struct Token *_lexer_create_token_number(const char *s, const size_t nl) {
     return NULL;
   }
 
-  while (isdigit(curr)) {
+  while (isdigit(*curr)) {
     n_chars++;
-    curr = curr + 1;
+    curr++;
   }
 
   token = _lexer_create_token_n(TOKEN_NUMBER, s, nl, n_chars + 1); // 1 for \0
@@ -287,7 +290,7 @@ struct Token *_lexer_create_token_number(const char *s, const size_t nl) {
   }
   token->value[n_chars] = '\0';
 
-  return NULL;
+  return token;
 }
 
 struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
@@ -299,9 +302,10 @@ struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
     return NULL;
   }
 
-  while (!isspace(*curr)) {
+  while (*curr && !isspace(*curr) && *curr != ',' && *curr != '(' &&
+         *curr != ')' && *curr != ';') {
     n_chars++;
-    curr = curr + 1;
+    curr++;
   }
 
   type = _lexer_classify_word(s, n_chars);
@@ -311,7 +315,7 @@ struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
   }
   token->value[n_chars] = '\0';
 
-  return NULL;
+  return token;
 }
 
 enum TokenType _lexer_classify_word(const char *word, const size_t num) {
