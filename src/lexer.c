@@ -199,6 +199,26 @@ struct Token *_lexer_create_token(const enum TokenType type, const char *value,
   return token;
 }
 
+struct Token *_lexer_create_token_n(const enum TokenType type,
+                                    const char *value, const size_t nl,
+                                    const size_t len) {
+  struct Token *token = jalloc(sizeof(struct Token));
+  if (!token) {
+    return NULL;
+  }
+  token->value = jalloc(sizeof(char) * len);
+  if (!token->value) {
+    jree(token);
+    return NULL;
+  }
+
+  token->type = type;
+  token->line_number = nl;
+  memcpy(token->value, value, len);
+
+  return token;
+}
+
 struct Token *_lexer_create_token_string(const char *s, const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;

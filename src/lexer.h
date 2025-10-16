@@ -66,9 +66,9 @@ int _lexer_add_token_to_list(struct DS_Llist *tokens_list, struct Token *token);
 struct Token *_lexer_create_token(const enum TokenType type, const char *value,
                                   const size_t nl);
 
-// Create token with given parameters, memncpy value using len.
-// Return pointer to token on success, NULL on failure.
-// Caller must free.
+// Create token with given parameters, memcpy the value using len. If you want
+// to end it eg by \0, you must pass (real-len+1) and manually rewrite it.
+// Return pointer to token on success, NULL on failure. Caller must free.
 struct Token *_lexer_create_token_n(const enum TokenType type,
                                     const char *value, const size_t nl,
                                     const size_t len);
