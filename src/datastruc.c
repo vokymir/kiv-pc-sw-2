@@ -22,7 +22,7 @@ struct DS_Llist *ds_llist_new(const size_t size) {
   return llist;
 }
 
-void *ds_llist_add(struct DS_Llist *llist, const void *item) {
+void *ds_llist_add(struct DS_Llist *llist, void *item) {
   struct DS_ItLlist *lit = NULL;
   if (!llist || !item) {
     return NULL;
@@ -32,25 +32,15 @@ void *ds_llist_add(struct DS_Llist *llist, const void *item) {
   if (!lit) {
     return NULL;
   }
-  lit->data = NULL;
+  lit->data = item;
   lit->next = NULL;
-  lit->data = jalloc(llist->it_size);
 
-  if (!lit->data) {
-    jree(lit);
-    return NULL;
-  }
-
-  memcpy(lit->data, item, llist->it_size);
-
-  if (!llist->last) {
+  if (llist->last) {
+    llist->last->next = lit;
+  } else { // if last is NULL, count is 0
     llist->first = lit;
-    llist->last = lit;
-    llist->count = 1;
-    return lit->data;
   }
 
-  llist->last->next = lit;
   llist->last = lit;
   llist->count++;
   return lit->data;
@@ -86,7 +76,7 @@ void *ds_llist_get_data(const struct DS_Llist *llist, const size_t idx) {
 }
 
 void ds_llist_remove(struct DS_Llist *llist, const size_t idx,
-                     const ds_llist_free_it_func fn) {
+                     ds_llist_free_it_func fn) {
   struct DS_ItLlist *to_remove, *replacing = NULL;
   if (!llist || llist->count == 0 || llist->count <= idx) {
     return;
@@ -135,7 +125,7 @@ void ds_llist_foreach(struct DS_Llist *llist, void (*fn)(void *)) {
   return;
 }
 
-void ds_llist_free(struct DS_Llist *llist, const ds_llist_free_it_func fn) {
+void ds_llist_free(struct DS_Llist *llist, ds_llist_free_it_func fn) {
   struct DS_ItLlist *current, *next = NULL;
   if (!llist) {
     return;

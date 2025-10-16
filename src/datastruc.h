@@ -28,9 +28,9 @@ typedef void (*ds_llist_free_it_func)(void *);
 // Return reference to the Llist or NULL.
 struct DS_Llist *ds_llist_new(const size_t size);
 
-// Add new item to the Llist. llist->size bytes are copied from item.
-// Return pointer to newly created ItLlist->data, or NULL;
-void *ds_llist_add(struct DS_Llist *llist, const void *item);
+// Add new item to the Llist. List only stores reference to the item, don't
+// copy it. Return pointer to newly created ItLlist->data, or NULL;
+void *ds_llist_add(struct DS_Llist *llist, void *item);
 
 // Get item at the index from llist.
 // Return pointer to ItList, or NULL.
@@ -45,7 +45,7 @@ void *ds_llist_get_data(const struct DS_Llist *llist, const size_t idx);
 // fn should remove all insides of data, but NOT data itself. It will be freed
 // inside this function.
 void ds_llist_remove(struct DS_Llist *llist, const size_t idx,
-                     const ds_llist_free_it_func fn);
+                     ds_llist_free_it_func fn);
 
 // Iterate over every list item from first to last. On each items data perform
 // function fn. This function takes pointer to data and do stuff with it.
@@ -54,6 +54,6 @@ void ds_llist_foreach(struct DS_Llist *llist, void (*fn)(void *));
 // Free all items in list using fn, then free all memory used for this items.
 // fn should remove all insides of data, but NOT data itself. It will be freed
 // inside this function.
-void ds_llist_free(struct DS_Llist *llist, const ds_llist_free_it_func fn);
+void ds_llist_free(struct DS_Llist *llist, ds_llist_free_it_func fn);
 
 #endif
