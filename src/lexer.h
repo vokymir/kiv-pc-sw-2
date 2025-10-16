@@ -38,26 +38,45 @@ struct Token {
 // Return NULL on failure.
 struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl);
 
-// Free a list of tokens.
-void lexer_free_tokens(struct Token *tokens);
+// Free tokens insides = clear value, DOESNT free the token itself.
+void lexer_free_token_inside(struct Token *token);
+
+// Free token inside, then free the token itself;
+void lexer_free_token(struct Token *token);
+
+// Skip all whitespaces or comments in line by INCREMENTING the pos value.
+// Return 1 if there is a token waiting to be parsed on pos.
+// Return 0 if end of line was reached.
+int _lexer_skip_to_next_token(const char *line, const size_t len, size_t *pos);
+
+// Create next token, starting on pos.
+// Update pos to one char after token characters.
+// Return Token on success, NULL on failure.
+struct Token *_lexer_create_next_token(const char *line, size_t len,
+                                       size_t *pos, size_t nl);
+
+// Add a token to the list.
+// Return 1 on success, 0 on failure.
+// On failure, the token IS FREED.
+int _lexer_add_token_to_list(struct DS_Llist *tokens_list, struct Token *token);
 
 // Create token with given parameters
 // Return pointer to token on success, NULL on failure.
 // Caller must free.
 struct Token *_lexer_create_token(const enum TokenType type, const char *value,
-                                  const int nl);
+                                  const size_t nl);
 
-// Get what type of string it is & save in Token. Return NULL on failure.
 // The string in DATA segments.
-struct Token *_lexer_parse_string(const char *);
+struct Token *_lexer_create_token_string(const char *, const size_t nl);
 
-// Get number & save to Token.
-struct Token *_lexer_parse_number(const char *);
+// Create token from pointer to the start of label (starting with @).
+// Return pointer to Token or NULL.
+struct Token *_lexer_create_token_label(const char *, const size_t nl);
 
-// Get label & save to Token
-struct Token *_lexer_parse_label(const char *);
+// Create token for static number, found wherever in code.
+struct Token *_lexer_create_token_number(const char *, const size_t nl);
 
-// Get identifier & save to Token
-struct Token *_lexer_parse_word(const char *);
+// Distinguish between different words and return which one it is.
+struct Token *_lexer_create_token_word(const char *, const size_t nl);
 
 #endif
