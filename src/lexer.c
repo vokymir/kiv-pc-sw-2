@@ -6,6 +6,11 @@
 #include "lexer.h"
 #include "memory.h"
 
+#define IDENTIFY(ch, type)                                                     \
+  if (strncmp(word, (ch), num) == 0) {                                         \
+    return (type);                                                             \
+  }
+
 struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   struct DS_Llist *tokens = NULL;
   struct Token *token = NULL;
@@ -286,5 +291,100 @@ struct Token *_lexer_create_token_number(const char *s, const size_t nl) {
 }
 
 struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
+  size_t n_chars = 0;
+  const char *curr = s;
+  struct Token *token = NULL;
+  enum TokenType type = TOKEN_UNKNOWN;
+  if (!s) {
+    return NULL;
+  }
+
+  while (!isspace(*curr)) {
+    n_chars++;
+    curr = curr + 1;
+  }
+
+  type = _lexer_classify_word(s, n_chars);
+  token = _lexer_create_token_n(type, s, nl, n_chars + 1); // 1 for \0
+  if (!token) {
+    return NULL;
+  }
+  token->value[n_chars] = '\0';
+
   return NULL;
+}
+
+enum TokenType _lexer_classify_word(const char *word, const size_t num) {
+  if (!word || num == 0) {
+    return TOKEN_UNKNOWN;
+  }
+  // SECTION MARKER
+  IDENTIFY(".KMA", TOKEN_KMA);
+  IDENTIFY(".DATA", TOKEN_SECTION_DATA);
+  IDENTIFY(".CODE", TOKEN_SECTION_CODE);
+  // DATA TYPE
+  IDENTIFY("DW", TOKEN_DATA_TYPE);
+  IDENTIFY("DWORD", TOKEN_DATA_TYPE);
+  IDENTIFY("DB", TOKEN_DATA_TYPE);
+  IDENTIFY("BYTE", TOKEN_DATA_TYPE);
+  // REGISTERS
+  IDENTIFY("A", TOKEN_REGISTER);
+  IDENTIFY("B", TOKEN_REGISTER);
+  IDENTIFY("C", TOKEN_REGISTER);
+  IDENTIFY("D", TOKEN_REGISTER);
+  IDENTIFY("S", TOKEN_REGISTER);
+  IDENTIFY("SP", TOKEN_REGISTER);
+  // INSTRUCTIONS
+  IDENTIFY("HALT", TOKEN_INSTRUCTION);
+  IDENTIFY("NOP", TOKEN_INSTRUCTION);
+
+  IDENTIFY("MOV", TOKEN_INSTRUCTION);
+  IDENTIFY("MOVSD", TOKEN_INSTRUCTION);
+  IDENTIFY("LOAD", TOKEN_INSTRUCTION);
+  IDENTIFY("STOR", TOKEN_INSTRUCTION);
+
+  IDENTIFY("PUSH", TOKEN_INSTRUCTION);
+  IDENTIFY("POP", TOKEN_INSTRUCTION);
+
+  IDENTIFY("ADD", TOKEN_INSTRUCTION);
+  IDENTIFY("SUB", TOKEN_INSTRUCTION);
+  IDENTIFY("MUL", TOKEN_INSTRUCTION);
+  IDENTIFY("DIV", TOKEN_INSTRUCTION);
+  IDENTIFY("INC", TOKEN_INSTRUCTION);
+  IDENTIFY("DEC", TOKEN_INSTRUCTION);
+
+  IDENTIFY("AND", TOKEN_INSTRUCTION);
+  IDENTIFY("OR", TOKEN_INSTRUCTION);
+  IDENTIFY("XOR", TOKEN_INSTRUCTION);
+  IDENTIFY("NOT", TOKEN_INSTRUCTION);
+
+  IDENTIFY("SHL", TOKEN_INSTRUCTION);
+  IDENTIFY("SHR", TOKEN_INSTRUCTION);
+
+  IDENTIFY("CMP", TOKEN_INSTRUCTION);
+
+  IDENTIFY("JMP", TOKEN_INSTRUCTION);
+  IDENTIFY("JE", TOKEN_INSTRUCTION);
+  IDENTIFY("JNE", TOKEN_INSTRUCTION);
+  IDENTIFY("JG", TOKEN_INSTRUCTION);
+  IDENTIFY("JGE", TOKEN_INSTRUCTION);
+  IDENTIFY("JNG", TOKEN_INSTRUCTION);
+  IDENTIFY("JL", TOKEN_INSTRUCTION);
+  IDENTIFY("JLE", TOKEN_INSTRUCTION);
+  IDENTIFY("JNL", TOKEN_INSTRUCTION);
+
+  IDENTIFY("CALL", TOKEN_INSTRUCTION);
+  IDENTIFY("RET", TOKEN_INSTRUCTION);
+
+  IDENTIFY("OUTD", TOKEN_INSTRUCTION);
+  IDENTIFY("OUTC", TOKEN_INSTRUCTION);
+  IDENTIFY("OUTS", TOKEN_INSTRUCTION);
+  IDENTIFY("INPD", TOKEN_INSTRUCTION);
+  IDENTIFY("INPC", TOKEN_INSTRUCTION);
+  IDENTIFY("INPS", TOKEN_INSTRUCTION);
+  // SPECIALS
+  IDENTIFY("DUP", TOKEN_DUP);
+  IDENTIFY("OFFSET", TOKEN_OFFSET);
+
+  return TOKEN_IDENTIFIER;
 }

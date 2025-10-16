@@ -15,6 +15,7 @@ enum TokenType {
   TOKEN_COMMA,
   TOKEN_SECTION_DATA,
   TOKEN_SECTION_CODE,
+  TOKEN_KMA,
   TOKEN_OFFSET,
   TOKEN_QUESTION,
   TOKEN_STRING,
@@ -95,5 +96,9 @@ struct Token *_lexer_create_token_number(const char *s, const size_t nl);
 // Return pointer to Token or NULL.
 // Caller must free.
 struct Token *_lexer_create_token_word(const char *s, const size_t nl);
+
+// Classify the first <num> number of characters of word.
+// Return the adequate TokenType, or TOKEN_UNKNOWN if any error.
+enum TokenType _lexer_classify_word(const char *word, const size_t num);
 
 #endif
