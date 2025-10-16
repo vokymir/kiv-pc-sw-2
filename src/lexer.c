@@ -4,6 +4,7 @@
 
 #include "datastruc.h"
 #include "lexer.h"
+#include "memory.h"
 
 struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   struct DS_Llist *tokens = NULL;
@@ -42,6 +43,23 @@ struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   }
 
   return tokens;
+}
+
+void lexer_free_token_inside(struct Token *token) {
+  if (!token || !token->value) {
+    return;
+  }
+  jree(token->value);
+  return;
+}
+
+void lexer_free_token(struct Token *token) {
+  if (!token) {
+    return;
+  }
+  lexer_free_token_inside(token);
+  jree(token);
+  return;
 }
 
 int _lexer_skip_to_next_token(const char *line, const size_t len, size_t *pos) {
