@@ -60,23 +60,40 @@ struct Token *_lexer_create_next_token(const char *line, size_t len,
 // On failure, the token IS FREED.
 int _lexer_add_token_to_list(struct DS_Llist *tokens_list, struct Token *token);
 
-// Create token with given parameters
+// Create token with given parameters, memcpy value using strlen().
 // Return pointer to token on success, NULL on failure.
 // Caller must free.
 struct Token *_lexer_create_token(const enum TokenType type, const char *value,
                                   const size_t nl);
 
-// The string in DATA segments.
-struct Token *_lexer_create_token_string(const char *, const size_t nl);
+// Create token with given parameters, memncpy value using len.
+// Return pointer to token on success, NULL on failure.
+// Caller must free.
+struct Token *_lexer_create_token_n(const enum TokenType type,
+                                    const char *value, const size_t nl,
+                                    const size_t len);
+
+// The string in DATA segments. Takes pointer AFTER first QUOTE.
+// Return pointer to token on success, NULL on failure.
+// Caller must free.
+struct Token *_lexer_create_token_string(const char *s, const size_t nl);
 
 // Create token from pointer to the start of label (starting with @).
+// Take pointer to the '@'.
 // Return pointer to Token or NULL.
-struct Token *_lexer_create_token_label(const char *, const size_t nl);
+// Caller must free.
+struct Token *_lexer_create_token_label(const char *s, const size_t nl);
 
 // Create token for static number, found wherever in code.
-struct Token *_lexer_create_token_number(const char *, const size_t nl);
+// Take pointer to first digit (or minus sign).
+// Return pointer to Token or NULL.
+// Caller must free.
+struct Token *_lexer_create_token_number(const char *s, const size_t nl);
 
 // Distinguish between different words and return which one it is.
-struct Token *_lexer_create_token_word(const char *, const size_t nl);
+// Take pointer to first letter.
+// Return pointer to Token or NULL.
+// Caller must free.
+struct Token *_lexer_create_token_word(const char *s, const size_t nl);
 
 #endif

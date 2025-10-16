@@ -178,3 +178,93 @@ int _lexer_add_token_to_list(struct DS_Llist *tokens_list,
 
   return 1;
 }
+
+struct Token *_lexer_create_token(const enum TokenType type, const char *value,
+                                  const size_t nl) {
+  size_t val_len = strlen(value) + 1;
+  struct Token *token = jalloc(sizeof(struct Token));
+  if (!token) {
+    return NULL;
+  }
+  token->value = jalloc(sizeof(char) * val_len);
+  if (!token->value) {
+    jree(token);
+    return NULL;
+  }
+
+  token->type = type;
+  token->line_number = nl;
+  memcpy(token->value, value, val_len);
+
+  return token;
+}
+
+struct Token *_lexer_create_token_string(const char *s, const size_t nl) {
+  size_t n_chars = 0;
+  const char *curr = s;
+  struct Token *token = NULL;
+  if (!s) {
+    return NULL;
+  }
+
+  while (*curr != '"') {
+    n_chars++;
+    curr = curr + 1;
+  }
+
+  token = _lexer_create_token_n(TOKEN_STRING, s, nl, n_chars + 1); // 1 for \0
+  if (!token) {
+    return NULL;
+  }
+  token->value[n_chars] = '\0';
+
+  return token;
+}
+
+struct Token *_lexer_create_token_label(const char *s, const size_t nl) {
+  size_t n_chars = 0;
+  const char *curr = s;
+  struct Token *token = NULL;
+  if (!s) {
+    return NULL;
+  }
+
+  while (!(isspace(*curr) || *curr == ':')) {
+    n_chars++;
+    curr = curr + 1;
+  }
+
+  token = _lexer_create_token_n(TOKEN_LABEL, s, nl, n_chars + 1); // 1 for \0
+  if (!token) {
+    return NULL;
+  }
+  token->value[n_chars] = '\0';
+
+  return NULL;
+}
+
+struct Token *_lexer_create_token_number(const char *s, const size_t nl) {
+  size_t n_chars = 0;
+  const char *curr = s;
+  struct Token *token = NULL;
+  if (!s) {
+    return NULL;
+  }
+
+  while (isdigit(curr)) {
+    n_chars++;
+    curr = curr + 1;
+  }
+
+  token = _lexer_create_token_n(TOKEN_NUMBER, s, nl, n_chars + 1); // 1 for \0
+  if (!token) {
+    return NULL;
+  }
+  token->value[n_chars] = '\0';
+
+  return NULL;
+}
+
+struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
+  return NULL;
+}
