@@ -3,3 +3,4 @@ source.kas
 *.o
 /build/
 /bin/
+vgcore.*
