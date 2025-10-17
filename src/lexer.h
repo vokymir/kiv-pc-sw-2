@@ -39,10 +39,7 @@ struct Token {
 // Return NULL on failure.
 struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl);
 
-// Free tokens insides = clear value, DOESNT free the token itself.
-void lexer_free_token_inside(struct Token *token);
-
-// Free token inside, then free the token itself;
+// Free tokens insides, then free the token itself;
 void lexer_free_token(struct Token *token);
 
 // Skip all whitespaces or comments in line by INCREMENTING the pos value.

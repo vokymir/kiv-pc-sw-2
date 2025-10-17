@@ -7,14 +7,14 @@
 #include "memory.h"
 
 #define IDENTIFY(ch, type)                                                     \
-  if (strncmp(word, (ch), num) == 0) {                                         \
+  if (num == sizeof(ch) - 1 && strncmp(word, (ch), num) == 0) {                \
     return (type);                                                             \
   }
 
 struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   struct DS_Llist *tokens = NULL;
   struct Token *token = NULL;
-  ds_llist_free_it_func func = (ds_llist_free_it_func)lexer_free_token_inside;
+  ds_llist_free_node_data func = (ds_llist_free_node_data)lexer_free_token;
   size_t pos = 0;
   size_t len = 0;
 
@@ -22,7 +22,7 @@ struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
     return NULL;
   }
 
-  tokens = ds_llist_new(sizeof(struct Token));
+  tokens = ds_llist_create(sizeof(struct Token));
   if (!tokens) {
     return NULL;
   }
@@ -50,19 +50,13 @@ struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   return tokens;
 }
 
-void lexer_free_token_inside(struct Token *token) {
-  if (!token || !token->value) {
-    return;
-  }
-  jree(token->value);
-  return;
-}
-
 void lexer_free_token(struct Token *token) {
   if (!token) {
     return;
   }
-  lexer_free_token_inside(token);
+  if (token->value) {
+    jree(token->value);
+  }
   jree(token);
   return;
 }
@@ -127,6 +121,8 @@ struct Token *_lexer_create_next_token(const char *line, size_t len,
     token = _lexer_create_token_string(&line[*pos + 1], nl);
     if (token && token->value) {
       (*pos) += strlen(token->value) + 2; // +2 for the quotes on begin/end
+    } else {
+      (*pos)++; // an error occured, skip the opening quote to avoid inf loop
     }
     return token;
   }
@@ -253,13 +249,19 @@ struct Token *_lexer_create_token_label(const char *s, const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
   struct Token *token = NULL;
-  if (!s) {
+  if (!s || *s != '@') {
     return NULL;
   }
+  n_chars++; // the @ at the beginning
+  curr++;
 
-  while (!(isspace(*curr) || *curr == ':')) {
+  while (*curr && (isalnum(*curr) || *curr == '_')) {
     n_chars++;
     curr++;
+  }
+
+  if (n_chars < 2) { // the symbol @ is invalid
+    return NULL;
   }
 
   token = _lexer_create_token_n(TOKEN_LABEL, s, nl, n_chars + 1); // 1 for \0
@@ -277,6 +279,11 @@ struct Token *_lexer_create_token_number(const char *s, const size_t nl) {
   struct Token *token = NULL;
   if (!s) {
     return NULL;
+  }
+
+  if (*curr == '-') { // optional negative number
+    n_chars++;
+    curr++;
   }
 
   while (isdigit(*curr)) {
@@ -302,8 +309,7 @@ struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
     return NULL;
   }
 
-  while (*curr && !isspace(*curr) && *curr != ',' && *curr != '(' &&
-         *curr != ')' && *curr != ';') {
+  while (*curr && isalnum(*curr)) {
     n_chars++;
     curr++;
   }
