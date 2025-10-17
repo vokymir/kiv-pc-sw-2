@@ -21,9 +21,9 @@ int main(void) {
 
   // === Add items ===
   int a = 10, b = 20, c = 30;
-  assert(ds_llist_add(list, &a) != NULL);
-  assert(ds_llist_add(list, &b) != NULL);
-  assert(ds_llist_add(list, &c) != NULL);
+  assert(ds_llist_add(list, (void **)&a) != NULL);
+  assert(ds_llist_add(list, (void **)&b) != NULL);
+  assert(ds_llist_add(list, (void **)&c) != NULL);
   assert(list->count == 3);
   printf("Added 3 items.\n");
 
