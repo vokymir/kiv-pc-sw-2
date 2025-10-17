@@ -3,7 +3,7 @@
 #include "datastruc.h"
 #include "memory.h"
 
-struct DS_Llist *ds_llist_new(const size_t size) {
+struct DS_Llist *ds_llist_create(const size_t size) {
   struct DS_Llist *llist = NULL;
   if (size == 0) {
     return NULL;
@@ -22,34 +22,35 @@ struct DS_Llist *ds_llist_new(const size_t size) {
   return llist;
 }
 
-void *ds_llist_add(struct DS_Llist *llist, void *item) {
-  struct DS_ItLlist *lit = NULL;
-  if (!llist || !item) {
+void *ds_llist_add(struct DS_Llist *llist, void **data_ptr) {
+  struct DS_Llist_Node *node = NULL;
+  if (!llist || !data_ptr || !*data_ptr) {
     return NULL;
   }
 
-  lit = jalloc(sizeof(struct DS_ItLlist));
-  if (!lit) {
+  node = jalloc(sizeof(struct DS_Llist_Node));
+  if (!node) {
     return NULL;
   }
-  lit->data = item;
-  lit->next = NULL;
+  node->data = *data_ptr;
+  *data_ptr = NULL;
+  node->next = NULL;
 
   if (llist->last) {
-    llist->last->next = lit;
+    llist->last->next = node;
   } else { // if last is NULL, count is 0
-    llist->first = lit;
+    llist->first = node;
   }
 
-  llist->last = lit;
+  llist->last = node;
   llist->count++;
-  return lit->data;
+  return node->data;
 }
 
-struct DS_ItLlist *ds_llist_get_it(const struct DS_Llist *llist,
-                                   const size_t idx) {
+struct DS_Llist_Node *ds_llist_get_node(const struct DS_Llist *llist,
+                                        const size_t idx) {
   size_t i = 0;
-  struct DS_ItLlist *current = NULL;
+  struct DS_Llist_Node *current = NULL;
   if (!llist || llist->count <= idx) {
     return NULL;
   }
@@ -63,11 +64,11 @@ struct DS_ItLlist *ds_llist_get_it(const struct DS_Llist *llist,
 }
 
 void *ds_llist_get_data(const struct DS_Llist *llist, const size_t idx) {
-  struct DS_ItLlist *res = NULL;
+  struct DS_Llist_Node *res = NULL;
   if (!llist || llist->count <= idx) {
     return NULL;
   }
-  res = ds_llist_get_it(llist, idx);
+  res = ds_llist_get_node(llist, idx);
   if (!res) {
     return NULL;
   } else {
@@ -76,8 +77,8 @@ void *ds_llist_get_data(const struct DS_Llist *llist, const size_t idx) {
 }
 
 void ds_llist_remove(struct DS_Llist *llist, const size_t idx,
-                     ds_llist_free_it_func fn) {
-  struct DS_ItLlist *to_remove, *replacing = NULL;
+                     ds_llist_free_node_data fn) {
+  struct DS_Llist_Node *to_remove = NULL, *replacing = NULL;
   if (!llist || llist->count == 0 || llist->count <= idx) {
     return;
   }
@@ -92,26 +93,28 @@ void ds_llist_remove(struct DS_Llist *llist, const size_t idx,
     llist->first = replacing;
   } else if (idx == llist->count - 1) { // last item
     to_remove = llist->last;
-    replacing = ds_llist_get_it(llist, idx - 1); // get 1 before
+    replacing = ds_llist_get_node(llist, idx - 1); // get 1 before
     replacing->next = NULL;
     llist->last = replacing;
   } else { // any middle
-    replacing = ds_llist_get_it(llist, idx - 1);
+    replacing = ds_llist_get_node(llist, idx - 1);
     to_remove = replacing->next;
     replacing->next = to_remove->next; // skip to_remove
   }
   llist->count--;
-  if (fn) {
+
+  if (fn) { // If data more complex, use fn.
     fn(to_remove->data);
+  } else {
+    jree(to_remove->data);
   }
-  jree(to_remove->data);
   jree(to_remove);
 
   return;
 }
 
 void ds_llist_foreach(struct DS_Llist *llist, void (*fn)(void *)) {
-  struct DS_ItLlist *current = NULL;
+  struct DS_Llist_Node *current = NULL;
   if (!llist || llist->count == 0 || !fn) {
     return;
   }
@@ -125,25 +128,15 @@ void ds_llist_foreach(struct DS_Llist *llist, void (*fn)(void *)) {
   return;
 }
 
-void ds_llist_free(struct DS_Llist *llist, ds_llist_free_it_func fn) {
-  struct DS_ItLlist *current, *next = NULL;
+void ds_llist_free(struct DS_Llist *llist, ds_llist_free_node_data fn) {
   if (!llist) {
     return;
   }
-  current = llist->first;
 
-  while (current != NULL) { // clear all list items
-    next = current->next;
-    if (fn) {
-      fn(current->data);
-    }
-    jree(current->data);
-    jree(current);
-    current = next;
+  while (llist->count > 0) { // clear all list nodes
+    ds_llist_remove(llist, 0, fn);
   }
 
-  llist->first = NULL;
-  llist->last = NULL;
   jree(llist); // clear list structure
   return;
 }
