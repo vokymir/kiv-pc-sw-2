@@ -41,8 +41,20 @@ const char *lexer_token_type_to_str(enum TokenType type) {
     return "IDENTIFIER";
   case TOKEN_EOF:
     return "EOF";
-  default:
+  case TOKEN_KMA:
+    return "KMA";
+  case TOKEN_OFFSET:
+    return "OFFSET";
+  case TOKEN_QUESTION:
+    return "?";
+  case TOKEN_DATA_TYPE:
+    return "DATA TYPE";
+  case TOKEN_DUP:
+    return "DUP";
+  case TOKEN_UNKNOWN:
     return "UNKNOWN";
+  default:
+    return "ERROR";
   }
 }
 
@@ -85,7 +97,7 @@ int main(void) {
   ds_llist_foreach(tokens, print_token);
 
   // === Free ===
-  ds_llist_free_it_func func = (ds_llist_free_it_func)lexer_free_token_inside;
+  ds_llist_free_node_data func = (ds_llist_free_node_data)lexer_free_token;
   ds_llist_free(tokens, func);
   assert(jemory() == 0);
   printf("Freed tokens, no leaks detected.\n");

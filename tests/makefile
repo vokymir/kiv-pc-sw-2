@@ -34,7 +34,7 @@ OBJ_FILES := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_FILES))
 # --------------------------------------------
 # Default target
 # --------------------------------------------
-.PHONY: test all clean ds
+.PHONY: test all clean
 test: all
 
 # Build + run all tests
@@ -46,11 +46,6 @@ all: $(TEST_BINS)
 		echo "✅ $$t passed."; \
 	done
 	@echo "🎉 All tests passed without leaks or errors!"
-
-# Run only the data structure test
-ds: $(BIN_DIR)/test_datastruc
-	@echo "▶ Running Data Structure test..."
-	$(VALGRIND) $<
 
 # --------------------------------------------
 #  Build rules

@@ -10,16 +10,11 @@ static void print_int(void *data) {
   printf("%d ", *v);
 }
 
-// Optional free function for items with internal pointers (not used here)
-static void free_inner(void *data) {
-  (void)data; // nothing to free
-}
-
 int main(void) {
   printf("Running linked list tests...\n");
 
   // === Create list ===
-  struct DS_Llist *list = ds_llist_new(sizeof(int));
+  struct DS_Llist *list = ds_llist_create(sizeof(int));
   assert(list != NULL);
   assert(list->count == 0);
   printf("Created new list.\n");
@@ -66,7 +61,7 @@ int main(void) {
   printf("Removed last element, list empty.\n");
 
   // === Free ===
-  ds_llist_free(list, free_inner);
+  ds_llist_free(list, NULL);
   assert(jemory() == 0);
   printf("Freed list successfully, no leaks.\n");
 
