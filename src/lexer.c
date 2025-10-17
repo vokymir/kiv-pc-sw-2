@@ -172,7 +172,7 @@ int _lexer_add_token_to_list(struct DS_Llist *tokens_list,
     return 0;
   }
 
-  if (!ds_llist_add(tokens_list, token)) {
+  if (!ds_llist_add(tokens_list, (void **)&token)) {
     lexer_free_token(token);
     return 0;
   }
