@@ -59,9 +59,9 @@ int main(void) {
   assert(list->count == 3);
 
   /* === get items and check values === */
-  int *p0 = llist_get_data(list, 0);
-  int *p1 = llist_get_data(list, 1);
-  int *p2 = llist_get_data(list, 2);
+  int *p0 = llist_get(list, 0);
+  int *p1 = llist_get(list, 1);
+  int *p2 = llist_get(list, 2);
   assert(p0 && p1 && p2);
   assert(*p0 == 10 && *p1 == 20 && *p2 == 30);
 
@@ -73,20 +73,20 @@ int main(void) {
   /* === remove middle === */
   llist_remove(list, 1, NULL); /* will jree() the item at idx 1 */
   assert(list->count == 2);
-  assert(*(int *)llist_get_data(list, 0) == 10);
-  assert(*(int *)llist_get_data(list, 1) == 30);
+  assert(*(int *)llist_get(list, 0) == 10);
+  assert(*(int *)llist_get(list, 1) == 30);
 
   /* === remove first === */
   llist_remove(list, 0, NULL);
   assert(list->count == 1);
-  assert(*(int *)llist_get_data(list, 0) == 30);
+  assert(*(int *)llist_get(list, 0) == 30);
 
   /* === remove last === */
   llist_remove(list, 0, NULL);
   assert(list->count == 0);
 
   /* === invalid index checks === */
-  assert(llist_get_data(list, 0) == NULL);
+  assert(llist_get(list, 0) == NULL);
   llist_remove(list, 0, NULL); /* should be no-op */
 
   /* === test custom destructor for complex payloads === */

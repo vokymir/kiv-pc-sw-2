@@ -14,23 +14,23 @@ static void test_single_character_tokens(void) {
   assert(tokens != NULL);
   assert(tokens->count == 5); // 4 tokens + EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_LPAREN);
   assert(strcmp(token0->value, "(") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_COMMA);
   assert(strcmp(token1->value, ",") == 0);
 
-  struct Token *token2 = llist_get_data(tokens, 2);
+  struct Token *token2 = llist_get(tokens, 2);
   assert(token2->type == TOKEN_RPAREN);
   assert(strcmp(token2->value, ")") == 0);
 
-  struct Token *token3 = llist_get_data(tokens, 3);
+  struct Token *token3 = llist_get(tokens, 3);
   assert(token3->type == TOKEN_QUESTION);
   assert(strcmp(token3->value, "?") == 0);
 
-  struct Token *token4 = llist_get_data(tokens, 4);
+  struct Token *token4 = llist_get(tokens, 4);
   assert(token4->type == TOKEN_EOF);
 
   llist_free(tokens, (llist_free_node_data)lexer_free_token);
@@ -47,19 +47,19 @@ static void test_instructions(void) {
   assert(tokens != NULL);
   assert(tokens->count == 5); // 4 instructions + EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_INSTRUCTION);
   assert(strcmp(token0->value, "MOV") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_INSTRUCTION);
   assert(strcmp(token1->value, "ADD") == 0);
 
-  struct Token *token2 = llist_get_data(tokens, 2);
+  struct Token *token2 = llist_get(tokens, 2);
   assert(token2->type == TOKEN_INSTRUCTION);
   assert(strcmp(token2->value, "HALT") == 0);
 
-  struct Token *token3 = llist_get_data(tokens, 3);
+  struct Token *token3 = llist_get(tokens, 3);
   assert(token3->type == TOKEN_INSTRUCTION);
   assert(strcmp(token3->value, "JMP") == 0);
 
@@ -78,11 +78,11 @@ static void test_registers(void) {
   assert(tokens->count == 7); // 6 registers + EOF
 
   for (size_t i = 0; i < 6; i++) {
-    struct Token *token = llist_get_data(tokens, i);
+    struct Token *token = llist_get(tokens, i);
     assert(token->type == TOKEN_REGISTER);
   }
 
-  struct Token *token_sp = llist_get_data(tokens, 5);
+  struct Token *token_sp = llist_get(tokens, 5);
   assert(strcmp(token_sp->value, "SP") == 0);
 
   llist_free(tokens, (llist_free_node_data)lexer_free_token);
@@ -99,19 +99,19 @@ static void test_numbers(void) {
   assert(tokens != NULL);
   assert(tokens->count == 5); // 4 numbers + EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_NUMBER);
   assert(strcmp(token0->value, "123") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_NUMBER);
   assert(strcmp(token1->value, "-456") == 0);
 
-  struct Token *token2 = llist_get_data(tokens, 2);
+  struct Token *token2 = llist_get(tokens, 2);
   assert(token2->type == TOKEN_NUMBER);
   assert(strcmp(token2->value, "0") == 0);
 
-  struct Token *token3 = llist_get_data(tokens, 3);
+  struct Token *token3 = llist_get(tokens, 3);
   assert(token3->type == TOKEN_NUMBER);
   assert(strcmp(token3->value, "-1") == 0);
 
@@ -129,11 +129,11 @@ static void test_strings(void) {
   assert(tokens != NULL);
   assert(tokens->count == 3); // 2 strings + EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_STRING);
   assert(strcmp(token0->value, "Hello, world!") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_STRING);
   assert(strcmp(token1->value, "Test") == 0);
 
@@ -151,7 +151,7 @@ static void test_empty_string(void) {
   assert(tokens != NULL);
   assert(tokens->count == 2); // 1 empty string + EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_STRING);
   assert(strcmp(token0->value, "") == 0);
 
@@ -169,15 +169,15 @@ static void test_labels(void) {
   assert(tokens != NULL);
   assert(tokens->count == 4); // 3 labels + EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_LABEL);
   assert(strcmp(token0->value, "@start") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_LABEL);
   assert(strcmp(token1->value, "@loop_123") == 0);
 
-  struct Token *token2 = llist_get_data(tokens, 2);
+  struct Token *token2 = llist_get(tokens, 2);
   assert(token2->type == TOKEN_LABEL);
   assert(strcmp(token2->value, "@_end") == 0);
 
@@ -195,15 +195,15 @@ static void test_identifiers(void) {
   assert(tokens != NULL);
   assert(tokens->count == 4); // 3 identifiers + EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_IDENTIFIER);
   assert(strcmp(token0->value, "var1") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_IDENTIFIER);
   assert(strcmp(token1->value, "my_variable") == 0);
 
-  struct Token *token2 = llist_get_data(tokens, 2);
+  struct Token *token2 = llist_get(tokens, 2);
   assert(token2->type == TOKEN_IDENTIFIER);
   assert(strcmp(token2->value, "x") == 0);
 
@@ -221,15 +221,15 @@ static void test_section_markers(void) {
   assert(tokens != NULL);
   assert(tokens->count == 4); // 3 sections + EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_SECTION_DATA);
   assert(strcmp(token0->value, ".DATA") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_SECTION_CODE);
   assert(strcmp(token1->value, ".CODE") == 0);
 
-  struct Token *token2 = llist_get_data(tokens, 2);
+  struct Token *token2 = llist_get(tokens, 2);
   assert(token2->type == TOKEN_KMA);
   assert(strcmp(token2->value, ".KMA") == 0);
 
@@ -248,7 +248,7 @@ static void test_data_types(void) {
   assert(tokens->count == 5); // 4 data types + EOF
 
   for (size_t i = 0; i < 4; i++) {
-    struct Token *token = llist_get_data(tokens, i);
+    struct Token *token = llist_get(tokens, i);
     assert(token->type == TOKEN_DATA_TYPE);
   }
 
@@ -266,11 +266,11 @@ static void test_special_keywords(void) {
   assert(tokens != NULL);
   assert(tokens->count == 3); // 2 keywords + EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_OFFSET);
   assert(strcmp(token0->value, "OFFSET") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_DUP);
   assert(strcmp(token1->value, "DUP") == 0);
 
@@ -288,18 +288,18 @@ static void test_realistic_instruction(void) {
   assert(tokens != NULL);
   assert(tokens->count == 5); // MOV, A, comma, 5, EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_INSTRUCTION);
   assert(strcmp(token0->value, "MOV") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_REGISTER);
   assert(strcmp(token1->value, "A") == 0);
 
-  struct Token *token2 = llist_get_data(tokens, 2);
+  struct Token *token2 = llist_get(tokens, 2);
   assert(token2->type == TOKEN_COMMA);
 
-  struct Token *token3 = llist_get_data(tokens, 3);
+  struct Token *token3 = llist_get(tokens, 3);
   assert(token3->type == TOKEN_NUMBER);
   assert(strcmp(token3->value, "5") == 0);
 
@@ -317,15 +317,15 @@ static void test_data_declaration(void) {
   assert(tokens != NULL);
   assert(tokens->count == 4); // var1, DWORD, ?, EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_IDENTIFIER);
   assert(strcmp(token0->value, "var1") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_DATA_TYPE);
   assert(strcmp(token1->value, "DWORD") == 0);
 
-  struct Token *token2 = llist_get_data(tokens, 2);
+  struct Token *token2 = llist_get(tokens, 2);
   assert(token2->type == TOKEN_QUESTION);
 
   llist_free(tokens, (llist_free_node_data)lexer_free_token);
@@ -343,7 +343,7 @@ static void test_comments(void) {
   // Should only tokenize what's before the semicolon
   assert(tokens->count == 5); // MOV, A, comma, 5, EOF
 
-  struct Token *last_real_token = llist_get_data(tokens, 3);
+  struct Token *last_real_token = llist_get(tokens, 3);
   assert(last_real_token->type == TOKEN_NUMBER);
   assert(strcmp(last_real_token->value, "5") == 0);
 
@@ -361,7 +361,7 @@ static void test_empty_line(void) {
   assert(tokens != NULL);
   assert(tokens->count == 1); // Just EOF
 
-  struct Token *token = llist_get_data(tokens, 0);
+  struct Token *token = llist_get(tokens, 0);
   assert(token->type == TOKEN_EOF);
 
   llist_free(tokens, (llist_free_node_data)lexer_free_token);
@@ -378,7 +378,7 @@ static void test_comment_only_line(void) {
   assert(tokens != NULL);
   assert(tokens->count == 1); // Just EOF
 
-  struct Token *token = llist_get_data(tokens, 0);
+  struct Token *token = llist_get(tokens, 0);
   assert(token->type == TOKEN_EOF);
 
   llist_free(tokens, (llist_free_node_data)lexer_free_token);
@@ -395,7 +395,7 @@ static void test_dup_syntax(void) {
   assert(tokens != NULL);
   assert(tokens->count == 8); // arr, DWORD, 100, DUP, (, ?, ), EOF
 
-  struct Token *token3 = llist_get_data(tokens, 3);
+  struct Token *token3 = llist_get(tokens, 3);
   assert(token3->type == TOKEN_DUP);
   assert(strcmp(token3->value, "DUP") == 0);
 
@@ -413,11 +413,11 @@ static void test_offset_usage(void) {
   assert(tokens != NULL);
   assert(tokens->count == 6); // MOV, A, comma, OFFSET, var1, EOF
 
-  struct Token *token3 = llist_get_data(tokens, 3);
+  struct Token *token3 = llist_get(tokens, 3);
   assert(token3->type == TOKEN_OFFSET);
   assert(strcmp(token3->value, "OFFSET") == 0);
 
-  struct Token *token4 = llist_get_data(tokens, 4);
+  struct Token *token4 = llist_get(tokens, 4);
   assert(token4->type == TOKEN_IDENTIFIER);
   assert(strcmp(token4->value, "var1") == 0);
 
@@ -436,11 +436,11 @@ static void test_instruction_prefixes(void) {
   assert(tokens != NULL);
   assert(tokens->count == 3); // ADD, ADDR, EOF
 
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_INSTRUCTION);
   assert(strcmp(token0->value, "ADD") == 0);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_IDENTIFIER);
   assert(strcmp(token1->value, "ADDR") == 0);
 
@@ -459,10 +459,10 @@ static void test_various_whitespace(void) {
   assert(tokens->count == 5); // MOV, A, comma, 5, EOF
 
   // Verify tokens are correct despite weird whitespace
-  struct Token *token0 = llist_get_data(tokens, 0);
+  struct Token *token0 = llist_get(tokens, 0);
   assert(token0->type == TOKEN_INSTRUCTION);
 
-  struct Token *token1 = llist_get_data(tokens, 1);
+  struct Token *token1 = llist_get(tokens, 1);
   assert(token1->type == TOKEN_REGISTER);
 
   llist_free(tokens, (llist_free_node_data)lexer_free_token);

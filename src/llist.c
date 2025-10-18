@@ -4,6 +4,29 @@
 #include "llist.h"
 #include "memory.h"
 
+// ===== STRUCT DEFINITIONS =====
+
+struct Llist_Node {
+  void *data;
+  struct Llist_Node *next;
+};
+
+struct Llist {
+  struct Llist_Node *first;
+  struct Llist_Node *last;
+  size_t it_size; // size of data in each item
+  size_t count;
+};
+
+// ===== PRIVATE FUNCTION DECLARATIONS =====
+
+// Get node at the index from llist.
+// Return pointer to ItList, or NULL.
+static struct Llist_Node *_llist_get_node(const struct Llist *llist,
+                                          const size_t idx);
+
+// ===== PUBLIC FUNCTIONS =====
+
 struct Llist *llist_create(const size_t size) {
   struct Llist *llist = NULL;
   if (size == 0) {
@@ -50,27 +73,12 @@ cleanup:
   return NULL;
 }
 
-struct Llist_Node *llist_get_node(const struct Llist *llist, const size_t idx) {
-  size_t i = 0;
-  struct Llist_Node *current = NULL;
-  if (!llist || llist->count <= idx) {
-    return NULL;
-  }
-
-  current = llist->first;
-  for (i = 0; i < idx; i++) {
-    current = current->next;
-  }
-
-  return current;
-}
-
-void *llist_get_data(const struct Llist *llist, const size_t idx) {
+void *llist_get(const struct Llist *llist, const size_t idx) {
   struct Llist_Node *res = NULL;
   if (!llist || llist->count <= idx) {
     return NULL;
   }
-  res = llist_get_node(llist, idx);
+  res = _llist_get_node(llist, idx);
   if (!res) {
     return NULL;
   } else {
@@ -95,11 +103,11 @@ void llist_remove(struct Llist *llist, const size_t idx,
     llist->first = replacing;
   } else if (idx == llist->count - 1) { // last item
     to_remove = llist->last;
-    replacing = llist_get_node(llist, idx - 1); // get 1 before
+    replacing = _llist_get_node(llist, idx - 1); // get 1 before
     replacing->next = NULL;
     llist->last = replacing;
   } else { // any middle
-    replacing = llist_get_node(llist, idx - 1);
+    replacing = _llist_get_node(llist, idx - 1);
     to_remove = replacing->next;
     replacing->next = to_remove->next; // skip to_remove
   }
@@ -141,4 +149,22 @@ void llist_free(struct Llist *llist, llist_free_node_data fn) {
 
   jree(llist); // clear list structure
   return;
+}
+
+// ===== PRIVATE FUNCTIONS =====
+
+static struct Llist_Node *_llist_get_node(const struct Llist *llist,
+                                          const size_t idx) {
+  size_t i = 0;
+  struct Llist_Node *current = NULL;
+  if (!llist || llist->count <= idx) {
+    return NULL;
+  }
+
+  current = llist->first;
+  for (i = 0; i < idx; i++) {
+    current = current->next;
+  }
+
+  return current;
 }

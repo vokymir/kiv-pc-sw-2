@@ -4,19 +4,11 @@
 #include <stddef.h>
 
 // Item of Llist
-struct Llist_Node {
-  void *data;
-  struct Llist_Node *next;
-};
+struct Llist_Node;
 
 // Stores size of each items data.
 // IS ZERO INDEXED
-struct Llist {
-  struct Llist_Node *first;
-  struct Llist_Node *last;
-  size_t it_size; // size of data in each item
-  size_t count;
-};
+struct Llist;
 
 // Function which frees data in node. Used only if the data is more complicated
 // than POD, something using pointers, which cannot be freed by simply calling
@@ -24,6 +16,7 @@ struct Llist {
 typedef void (*llist_free_node_data)(void *);
 
 // Create new linked list of items of size (use sizeof()).
+// Size = size of one item stored in the list.
 // Return reference to the Llist or NULL.
 struct Llist *llist_create(const size_t size);
 
@@ -32,13 +25,9 @@ struct Llist *llist_create(const size_t size);
 // If adding fails, the item pointer is not cleared.
 void *llist_add(struct Llist *llist, void **data_ptr);
 
-// Get node at the index from llist.
-// Return pointer to ItList, or NULL.
-struct Llist_Node *llist_get_node(const struct Llist *llist, const size_t idx);
-
 // Get node's data at the index from llist.
 // Return pointer to data, or NULL.
-void *llist_get_data(const struct Llist *llist, const size_t idx);
+void *llist_get(const struct Llist *llist, const size_t idx);
 
 // Remove node at the index from llist.
 // If node->value is more complex and need specialized freeing, supplement
