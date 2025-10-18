@@ -21,13 +21,13 @@ struct Instruction_Descriptor {
 };
 
 // Check if given string is an instruction mnemonic.
-// If len == 0 uses strcpy (word must be NULL-terminated), if len is specified,
-// uses strncpy. Return 1 if is instruction, 0 if not.
+// If len == 0 word must be NULL-terminated, if len is specified,
+// uses it inside strncpy. Return 1 if is instruction, 0 if not.
 int instruction_is_mnemonic(const char *word, const size_t len);
 
 // Find I_D for given mnemonic and types of operands.
-// If len == 0 uses strcpy (word must be NULL-terminated), if len is specified,
-// uses strncpy. Return pointer to descriptor or NULL.
+// If len == 0 word must be NULL-terminated, if len is specified,
+// uses it inside strncpy. Return pointer to descriptor or NULL.
 const struct Instruction_Descriptor *instruction_find(const char *mnemonic,
                                                       const size_t len,
                                                       enum Operand_Type op1,

@@ -1,5 +1,6 @@
 #include "instruction.h"
 #include <stddef.h>
+#include <string.h>
 
 // The complete instruction set of KM processor.
 static const struct Instruction_Descriptor INSTRUCTION_TABLE[] = {
@@ -79,3 +80,27 @@ static const struct Instruction_Descriptor INSTRUCTION_TABLE[] = {
 
 static const size_t INSTRUCTION_COUNT =
     sizeof(INSTRUCTION_TABLE) / sizeof(INSTRUCTION_TABLE[0]);
+
+int instruction_is_mnemonic(const char *word, const size_t len) {
+  size_t i = 0, i_len = 0, w_len = 0;
+  if (!word) {
+    return 0;
+  }
+
+  w_len = len;
+  if (len == 0) {
+    w_len = strlen(word);
+  }
+
+  for (i = 0; i < INSTRUCTION_COUNT; i++) {
+    i_len = strlen(INSTRUCTION_TABLE[i].mnemonic);
+    if (w_len != i_len) {
+      continue;
+    }
+    if (strncmp(INSTRUCTION_TABLE[i].mnemonic, word, w_len) == 0) {
+      return 1;
+    }
+  }
+
+  return 0;
+}

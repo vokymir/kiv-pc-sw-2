@@ -1,12 +1,16 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+// Implementing RAII-like cleanup procedure.
+// If condition is not satisfied, go to label.
+// Label must be at the end of the same function, to work reliably.
 #define GOTO_IF_FAIL(cond, label)                                              \
   do {                                                                         \
     if (!(cond))                                                               \
       goto label;                                                              \
   } while (0)
 
+// If condition is not satisfied, go to label 'cleanup'.
 #define CLEANUP_IF_FAIL(cond) GOTO_IF_FAIL((cond), cleanup)
 
 // Errors specific to main, which the program outputs.
