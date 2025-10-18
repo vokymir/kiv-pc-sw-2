@@ -1,11 +1,13 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define CLEANUP_IF_FAIL(cond, label)                                           \
+#define GOTO_IF_FAIL(cond, label)                                              \
   do {                                                                         \
     if (!(cond))                                                               \
       goto label;                                                              \
   } while (0)
+
+#define CLEANUP_IF_FAIL(cond) GOTO_IF_FAIL((cond), cleanup)
 
 // Errors specific to main, which the program outputs.
 enum Err_Main {

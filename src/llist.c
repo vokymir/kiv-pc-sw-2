@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "common.h"
 #include "llist.h"
 #include "memory.h"
 
@@ -10,9 +11,7 @@ struct Llist *llist_create(const size_t size) {
   }
 
   llist = jalloc(sizeof(*llist));
-  if (!llist) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(llist);
 
   llist->first = NULL;
   llist->last = NULL;
@@ -20,6 +19,9 @@ struct Llist *llist_create(const size_t size) {
   llist->count = 0;
 
   return llist;
+
+cleanup:
+  return NULL;
 }
 
 void *llist_add(struct Llist *llist, void **data_ptr) {
@@ -29,9 +31,7 @@ void *llist_add(struct Llist *llist, void **data_ptr) {
   }
 
   node = jalloc(sizeof(*node));
-  if (!node) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(node);
   node->data = *data_ptr;
   *data_ptr = NULL;
   node->next = NULL;
@@ -45,6 +45,9 @@ void *llist_add(struct Llist *llist, void **data_ptr) {
   llist->last = node;
   llist->count++;
   return node->data;
+
+cleanup:
+  return NULL;
 }
 
 struct Llist_Node *llist_get_node(const struct Llist *llist, const size_t idx) {

@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "common.h"
 #include "lexer.h"
 #include "llist.h"
 #include "memory.h"
@@ -88,9 +89,7 @@ struct Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   }
 
   tokens = llist_create(sizeof(struct Token));
-  if (!tokens) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(tokens);
 
   len = strlen(line);
 
@@ -98,21 +97,21 @@ struct Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   while (_lexer_skip_to_next_token(line, len, &pos)) {
     token = _lexer_create_next_token(line, len, &pos, nl);
 
-    if (!_lexer_add_token_to_list(tokens, token)) {
-      llist_free(tokens, func);
-      return NULL;
-    }
+    CLEANUP_IF_FAIL(_lexer_add_token_to_list(tokens, token));
     token = NULL;
   }
 
   // Add EOF to the end
   token = _lexer_create_token(TOKEN_EOF, "", nl);
-  if (!_lexer_add_token_to_list(tokens, token)) {
-    llist_free(tokens, func);
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(_lexer_add_token_to_list(tokens, token));
 
   return tokens;
+
+cleanup:
+  if (tokens) {
+    llist_free(tokens, func);
+  }
+  return NULL;
 }
 
 void lexer_free_token(struct Token *token) {
@@ -261,57 +260,60 @@ static int _lexer_add_token_to_list(struct Llist *tokens_list,
     return 0;
   }
 
-  if (!token->value) {
-    lexer_free_token(token);
-    return 0;
-  }
+  CLEANUP_IF_FAIL(token->value);
 
-  if (!llist_add(tokens_list, (void **)&token)) {
-    lexer_free_token(token);
-    return 0;
-  }
+  CLEANUP_IF_FAIL(llist_add(tokens_list, (void **)&token));
 
   return 1;
+
+cleanup:
+  lexer_free_token(token);
+  return 0;
 }
 
 static struct Token *_lexer_create_token(const enum Token_Type type,
                                          const char *value, const size_t nl) {
   size_t val_len = strlen(value) + 1;
   struct Token *token = jalloc(sizeof(struct Token));
-  if (!token) {
-    return NULL;
-  }
+
+  CLEANUP_IF_FAIL(token);
+
   token->value = jalloc(sizeof(char) * val_len);
-  if (!token->value) {
-    jree(token);
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(token->value);
 
   token->type = type;
   token->line_number = nl;
   memcpy(token->value, value, val_len);
 
   return token;
+
+cleanup:
+  if (token) {
+    jree(token);
+  }
+  return NULL;
 }
 
 static struct Token *_lexer_create_token_n(const enum Token_Type type,
                                            const char *value, const size_t nl,
                                            const size_t len) {
   struct Token *token = jalloc(sizeof(struct Token));
-  if (!token) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(token);
+
   token->value = jalloc(sizeof(char) * len);
-  if (!token->value) {
-    jree(token);
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(token->value);
 
   token->type = type;
   token->line_number = nl;
   memcpy(token->value, value, len);
 
   return token;
+
+cleanup:
+  if (token) {
+    jree(token);
+  }
+  return NULL;
 }
 
 static struct Token *_lexer_create_token_string(const char *s,
@@ -319,9 +321,7 @@ static struct Token *_lexer_create_token_string(const char *s,
   size_t n_chars = 0;
   const char *curr = s;
   struct Token *token = NULL;
-  if (!s) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(s);
 
   while (*curr && *curr != '"') {
     n_chars++;
@@ -332,21 +332,20 @@ static struct Token *_lexer_create_token_string(const char *s,
   }
 
   token = _lexer_create_token_n(TOKEN_STRING, s, nl, n_chars + 1); // 1 for \0
-  if (!token) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(token);
   token->value[n_chars] = '\0';
 
   return token;
+
+cleanup:
+  return NULL;
 }
 
 static struct Token *_lexer_create_token_label(const char *s, const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
   struct Token *token = NULL;
-  if (!s || *s != '@') {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(s && *s == '@');
   n_chars++; // the @ at the beginning
   curr++;
 
@@ -355,17 +354,16 @@ static struct Token *_lexer_create_token_label(const char *s, const size_t nl) {
     curr++;
   }
 
-  if (n_chars < 2) { // the symbol @ is invalid
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(n_chars >= 2); // too little characters
 
   token = _lexer_create_token_n(TOKEN_LABEL, s, nl, n_chars + 1); // 1 for \0
-  if (!token) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(token);
   token->value[n_chars] = '\0';
 
   return token;
+
+cleanup:
+  return NULL;
 }
 
 static struct Token *_lexer_create_token_number(const char *s,
@@ -373,9 +371,7 @@ static struct Token *_lexer_create_token_number(const char *s,
   size_t n_chars = 0;
   const char *curr = s;
   struct Token *token = NULL;
-  if (!s) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(s);
 
   if (*curr == '-') { // optional negative number
     n_chars++;
@@ -388,12 +384,13 @@ static struct Token *_lexer_create_token_number(const char *s,
   }
 
   token = _lexer_create_token_n(TOKEN_NUMBER, s, nl, n_chars + 1); // 1 for \0
-  if (!token) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(token);
   token->value[n_chars] = '\0';
 
   return token;
+
+cleanup:
+  return NULL;
 }
 
 static struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
@@ -401,9 +398,7 @@ static struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
   const char *curr = s;
   struct Token *token = NULL;
   enum Token_Type type = TOKEN_UNKNOWN;
-  if (!s) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(s);
 
   if (*curr && *curr == '.') {
     n_chars++;
@@ -417,12 +412,13 @@ static struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
 
   type = _lexer_classify_word(s, n_chars);
   token = _lexer_create_token_n(type, s, nl, n_chars + 1); // 1 for \0
-  if (!token) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(token);
   token->value[n_chars] = '\0';
 
   return token;
+
+cleanup:
+  return NULL;
 }
 
 static enum Token_Type _lexer_classify_word(const char *word,
