@@ -48,7 +48,7 @@ void symtab_free(struct Symbol_Table *table) {
     return;
   }
   if (table->symbols) {
-    llist_free(table->symbols, NULL);
+    llist_free(table->symbols, (llist_free_node_data)_symtab_free_symbol);
   }
   jree(table);
   return;
@@ -87,7 +87,7 @@ struct Symbol *symtab_find(const struct Symbol_Table *table, const char *name) {
 
   for (i = 0; i < table->symbols->count; i++) { // iterate all symbols
     symbol = llist_get(table->symbols, i);
-    if (symbol && symbol->name && strcmp(symbol->name, name)) {
+    if (symbol && symbol->name && strcmp(symbol->name, name) == 0) {
       return symbol; // found with the same name
     }
     symbol = NULL;

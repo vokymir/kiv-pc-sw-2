@@ -81,7 +81,6 @@ static enum Token_Type _lexer_classify_word(const char *word, const size_t num);
 struct Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   struct Llist *tokens = NULL;
   struct Token *token = NULL;
-  llist_free_node_data func = (llist_free_node_data)lexer_free_token;
   size_t pos = 0;
   size_t len = 0;
 
@@ -110,7 +109,7 @@ struct Llist *lexer_tokenize_line(const char *line, const size_t nl) {
 
 cleanup:
   if (tokens) {
-    llist_free(tokens, func);
+    llist_free(tokens, (llist_free_node_data)lexer_free_token);
   }
   return NULL;
 }
