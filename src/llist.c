@@ -11,13 +11,6 @@ struct Llist_Node {
   struct Llist_Node *next;
 };
 
-struct Llist {
-  struct Llist_Node *first;
-  struct Llist_Node *last;
-  size_t it_size; // size of data in each item
-  size_t count;
-};
-
 // ===== PRIVATE FUNCTION DECLARATIONS =====
 
 // Get node at the index from llist.
@@ -55,6 +48,7 @@ void *llist_add(struct Llist *llist, void **data_ptr) {
 
   node = jalloc(sizeof(*node));
   CLEANUP_IF_FAIL(node);
+
   node->data = *data_ptr;
   *data_ptr = NULL;
   node->next = NULL;

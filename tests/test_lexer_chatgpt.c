@@ -71,9 +71,9 @@ int main(void) {
   printf("Tokenized successfully, token count = %zu\n", tokens->count);
 
   // === Inspect tokens ===
-  struct Token *t0 = (struct Token *)llist_get_data(tokens, 0);
-  struct Token *t1 = (struct Token *)llist_get_data(tokens, 1);
-  struct Token *t2 = (struct Token *)llist_get_data(tokens, 2);
+  struct Token *t0 = (struct Token *)llist_get(tokens, 0);
+  struct Token *t1 = (struct Token *)llist_get(tokens, 1);
+  struct Token *t2 = (struct Token *)llist_get(tokens, 2);
 
   assert(t0 && t1 && t2);
   assert(t0->type == TOKEN_INSTRUCTION);
@@ -87,8 +87,7 @@ int main(void) {
   printf("First 3 tokens verified (MOV, A, ,)\n");
 
   // === Last token should be EOF ===
-  struct Token *last =
-      (struct Token *)llist_get_data(tokens, tokens->count - 1);
+  struct Token *last = (struct Token *)llist_get(tokens, tokens->count - 1);
   assert(last && last->type == TOKEN_EOF);
   printf("EOF token present.\n");
 

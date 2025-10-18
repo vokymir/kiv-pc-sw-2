@@ -8,7 +8,12 @@ struct Llist_Node;
 
 // Stores size of each items data.
 // IS ZERO INDEXED
-struct Llist;
+struct Llist {
+  struct Llist_Node *first;
+  struct Llist_Node *last;
+  size_t it_size; // size of data in each item
+  size_t count;
+};
 
 // Function which frees data in node. Used only if the data is more complicated
 // than POD, something using pointers, which cannot be freed by simply calling
@@ -21,8 +26,8 @@ typedef void (*llist_free_node_data)(void *);
 struct Llist *llist_create(const size_t size);
 
 // Add new item to the Llist. List gains ownership of the item and rewoke it
-// from the caller. Return pointer to newly created ItLlist->data, or NULL.
-// If adding fails, the item pointer is not cleared.
+// from the caller. Return pointer to newly created nodes data, or NULL.
+// If adding fails, the data pointer is not cleared, caller retains ownership.
 void *llist_add(struct Llist *llist, void **data_ptr);
 
 // Get node's data at the index from llist.
