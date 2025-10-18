@@ -50,8 +50,8 @@ int _lexer_skip_to_next_token(const char *line, const size_t len, size_t *pos);
 // Create next token, starting on pos.
 // Update pos to one char after token characters.
 // Return Token on success, NULL on failure.
-struct Token *_lexer_create_next_token(const char *line, size_t len,
-                                       size_t *pos, size_t nl);
+struct Token *_lexer_create_next_token(const char *line, const size_t len,
+                                       size_t *pos, const size_t nl);
 
 // Add a token to the list.
 // Return 1 on success, 0 on failure.

@@ -62,29 +62,35 @@ void lexer_free_token(struct Token *token) {
 }
 
 int _lexer_skip_to_next_token(const char *line, const size_t len, size_t *pos) {
-  if (!line || !pos || len == 0 || len <= *pos) {
+  if (!line || !pos) {
     return 0;
   }
 
-  while (*pos < len && isspace(line[*pos])) { // skip whitespaces
+  if (*pos >= len) {
+    *pos = len;
+    return 0;
+  }
+
+  while (*pos < len && isspace((unsigned char)line[*pos])) { // skip whitespaces
     (*pos)++;
   }
 
-  if (*pos > len) { // reached EO Line
+  if (*pos >= len) { // reached EO Line
+    *pos = len;
     return 0;
   }
 
   if (line[*pos] == ';') { // reached comments
     return 0;
   }
-
   return 1; // found something meaningful
 }
 
-struct Token *_lexer_create_next_token(const char *line, size_t len,
-                                       size_t *pos, size_t nl) {
+struct Token *_lexer_create_next_token(const char *line, const size_t len,
+                                       size_t *pos, const size_t nl) {
   struct Token *token = NULL;
   char current = 0;
+  size_t jmp = 0;
   if (!line || !pos || len == 0 || len <= *pos) {
     return NULL;
   }
@@ -120,9 +126,13 @@ struct Token *_lexer_create_next_token(const char *line, size_t len,
   if (current == '"') {
     token = _lexer_create_token_string(&line[*pos + 1], nl);
     if (token && token->value) {
-      (*pos) += strlen(token->value) + 2; // +2 for the quotes on begin/end
+      jmp = strlen(token->value); // string literal can be 0-length
+      (*pos) += jmp + 2;          // +2 for the quotes on begin/end
     } else {
-      (*pos)++; // an error occured, skip the opening quote to avoid inf loop
+      if (token) {
+        jree(token);
+      }
+      return NULL;
     }
     return token;
   }
@@ -130,8 +140,13 @@ struct Token *_lexer_create_next_token(const char *line, size_t len,
   // Label (starts with @)
   if (current == '@') {
     token = _lexer_create_token_label(&line[*pos], nl);
-    if (token && token->value) {
-      (*pos) += strlen(token->value);
+    if (token && token->value && (jmp = strlen(token->value)) > 0) {
+      (*pos) += jmp;
+    } else {
+      if (token) {
+        jree(token);
+      }
+      return NULL;
     }
     return token;
   }
@@ -140,8 +155,13 @@ struct Token *_lexer_create_next_token(const char *line, size_t len,
   if (isdigit(current) ||
       (current == '-' && *pos + 1 < len && isdigit(line[*pos + 1]))) {
     token = _lexer_create_token_number(&line[*pos], nl);
-    if (token && token->value) {
-      (*pos) += strlen(token->value);
+    if (token && token->value && (jmp = strlen(token->value)) > 0) {
+      (*pos) += jmp;
+    } else {
+      if (token) {
+        jree(token);
+      }
+      return NULL;
     }
     return token;
   }
@@ -149,8 +169,13 @@ struct Token *_lexer_create_next_token(const char *line, size_t len,
   // Word (instruction, register, keyword, or identifier)
   if (isalpha(current) || current == '.') {
     token = _lexer_create_token_word(&line[*pos], nl);
-    if (token && token->value) {
-      (*pos) += strlen(token->value);
+    if (token && token->value && (jmp = strlen(token->value)) > 0) {
+      (*pos) += jmp;
+    } else {
+      if (token) {
+        jree(token);
+      }
+      return NULL;
     }
     return token;
   }
@@ -309,7 +334,12 @@ struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
     return NULL;
   }
 
-  while (*curr && isalnum(*curr)) {
+  if (*curr && *curr == '.') {
+    n_chars++;
+    curr++;
+  }
+
+  while (*curr && (isalnum(*curr) || *curr == '_')) {
     n_chars++;
     curr++;
   }
