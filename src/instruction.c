@@ -1,6 +1,7 @@
-#include "instruction.h"
 #include <stddef.h>
 #include <string.h>
+
+#include "instruction.h"
 
 // The complete instruction set of KM processor.
 static const struct Instruction_Descriptor INSTRUCTION_TABLE[] = {
