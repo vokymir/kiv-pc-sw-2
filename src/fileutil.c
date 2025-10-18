@@ -96,6 +96,6 @@ int fu_can_write_parent_dir(const char *path) {
     res = fu_can_write_dir(".");
   }
 
-  free(dup);
+  jree(dup);
   return res;
 }
