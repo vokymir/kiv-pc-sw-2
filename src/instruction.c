@@ -95,12 +95,62 @@ int instruction_is_mnemonic(const char *word, const size_t len) {
   for (i = 0; i < INSTRUCTION_COUNT; i++) {
     i_len = strlen(INSTRUCTION_TABLE[i].mnemonic);
     if (w_len != i_len) {
-      continue;
+      continue; // skip different-length instructions
     }
     if (strncmp(INSTRUCTION_TABLE[i].mnemonic, word, w_len) == 0) {
-      return 1;
+      return 1; // found match
     }
   }
 
   return 0;
+}
+
+const struct Instruction_Descriptor *instruction_find(const char *mnemonic,
+                                                      const size_t len,
+                                                      enum Operand_Type op1,
+                                                      enum Operand_Type op2) {
+  size_t i = 0, i_len = 0, w_len = 0;
+  if (!mnemonic) {
+    return NULL;
+  }
+
+  w_len = len;
+  if (len == 0) {
+    w_len = strlen(mnemonic);
+  }
+
+  for (i = 0; i < INSTRUCTION_COUNT; i++) {
+    i_len = strlen(INSTRUCTION_TABLE[i].mnemonic);
+    if (w_len != i_len) {
+      continue; // skip different-length instructions
+    }
+    if (strncmp(INSTRUCTION_TABLE[i].mnemonic, mnemonic, w_len) == 0 &&
+        INSTRUCTION_TABLE[i].operand1 == op1 &&
+        INSTRUCTION_TABLE[i].operand2 == op2) {
+      return &INSTRUCTION_TABLE[i]; // Has the same mnemonic & both operands
+    }
+  }
+
+  return NULL; // didn't found match
+}
+
+size_t instruction_get_encoded_size(const struct Instruction_Descriptor *desc) {
+  size_t size = 1; // Always at least opcode byte
+  if (!desc) {
+    return 0;
+  }
+
+  if (desc->operand1 == OP_REG) {
+    size += 1; // sizes of REG or immediate values are defined in assignment
+  } else if (desc->operand1 == OP_IMM32) {
+    size += 4;
+  }
+
+  if (desc->operand2 == OP_REG) {
+    size += 1;
+  } else if (desc->operand2 == OP_IMM32) {
+    size += 4;
+  }
+
+  return size;
 }
