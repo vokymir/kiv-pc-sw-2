@@ -54,14 +54,4 @@ int args_config_init(struct Config *config, const char *target);
 // which is at the end of Main.
 void args_config_free(struct Config *config);
 
-// ===== (private) HELPERS =====
-
-// Parse one argument. Set flags or target path in config.
-// Return ERR_NO_ERROR on success.
-enum Err_Main _args_parse_arg(const char *arg, struct Config *config);
-
-// Change extension from '.kas' to '.kmx'.
-// Return 1 on success, 0 on failure.
-int _args_change_extension(char *path);
-
 #endif

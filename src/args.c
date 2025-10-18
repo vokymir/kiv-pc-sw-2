@@ -8,6 +8,16 @@
 #include "fileutil.h"
 #include "memory.h"
 
+// ===== PRIVATE FUNCTION DECLARATIONS =====
+
+// Parse one argument. Set flags or target path in config.
+// Return ERR_NO_ERROR on success.
+static enum Err_Main _args_parse_arg(const char *arg, struct Config *config);
+
+// Change extension from '.kas' to '.kmx'.
+// Return 1 on success, 0 on failure.
+static int _args_change_extension(char *path);
+
 // ===== PARSING ARGS =====
 
 enum Err_Main args_parse(const int argc, const char **argv,
@@ -140,9 +150,9 @@ void args_config_free(struct Config *config) {
   jree_clear((void **)&config->target); // free & clear the config->target
 }
 
-// ===== (private) HELPERS =====
+// ===== PRIVATE FUNCTIONS =====
 
-enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
+static enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
   if (strcmp(arg, "-v") == 0) { // is verbose?
     config->flag_verbose = 1;
   } else if (strcmp(arg, "-i") == 0) { // Is instruction?
@@ -155,7 +165,7 @@ enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
   return ERR_NO_ERROR;
 }
 
-int _args_change_extension(char *path) {
+static int _args_change_extension(char *path) {
   char *begin = NULL;
   if (!path) {
     return 0;
