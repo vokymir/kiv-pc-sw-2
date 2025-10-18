@@ -1,15 +1,15 @@
 #include <string.h>
 
-#include "datastruc.h"
+#include "llist.h"
 #include "memory.h"
 
-struct DS_Llist *ds_llist_create(const size_t size) {
-  struct DS_Llist *llist = NULL;
+struct Llist *llist_create(const size_t size) {
+  struct Llist *llist = NULL;
   if (size == 0) {
     return NULL;
   }
 
-  llist = jalloc(sizeof(struct DS_Llist));
+  llist = jalloc(sizeof(*llist));
   if (!llist) {
     return NULL;
   }
@@ -22,13 +22,13 @@ struct DS_Llist *ds_llist_create(const size_t size) {
   return llist;
 }
 
-void *ds_llist_add(struct DS_Llist *llist, void **data_ptr) {
-  struct DS_Llist_Node *node = NULL;
+void *llist_add(struct Llist *llist, void **data_ptr) {
+  struct Llist_Node *node = NULL;
   if (!llist || !data_ptr || !*data_ptr) {
     return NULL;
   }
 
-  node = jalloc(sizeof(struct DS_Llist_Node));
+  node = jalloc(sizeof(*node));
   if (!node) {
     return NULL;
   }
@@ -47,10 +47,9 @@ void *ds_llist_add(struct DS_Llist *llist, void **data_ptr) {
   return node->data;
 }
 
-struct DS_Llist_Node *ds_llist_get_node(const struct DS_Llist *llist,
-                                        const size_t idx) {
+struct Llist_Node *llist_get_node(const struct Llist *llist, const size_t idx) {
   size_t i = 0;
-  struct DS_Llist_Node *current = NULL;
+  struct Llist_Node *current = NULL;
   if (!llist || llist->count <= idx) {
     return NULL;
   }
@@ -63,12 +62,12 @@ struct DS_Llist_Node *ds_llist_get_node(const struct DS_Llist *llist,
   return current;
 }
 
-void *ds_llist_get_data(const struct DS_Llist *llist, const size_t idx) {
-  struct DS_Llist_Node *res = NULL;
+void *llist_get_data(const struct Llist *llist, const size_t idx) {
+  struct Llist_Node *res = NULL;
   if (!llist || llist->count <= idx) {
     return NULL;
   }
-  res = ds_llist_get_node(llist, idx);
+  res = llist_get_node(llist, idx);
   if (!res) {
     return NULL;
   } else {
@@ -76,9 +75,9 @@ void *ds_llist_get_data(const struct DS_Llist *llist, const size_t idx) {
   }
 }
 
-void ds_llist_remove(struct DS_Llist *llist, const size_t idx,
-                     ds_llist_free_node_data fn) {
-  struct DS_Llist_Node *to_remove = NULL, *replacing = NULL;
+void llist_remove(struct Llist *llist, const size_t idx,
+                  llist_free_node_data fn) {
+  struct Llist_Node *to_remove = NULL, *replacing = NULL;
   if (!llist || llist->count == 0 || llist->count <= idx) {
     return;
   }
@@ -93,11 +92,11 @@ void ds_llist_remove(struct DS_Llist *llist, const size_t idx,
     llist->first = replacing;
   } else if (idx == llist->count - 1) { // last item
     to_remove = llist->last;
-    replacing = ds_llist_get_node(llist, idx - 1); // get 1 before
+    replacing = llist_get_node(llist, idx - 1); // get 1 before
     replacing->next = NULL;
     llist->last = replacing;
   } else { // any middle
-    replacing = ds_llist_get_node(llist, idx - 1);
+    replacing = llist_get_node(llist, idx - 1);
     to_remove = replacing->next;
     replacing->next = to_remove->next; // skip to_remove
   }
@@ -113,8 +112,8 @@ void ds_llist_remove(struct DS_Llist *llist, const size_t idx,
   return;
 }
 
-void ds_llist_foreach(struct DS_Llist *llist, void (*fn)(void *)) {
-  struct DS_Llist_Node *current = NULL;
+void llist_foreach(struct Llist *llist, void (*fn)(void *)) {
+  struct Llist_Node *current = NULL;
   if (!llist || llist->count == 0 || !fn) {
     return;
   }
@@ -128,13 +127,13 @@ void ds_llist_foreach(struct DS_Llist *llist, void (*fn)(void *)) {
   return;
 }
 
-void ds_llist_free(struct DS_Llist *llist, ds_llist_free_node_data fn) {
+void llist_free(struct Llist *llist, llist_free_node_data fn) {
   if (!llist) {
     return;
   }
 
   while (llist->count > 0) { // clear all list nodes
-    ds_llist_remove(llist, 0, fn);
+    llist_remove(llist, 0, fn);
   }
 
   jree(llist); // clear list structure

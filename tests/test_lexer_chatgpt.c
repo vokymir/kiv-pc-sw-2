@@ -1,5 +1,5 @@
-#include "../src/datastruc.h"
 #include "../src/lexer.h"
+#include "../src/llist.h"
 #include "../src/memory.h"
 #include <assert.h>
 #include <stdio.h>
@@ -65,15 +65,15 @@ int main(void) {
   size_t nl = 1;
 
   // === Tokenize ===
-  struct DS_Llist *tokens = lexer_tokenize_line(line, nl);
+  struct Llist *tokens = lexer_tokenize_line(line, nl);
   assert(tokens != NULL);
   assert(tokens->count > 0);
   printf("Tokenized successfully, token count = %zu\n", tokens->count);
 
   // === Inspect tokens ===
-  struct Token *t0 = (struct Token *)ds_llist_get_data(tokens, 0);
-  struct Token *t1 = (struct Token *)ds_llist_get_data(tokens, 1);
-  struct Token *t2 = (struct Token *)ds_llist_get_data(tokens, 2);
+  struct Token *t0 = (struct Token *)llist_get_data(tokens, 0);
+  struct Token *t1 = (struct Token *)llist_get_data(tokens, 1);
+  struct Token *t2 = (struct Token *)llist_get_data(tokens, 2);
 
   assert(t0 && t1 && t2);
   assert(t0->type == TOKEN_INSTRUCTION);
@@ -88,17 +88,17 @@ int main(void) {
 
   // === Last token should be EOF ===
   struct Token *last =
-      (struct Token *)ds_llist_get_data(tokens, tokens->count - 1);
+      (struct Token *)llist_get_data(tokens, tokens->count - 1);
   assert(last && last->type == TOKEN_EOF);
   printf("EOF token present.\n");
 
   // === Optional print ===
   printf("Token list:\n");
-  ds_llist_foreach(tokens, print_token);
+  llist_foreach(tokens, print_token);
 
   // === Free ===
-  ds_llist_free_node_data func = (ds_llist_free_node_data)lexer_free_token;
-  ds_llist_free(tokens, func);
+  llist_free_node_data func = (llist_free_node_data)lexer_free_token;
+  llist_free(tokens, func);
   assert(jemory() == 0);
   printf("Freed tokens, no leaks detected.\n");
 

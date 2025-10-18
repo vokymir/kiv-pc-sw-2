@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "datastruc.h"
+#include "llist.h"
 
 // All possible types of token.
 enum TokenType {
@@ -37,7 +37,7 @@ struct Token {
 // Tokenize given line (ended by \0).
 // Return pointer to list of tokens, ended by TOKEN_EOF.
 // Return NULL on failure.
-struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl);
+struct Llist *lexer_tokenize_line(const char *line, const size_t nl);
 
 // Free tokens insides, then free the token itself;
 void lexer_free_token(struct Token *token);
@@ -56,7 +56,7 @@ struct Token *_lexer_create_next_token(const char *line, const size_t len,
 // Add a token to the list.
 // Return 1 on success, 0 on failure.
 // On failure, the token IS FREED.
-int _lexer_add_token_to_list(struct DS_Llist *tokens_list, struct Token *token);
+int _lexer_add_token_to_list(struct Llist *tokens_list, struct Token *token);
 
 // Create token with given parameters, memcpy value using strlen().
 // Return pointer to token on success, NULL on failure.

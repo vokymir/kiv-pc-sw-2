@@ -2,8 +2,8 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "datastruc.h"
 #include "lexer.h"
+#include "llist.h"
 #include "memory.h"
 
 #define IDENTIFY(ch, type)                                                     \
@@ -11,10 +11,10 @@
     return (type);                                                             \
   }
 
-struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
-  struct DS_Llist *tokens = NULL;
+struct Llist *lexer_tokenize_line(const char *line, const size_t nl) {
+  struct Llist *tokens = NULL;
   struct Token *token = NULL;
-  ds_llist_free_node_data func = (ds_llist_free_node_data)lexer_free_token;
+  llist_free_node_data func = (llist_free_node_data)lexer_free_token;
   size_t pos = 0;
   size_t len = 0;
 
@@ -22,7 +22,7 @@ struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
     return NULL;
   }
 
-  tokens = ds_llist_create(sizeof(struct Token));
+  tokens = llist_create(sizeof(struct Token));
   if (!tokens) {
     return NULL;
   }
@@ -34,7 +34,7 @@ struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
     token = _lexer_create_next_token(line, len, &pos, nl);
 
     if (!_lexer_add_token_to_list(tokens, token)) {
-      ds_llist_free(tokens, func);
+      llist_free(tokens, func);
       return NULL;
     }
     token = NULL;
@@ -43,7 +43,7 @@ struct DS_Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   // Add EOF to the end
   token = _lexer_create_token(TOKEN_EOF, "", nl);
   if (!_lexer_add_token_to_list(tokens, token)) {
-    ds_llist_free(tokens, func);
+    llist_free(tokens, func);
     return NULL;
   }
 
@@ -186,8 +186,7 @@ struct Token *_lexer_create_next_token(const char *line, const size_t len,
   return token;
 }
 
-int _lexer_add_token_to_list(struct DS_Llist *tokens_list,
-                             struct Token *token) {
+int _lexer_add_token_to_list(struct Llist *tokens_list, struct Token *token) {
   if (!tokens_list || !token) {
     return 0;
   }
@@ -197,7 +196,7 @@ int _lexer_add_token_to_list(struct DS_Llist *tokens_list,
     return 0;
   }
 
-  if (!ds_llist_add(tokens_list, (void **)&token)) {
+  if (!llist_add(tokens_list, (void **)&token)) {
     lexer_free_token(token);
     return 0;
   }
