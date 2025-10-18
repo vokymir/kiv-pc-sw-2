@@ -6,10 +6,75 @@
 #include "llist.h"
 #include "memory.h"
 
+// ===== MACROS =====
+
 #define IDENTIFY(ch, type)                                                     \
   if (num == sizeof(ch) - 1 && strncmp(word, (ch), num) == 0) {                \
     return (type);                                                             \
   }
+
+// ===== PRIVATE FUNCTION DECLARATIONS  =====
+
+// Skip all whitespaces or comments in line by INCREMENTING the pos value.
+// Return 1 if there is a token waiting to be parsed on pos.
+// Return 0 if end of line was reached.
+static int _lexer_skip_to_next_token(const char *line, const size_t len,
+                                     size_t *pos);
+
+// Create next token, starting on pos.
+// Update pos to one char after token characters.
+// Return Token on success, NULL on failure.
+static struct Token *_lexer_create_next_token(const char *line,
+                                              const size_t len, size_t *pos,
+                                              const size_t nl);
+
+// Add a token to the list.
+// Return 1 on success, 0 on failure.
+// On failure, the token IS FREED.
+static int _lexer_add_token_to_list(struct Llist *tokens_list,
+                                    struct Token *token);
+
+// Create token with given parameters, memcpy value using strlen().
+// Return pointer to token on success, NULL on failure.
+// Caller must free.
+static struct Token *_lexer_create_token(const enum Token_Type type,
+                                         const char *value, const size_t nl);
+
+// Create token with given parameters, memcpy the value using len. If you want
+// to end it eg by \0, you must pass (real-len+1) and manually rewrite it.
+// Return pointer to token on success, NULL on failure. Caller must free.
+static struct Token *_lexer_create_token_n(const enum Token_Type type,
+                                           const char *value, const size_t nl,
+                                           const size_t len);
+
+// The string in DATA segments. Takes pointer AFTER first QUOTE.
+// Return pointer to token on success, NULL on failure.
+// Caller must free.
+static struct Token *_lexer_create_token_string(const char *s, const size_t nl);
+
+// Create token from pointer to the start of label (starting with @).
+// Take pointer to the '@'.
+// Return pointer to Token or NULL.
+// Caller must free.
+static struct Token *_lexer_create_token_label(const char *s, const size_t nl);
+
+// Create token for static number, found wherever in code.
+// Take pointer to first digit (or minus sign).
+// Return pointer to Token or NULL.
+// Caller must free.
+static struct Token *_lexer_create_token_number(const char *s, const size_t nl);
+
+// Distinguish between different words and return which one it is.
+// Take pointer to first letter.
+// Return pointer to Token or NULL.
+// Caller must free.
+static struct Token *_lexer_create_token_word(const char *s, const size_t nl);
+
+// Classify the first <num> number of characters of word.
+// Return the adequate TokenType, or TOKEN_UNKNOWN if any error.
+static enum Token_Type _lexer_classify_word(const char *word, const size_t num);
+
+// ===== PUBLIC FUNCTIONS =====
 
 struct Llist *lexer_tokenize_line(const char *line, const size_t nl) {
   struct Llist *tokens = NULL;
@@ -61,7 +126,10 @@ void lexer_free_token(struct Token *token) {
   return;
 }
 
-int _lexer_skip_to_next_token(const char *line, const size_t len, size_t *pos) {
+// ===== PRIVATE FUNCTIONS =====
+
+static int _lexer_skip_to_next_token(const char *line, const size_t len,
+                                     size_t *pos) {
   if (!line || !pos) {
     return 0;
   }
@@ -86,8 +154,9 @@ int _lexer_skip_to_next_token(const char *line, const size_t len, size_t *pos) {
   return 1; // found something meaningful
 }
 
-struct Token *_lexer_create_next_token(const char *line, const size_t len,
-                                       size_t *pos, const size_t nl) {
+static struct Token *_lexer_create_next_token(const char *line,
+                                              const size_t len, size_t *pos,
+                                              const size_t nl) {
   struct Token *token = NULL;
   char current = 0;
   size_t jmp = 0;
@@ -186,7 +255,8 @@ struct Token *_lexer_create_next_token(const char *line, const size_t len,
   return token;
 }
 
-int _lexer_add_token_to_list(struct Llist *tokens_list, struct Token *token) {
+static int _lexer_add_token_to_list(struct Llist *tokens_list,
+                                    struct Token *token) {
   if (!tokens_list || !token) {
     return 0;
   }
@@ -204,8 +274,8 @@ int _lexer_add_token_to_list(struct Llist *tokens_list, struct Token *token) {
   return 1;
 }
 
-struct Token *_lexer_create_token(const enum Token_Type type, const char *value,
-                                  const size_t nl) {
+static struct Token *_lexer_create_token(const enum Token_Type type,
+                                         const char *value, const size_t nl) {
   size_t val_len = strlen(value) + 1;
   struct Token *token = jalloc(sizeof(struct Token));
   if (!token) {
@@ -224,9 +294,9 @@ struct Token *_lexer_create_token(const enum Token_Type type, const char *value,
   return token;
 }
 
-struct Token *_lexer_create_token_n(const enum Token_Type type,
-                                    const char *value, const size_t nl,
-                                    const size_t len) {
+static struct Token *_lexer_create_token_n(const enum Token_Type type,
+                                           const char *value, const size_t nl,
+                                           const size_t len) {
   struct Token *token = jalloc(sizeof(struct Token));
   if (!token) {
     return NULL;
@@ -244,7 +314,8 @@ struct Token *_lexer_create_token_n(const enum Token_Type type,
   return token;
 }
 
-struct Token *_lexer_create_token_string(const char *s, const size_t nl) {
+static struct Token *_lexer_create_token_string(const char *s,
+                                                const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
   struct Token *token = NULL;
@@ -269,7 +340,7 @@ struct Token *_lexer_create_token_string(const char *s, const size_t nl) {
   return token;
 }
 
-struct Token *_lexer_create_token_label(const char *s, const size_t nl) {
+static struct Token *_lexer_create_token_label(const char *s, const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
   struct Token *token = NULL;
@@ -297,7 +368,8 @@ struct Token *_lexer_create_token_label(const char *s, const size_t nl) {
   return token;
 }
 
-struct Token *_lexer_create_token_number(const char *s, const size_t nl) {
+static struct Token *_lexer_create_token_number(const char *s,
+                                                const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
   struct Token *token = NULL;
@@ -324,7 +396,7 @@ struct Token *_lexer_create_token_number(const char *s, const size_t nl) {
   return token;
 }
 
-struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
+static struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
   struct Token *token = NULL;
@@ -353,7 +425,8 @@ struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
   return token;
 }
 
-enum Token_Type _lexer_classify_word(const char *word, const size_t num) {
+static enum Token_Type _lexer_classify_word(const char *word,
+                                            const size_t num) {
   if (!word || num == 0) {
     return TOKEN_UNKNOWN;
   }
