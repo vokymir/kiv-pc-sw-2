@@ -8,12 +8,7 @@ struct Llist_Node;
 
 // Stores size of each items data.
 // IS ZERO INDEXED
-struct Llist {
-  struct Llist_Node *first;
-  struct Llist_Node *last;
-  size_t it_size; // size of data in each item
-  size_t count;
-};
+struct Llist;
 
 // Function which frees data in node. Used only if the data is more complicated
 // than POD, something using pointers, which cannot be freed by simply calling
@@ -24,6 +19,13 @@ typedef void (*llist_free_node_data)(void *);
 // Size = size of one item stored in the list.
 // Return reference to the Llist or NULL.
 struct Llist *llist_create(const size_t size);
+
+// Free the Llist and all its nodes. If node->data is more complex, pass some
+// fn, which frees it, otherwise the jree(node->data) will be called.
+void llist_free(struct Llist *llist, llist_free_node_data fn);
+
+// Return count of nodes in given linked list, or 0 on failure.
+size_t llist_count(const struct Llist *llist);
 
 // Add new item to the Llist. List gains ownership of the item and rewoke it
 // from the caller. Return pointer to newly created nodes data, or NULL.
@@ -44,9 +46,5 @@ void llist_remove(struct Llist *llist, const size_t idx,
 // Iterate over every node from first to last. On each node->data performs
 // function fn. This function takes pointer to node->data and do stuff with it.
 void llist_foreach(struct Llist *llist, void (*fn)(void *));
-
-// Free the Llist and all its nodes. If node->data is more complex, pass some
-// fn, which frees it, otherwise the jree(node->data) will be called.
-void llist_free(struct Llist *llist, llist_free_node_data fn);
 
 #endif

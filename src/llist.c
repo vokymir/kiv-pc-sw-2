@@ -11,6 +11,13 @@ struct Llist_Node {
   struct Llist_Node *next;
 };
 
+struct Llist {
+  struct Llist_Node *first;
+  struct Llist_Node *last;
+  size_t it_size; // size of data in each item
+  size_t count;
+};
+
 // ===== PRIVATE FUNCTION DECLARATIONS =====
 
 // Get node at the index from llist.
@@ -38,6 +45,26 @@ struct Llist *llist_create(const size_t size) {
 
 cleanup:
   return NULL;
+}
+
+void llist_free(struct Llist *llist, llist_free_node_data fn) {
+  if (!llist) {
+    return;
+  }
+
+  while (llist->count > 0) { // clear all list nodes
+    llist_remove(llist, 0, fn);
+  }
+
+  jree(llist); // clear list structure
+  return;
+}
+
+size_t llist_count(const struct Llist *llist) {
+  if (!llist) {
+    return 0;
+  }
+  return llist->count;
 }
 
 void *llist_add(struct Llist *llist, void **data_ptr) {
@@ -129,19 +156,6 @@ void llist_foreach(struct Llist *llist, void (*fn)(void *)) {
     current = current->next;
   }
 
-  return;
-}
-
-void llist_free(struct Llist *llist, llist_free_node_data fn) {
-  if (!llist) {
-    return;
-  }
-
-  while (llist->count > 0) { // clear all list nodes
-    llist_remove(llist, 0, fn);
-  }
-
-  jree(llist); // clear list structure
   return;
 }
 
