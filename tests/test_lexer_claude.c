@@ -356,7 +356,7 @@ static void test_comments(void) {
 static void test_empty_line(void) {
   printf("Testing empty line...\n");
 
-  const char *line = "   ";
+  const char *line = "  ";
   struct DS_Llist *tokens = lexer_tokenize_line(line, 1);
 
   assert(tokens != NULL);
@@ -394,7 +394,7 @@ static void test_dup_syntax(void) {
   struct DS_Llist *tokens = lexer_tokenize_line(line, 1);
 
   assert(tokens != NULL);
-  assert(tokens->count == 7); // arr, DWORD, 100, DUP, (, ?, ), EOF
+  assert(tokens->count == 8); // arr, DWORD, 100, DUP, (, ?, ), EOF
 
   struct Token *token3 = ds_llist_get_data(tokens, 3);
   assert(token3->type == TOKEN_DUP);
