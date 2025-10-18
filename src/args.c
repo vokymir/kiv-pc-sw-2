@@ -136,9 +136,7 @@ int args_config_init(struct Config *config, const char *target) {
   if (!config->target) {
     return 0;
   }
-  if (!strcpy(config->target, target)) {
-    return 0;
-  }
+  strcpy(config->target, target);
 
   return 1;
 }
