@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-const char *lexer_token_type_to_str(enum TokenType type);
+const char *lexer_token_type_to_str(enum Token_Type type);
 
 // Helper to print tokens (optional)
 static void print_token(void *data) {
@@ -15,7 +15,7 @@ static void print_token(void *data) {
 }
 
 // Convert enum TokenType to string (for debug output)
-const char *lexer_token_type_to_str(enum TokenType type) {
+const char *lexer_token_type_to_str(enum Token_Type type) {
   switch (type) {
   case TOKEN_SECTION_DATA:
     return "SECTION_DATA";

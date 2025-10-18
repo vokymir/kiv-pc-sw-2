@@ -204,7 +204,7 @@ int _lexer_add_token_to_list(struct Llist *tokens_list, struct Token *token) {
   return 1;
 }
 
-struct Token *_lexer_create_token(const enum TokenType type, const char *value,
+struct Token *_lexer_create_token(const enum Token_Type type, const char *value,
                                   const size_t nl) {
   size_t val_len = strlen(value) + 1;
   struct Token *token = jalloc(sizeof(struct Token));
@@ -224,7 +224,7 @@ struct Token *_lexer_create_token(const enum TokenType type, const char *value,
   return token;
 }
 
-struct Token *_lexer_create_token_n(const enum TokenType type,
+struct Token *_lexer_create_token_n(const enum Token_Type type,
                                     const char *value, const size_t nl,
                                     const size_t len) {
   struct Token *token = jalloc(sizeof(struct Token));
@@ -328,7 +328,7 @@ struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
   struct Token *token = NULL;
-  enum TokenType type = TOKEN_UNKNOWN;
+  enum Token_Type type = TOKEN_UNKNOWN;
   if (!s) {
     return NULL;
   }
@@ -353,7 +353,7 @@ struct Token *_lexer_create_token_word(const char *s, const size_t nl) {
   return token;
 }
 
-enum TokenType _lexer_classify_word(const char *word, const size_t num) {
+enum Token_Type _lexer_classify_word(const char *word, const size_t num) {
   if (!word || num == 0) {
     return TOKEN_UNKNOWN;
   }

@@ -6,7 +6,7 @@
 #include "llist.h"
 
 // All possible types of token.
-enum TokenType {
+enum Token_Type {
   TOKEN_INSTRUCTION,
   TOKEN_REGISTER,
   TOKEN_NUMBER,
@@ -29,7 +29,7 @@ enum TokenType {
 
 // Representation of one token.
 struct Token {
-  enum TokenType type;
+  enum Token_Type type;
   char *value;
   size_t line_number;
 };
@@ -61,13 +61,13 @@ int _lexer_add_token_to_list(struct Llist *tokens_list, struct Token *token);
 // Create token with given parameters, memcpy value using strlen().
 // Return pointer to token on success, NULL on failure.
 // Caller must free.
-struct Token *_lexer_create_token(const enum TokenType type, const char *value,
+struct Token *_lexer_create_token(const enum Token_Type type, const char *value,
                                   const size_t nl);
 
 // Create token with given parameters, memcpy the value using len. If you want
 // to end it eg by \0, you must pass (real-len+1) and manually rewrite it.
 // Return pointer to token on success, NULL on failure. Caller must free.
-struct Token *_lexer_create_token_n(const enum TokenType type,
+struct Token *_lexer_create_token_n(const enum Token_Type type,
                                     const char *value, const size_t nl,
                                     const size_t len);
 
@@ -96,6 +96,6 @@ struct Token *_lexer_create_token_word(const char *s, const size_t nl);
 
 // Classify the first <num> number of characters of word.
 // Return the adequate TokenType, or TOKEN_UNKNOWN if any error.
-enum TokenType _lexer_classify_word(const char *word, const size_t num);
+enum Token_Type _lexer_classify_word(const char *word, const size_t num);
 
 #endif
