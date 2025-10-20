@@ -30,16 +30,16 @@ static void free_pair(void *p) {
 int main(void) {
   printf("Running linked list tests...\n");
 
-  /* create */
+  /* === create === */
   struct Llist *list = llist_create(sizeof(int));
   assert(list != NULL);
-  assert(list->count == 0);
+  assert(llist_count(list) == 0);
 
-  /* invalid create */
+  /* === invalid create === */
   struct Llist *bad = llist_create(0);
   assert(bad == NULL);
 
-  /* === add items: allocate on heap and transfer ownership === */
+  /* === add items (ownership transfer) === */
   int *a = jalloc(sizeof(int));
   *a = 10;
   int *b = jalloc(sizeof(int));
@@ -48,15 +48,13 @@ int main(void) {
   *c = 30;
 
   assert(a && b && c);
-
-  /* ownership transfer: after add, local pointer must be NULL */
   assert(llist_add(list, (void **)&a) != NULL);
   assert(a == NULL);
   assert(llist_add(list, (void **)&b) != NULL);
   assert(b == NULL);
   assert(llist_add(list, (void **)&c) != NULL);
   assert(c == NULL);
-  assert(list->count == 3);
+  assert(llist_count(list) == 3);
 
   /* === get items and check values === */
   int *p0 = llist_get(list, 0);
@@ -65,47 +63,46 @@ int main(void) {
   assert(p0 && p1 && p2);
   assert(*p0 == 10 && *p1 == 20 && *p2 == 30);
 
-  /* === foreach (visual) === */
+  /* === foreach (visual check) === */
   printf("List (foreach): ");
   llist_foreach(list, print_int);
   printf("\n");
 
   /* === remove middle === */
-  llist_remove(list, 1, NULL); /* will jree() the item at idx 1 */
-  assert(list->count == 2);
+  llist_remove(list, 1, NULL);
+  assert(llist_count(list) == 2);
   assert(*(int *)llist_get(list, 0) == 10);
   assert(*(int *)llist_get(list, 1) == 30);
 
   /* === remove first === */
   llist_remove(list, 0, NULL);
-  assert(list->count == 1);
+  assert(llist_count(list) == 1);
   assert(*(int *)llist_get(list, 0) == 30);
 
   /* === remove last === */
   llist_remove(list, 0, NULL);
-  assert(list->count == 0);
+  assert(llist_count(list) == 0);
 
   /* === invalid index checks === */
   assert(llist_get(list, 0) == NULL);
   llist_remove(list, 0, NULL); /* should be no-op */
 
-  /* === test custom destructor for complex payloads === */
+  /* === custom destructor for complex payloads === */
   struct Llist *list2 = llist_create(sizeof(void *));
   struct Pair *pair = jalloc(sizeof(*pair));
   pair->s = jalloc(16);
   strcpy(pair->s, "hello");
   pair->n = jalloc(sizeof(int));
   *pair->n = 7;
+
   assert(llist_add(list2, (void **)&pair) != NULL);
-  /* free with custom destructor */
   llist_free(list2, free_pair);
 
-  /* === free list and check memory tracker === */
+  /* === free list and check for leaks === */
   llist_free(list, NULL);
+  assert(jemory() == 0);
 
-  assert(jemory() == 0); /* your allocator must track all jalloc/jree */
   printf("Freed list successfully, no leaks.\n");
-
   printf("✅ All linked list tests passed!\n");
   return 0;
 }

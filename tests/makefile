@@ -74,3 +74,17 @@ $(BIN_DIR):
 clean:
 	@echo "🧹 Cleaning build and bin directories..."
 	rm -rf $(BUILD_DIR) $(BIN_DIR)
+
+# --------------------------------------------
+# Special rule: test_container_chatgpt.c
+# --------------------------------------------
+$(BIN_DIR)/test_container_chatgpt: $(BUILD_DIR)/test_container_chatgpt.o $(OBJ_FILES) | $(BIN_DIR)
+	@echo "🔗 Linking (special) $@..."
+	$(CC) $(CFLAGS) $^ -o $@
+
+# Run only this test under Valgrind
+.PHONY: test_container_chatgpt
+test_container_chatgpt: $(BIN_DIR)/test_container_chatgpt
+	@echo "🧪 Running test_container_chatgpt under Valgrind..."
+	$(VALGRIND) $(BIN_DIR)/test_container_chatgpt || { echo "❌ test_container_chatgpt failed under Valgrind"; exit 1; }
+	@echo "✅ test_container_chatgpt passed without leaks or errors!"
