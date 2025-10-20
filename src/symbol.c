@@ -2,14 +2,14 @@
 #include <string.h>
 
 #include "common.h"
-#include "llist.h"
+#include "container.h"
 #include "memory.h"
 #include "symbol.h"
 
 // ===== STRUCT DEFINITIONS =====
 
 struct Symbol_Table {
-  struct Llist *symbols;
+  struct Container *symbols;
 };
 
 // ===== PRIVATE FUNCTION DEFINITIONS =====
@@ -31,7 +31,7 @@ struct Symbol_Table *symtab_create(void) {
   table = jalloc(sizeof(struct Symbol_Table));
   CLEANUP_IF_FAIL(table);
 
-  table->symbols = llist_create(sizeof(struct Symbol));
+  table->symbols = ct_create(CT_LLIST, sizeof(struct Symbol));
   CLEANUP_IF_FAIL(table->symbols);
 
   return table;
@@ -48,7 +48,7 @@ void symtab_free(struct Symbol_Table *table) {
     return;
   }
   if (table->symbols) {
-    llist_free(table->symbols, (llist_free_node_data)_symtab_free_symbol);
+    ct_free(table->symbols, (ct_free_item)_symtab_free_symbol);
   }
   jree(table);
   return;
@@ -65,7 +65,7 @@ struct Symbol *symtab_add(struct Symbol_Table *table, const char *name,
   symbol = _symtab_create_symbol(name, address);
   CLEANUP_IF_FAIL(symbol);
 
-  tmp = llist_add(table->symbols, (void **)&symbol);
+  tmp = ct_add(table->symbols, (void **)&symbol);
   CLEANUP_IF_FAIL(tmp);
   symbol = tmp;
 
@@ -85,8 +85,8 @@ struct Symbol *symtab_find(const struct Symbol_Table *table, const char *name) {
     return NULL;
   }
 
-  for (i = 0; i < table->symbols->count; i++) { // iterate all symbols
-    symbol = llist_get(table->symbols, i);
+  for (i = 0; i < ct_count(table->symbols); i++) { // iterate all symbols
+    symbol = ct_get(table->symbols, i);
     if (symbol && symbol->name && strcmp(symbol->name, name) == 0) {
       return symbol; // found with the same name
     }

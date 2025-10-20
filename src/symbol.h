@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-#include "llist.h"
-
 struct Symbol {
   char *name;
   uint32_t address;
