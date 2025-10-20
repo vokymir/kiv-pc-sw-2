@@ -69,7 +69,7 @@ size_t ct_count(const struct Container *c) {
 
   switch (c->type) {
   case CT_LLIST:
-    llist_count(c->llist);
+    return llist_count(c->llist);
     break;
   default:
     goto cleanup;
@@ -79,14 +79,13 @@ cleanup:
   return 0;
 }
 
-// TODO: Does this work correctly, and as is described in .h file?
-int ct_add(struct Container *c, void *item) {
+int ct_add(struct Container *c, void **item_ptr) {
   void *tmp = NULL;
-  CLEANUP_IF_FAIL(c && c->type != CT_NONE && item);
+  CLEANUP_IF_FAIL(c && c->type != CT_NONE && item_ptr && *item_ptr);
 
   switch (c->type) {
   case CT_LLIST:
-    tmp = llist_add(c->llist, &item);
+    tmp = llist_add(c->llist, item_ptr);
     CLEANUP_IF_FAIL(tmp);
     return 1;
   default:

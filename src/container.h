@@ -28,7 +28,7 @@ struct Container *ct_create(const enum Container_Type type,
 // Transfers ownership from caller to Container, clear l pointer.
 // Return pointer to container or NULL on failute.
 // In case of failure, original l pointer is not cleared, ownership not
-// transfered.
+// transferred.
 struct Container *ct_from_llist(struct Llist **l);
 
 // Free container and all its insides. If provided, uses fn to free items.
@@ -38,9 +38,10 @@ void ct_free(struct Container *c, ct_free_item fn);
 // Return number of items in container. On failure return 0.
 size_t ct_count(const struct Container *c);
 
-// Add new item to container, transfer ownership to it.
+// Add new item to container.
+// Set *item = NULL to transfer ownership to container. (only on success)
 // Return 1 on success, 0 on failure.
-int ct_add(struct Container *c, void *item);
+int ct_add(struct Container *c, void **item_ptr);
 
 // Get item at index idx.
 // Return pointer or NULL on failure.
