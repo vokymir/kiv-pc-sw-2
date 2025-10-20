@@ -13,8 +13,12 @@ struct Container *ct_create(const enum Container_Type type,
 
   switch (type) {
   case CT_LLIST:
-    c->llist = llist_create(item_size);
-    CLEANUP_IF_FAIL(c->llist);
+    c->u.llist = llist_create(item_size);
+    CLEANUP_IF_FAIL(c->u.llist);
+    c->type = CT_LLIST;
+    break;
+  case CT_NONE:
+    goto cleanup;
     break;
   default:
     goto cleanup;
@@ -37,7 +41,7 @@ struct Container *ct_from_llist(struct Llist **l) {
   CLEANUP_IF_FAIL(c);
 
   c->type = CT_LLIST;
-  c->llist = *l;
+  c->u.llist = *l;
   *l = NULL;
 
   return c;
@@ -51,7 +55,10 @@ void ct_free(struct Container *c, ct_free_item fn) {
 
   switch (c->type) {
   case CT_LLIST:
-    llist_free(c->llist, fn);
+    llist_free(c->u.llist, fn);
+    break;
+  case CT_NONE:
+    goto cleanup;
     break;
   default:
     goto cleanup;
@@ -69,7 +76,10 @@ size_t ct_count(const struct Container *c) {
 
   switch (c->type) {
   case CT_LLIST:
-    return llist_count(c->llist);
+    return llist_count(c->u.llist);
+    break;
+  case CT_NONE:
+    goto cleanup;
     break;
   default:
     goto cleanup;
@@ -79,21 +89,24 @@ cleanup:
   return 0;
 }
 
-int ct_add(struct Container *c, void **item_ptr) {
+void *ct_add(struct Container *c, void **item_ptr) {
   void *tmp = NULL;
   CLEANUP_IF_FAIL(c && c->type != CT_NONE && item_ptr && *item_ptr);
 
   switch (c->type) {
   case CT_LLIST:
-    tmp = llist_add(c->llist, item_ptr);
+    tmp = llist_add(c->u.llist, item_ptr);
     CLEANUP_IF_FAIL(tmp);
-    return 1;
+    return tmp;
+  case CT_NONE:
+    goto cleanup;
+    break;
   default:
     goto cleanup;
   }
 
 cleanup:
-  return 0;
+  return NULL;
 }
 
 void *ct_get(const struct Container *c, const size_t idx) {
@@ -101,7 +114,10 @@ void *ct_get(const struct Container *c, const size_t idx) {
 
   switch (c->type) {
   case CT_LLIST:
-    return llist_get(c->llist, idx);
+    return llist_get(c->u.llist, idx);
+  case CT_NONE:
+    goto cleanup;
+    break;
   default:
     goto cleanup;
   }
@@ -115,10 +131,31 @@ void ct_remove(struct Container *c, const size_t idx, ct_free_item fn) {
 
   switch (c->type) {
   case CT_LLIST:
-    llist_remove(c->llist, idx, fn);
+    llist_remove(c->u.llist, idx, fn);
+    break;
+  case CT_NONE:
+    goto cleanup;
     break;
   default:
     goto cleanup;
+  }
+
+cleanup:
+  return;
+}
+
+void ct_foreach(const struct Container *c, void (*fn)(void *)) {
+  CLEANUP_IF_FAIL(c && fn);
+
+  switch (c->type) {
+  case CT_LLIST:
+    llist_foreach(c->u.llist, fn);
+    break;
+  case CT_NONE:
+    goto cleanup;
+    break;
+  default:
+    break;
   }
 
 cleanup:
