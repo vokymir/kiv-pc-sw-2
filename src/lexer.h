@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "llist.h"
+#include "container.h"
 
 // All possible types of token.
 enum Token_Type {
@@ -37,7 +37,7 @@ struct Token {
 // Tokenize given line (ended by \0).
 // Return pointer to list of tokens, ended by TOKEN_EOF.
 // Return NULL on failure.
-struct Llist *lexer_tokenize_line(const char *line, const size_t nl);
+struct Container *lexer_tokenize_line(const char *line, const size_t nl);
 
 // Free tokens insides, then free the token itself;
 void lexer_free_token(struct Token *token);

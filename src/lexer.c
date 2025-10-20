@@ -3,9 +3,9 @@
 #include <string.h>
 
 #include "common.h"
+#include "container.h"
 #include "instruction.h"
 #include "lexer.h"
-#include "llist.h"
 #include "memory.h"
 
 // ===== MACROS =====
@@ -33,7 +33,7 @@ static struct Token *_lexer_create_next_token(const char *line,
 // Add a token to the list.
 // Return 1 on success, 0 on failure.
 // On failure, the token IS FREED.
-static int _lexer_add_token_to_list(struct Llist *tokens_list,
+static int _lexer_add_token_to_list(struct Container *tokens,
                                     struct Token *token);
 
 // Create token with given parameters, memcpy value using strlen().
@@ -78,8 +78,8 @@ static enum Token_Type _lexer_classify_word(const char *word, const size_t num);
 
 // ===== PUBLIC FUNCTIONS =====
 
-struct Llist *lexer_tokenize_line(const char *line, const size_t nl) {
-  struct Llist *tokens = NULL;
+struct Container *lexer_tokenize_line(const char *line, const size_t nl) {
+  struct Container *tokens = NULL;
   struct Token *token = NULL;
   size_t pos = 0;
   size_t len = 0;
@@ -88,7 +88,7 @@ struct Llist *lexer_tokenize_line(const char *line, const size_t nl) {
     return NULL;
   }
 
-  tokens = llist_create(sizeof(struct Token));
+  tokens = ct_create(CT_LLIST, sizeof(struct Token));
   CLEANUP_IF_FAIL(tokens);
 
   len = strlen(line);
@@ -109,7 +109,7 @@ struct Llist *lexer_tokenize_line(const char *line, const size_t nl) {
 
 cleanup:
   if (tokens) {
-    llist_free(tokens, (llist_free_node_data)lexer_free_token);
+    ct_free(tokens, (ct_free_item)lexer_free_token);
   }
   return NULL;
 }
@@ -254,15 +254,15 @@ static struct Token *_lexer_create_next_token(const char *line,
   return token;
 }
 
-static int _lexer_add_token_to_list(struct Llist *tokens_list,
+static int _lexer_add_token_to_list(struct Container *tokens,
                                     struct Token *token) {
-  if (!tokens_list || !token) {
+  if (!tokens || !token) {
     return 0;
   }
 
   CLEANUP_IF_FAIL(token->value);
 
-  CLEANUP_IF_FAIL(llist_add(tokens_list, (void **)&token));
+  CLEANUP_IF_FAIL(ct_add(tokens, (void **)&token));
 
   return 1;
 
