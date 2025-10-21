@@ -7,6 +7,11 @@
 // Returns pointer on success, NULL on failure.
 void *jalloc(const size_t bytes);
 
+// Reallocate src. Now will have <bytes> number of bytes.
+// If bytes == 0, the behaviour is undefined.
+// Return new pointer on success, NULL on failure.
+void *jealloc(void *src, const size_t bytes);
+
 // Free memory allocated via jalloc.
 void jree(void *memory);
 

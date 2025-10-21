@@ -21,6 +21,16 @@ void *jalloc(const size_t bytes) {
   return mem;
 }
 
+void *jealloc(void *src, const size_t bytes) {
+  void *mem = NULL;
+  if (!src) {
+    return NULL;
+  }
+  mem = realloc(src, bytes);
+
+  return mem;
+}
+
 void jree(void *memory) {
   if (!memory) {
     return;
