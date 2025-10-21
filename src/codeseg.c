@@ -112,11 +112,9 @@ size_t cdsg_reserve(struct Code_Segment *cdsg, size_t num_bytes) {
   size_t pos = 0;
   CLEANUP_IF_FAIL(cdsg);
 
-  if (num_bytes == 0) {
-    return cdsg->size;
+  if (cdsg->size > SIZE_MAX - num_bytes) {
+    goto cleanup;
   }
-
-  CLEANUP_IF_FAIL(cdsg->size <= SIZE_MAX - num_bytes);
 
   pos = cdsg->size;
   cdsg->size += num_bytes;
