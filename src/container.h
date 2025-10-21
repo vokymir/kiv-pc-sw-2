@@ -3,19 +3,24 @@
 
 #include <stddef.h>
 
+#include "array.h"
 #include "llist.h"
+
 enum Container_Type {
   CT_NONE,
   CT_LLIST,
+  CT_ARRAY,
 };
 
 struct Container {
   enum Container_Type type;
   union {
     struct Llist *llist;
+    struct Array *array;
   } u;
 };
 
+// Free insides of a item.
 typedef void (*ct_free_item)(void *);
 
 // Create a new container using given data type, and item_size.
@@ -24,12 +29,13 @@ typedef void (*ct_free_item)(void *);
 struct Container *ct_create(const enum Container_Type type,
                             const size_t item_size);
 
-// Create new container from existing Linked list.
+// Create new container from existing supported structure.
 // Transfers ownership from caller to Container, clear l pointer.
 // Return pointer to container or NULL on failute.
 // In case of failure, original l pointer is not cleared, ownership not
 // transferred.
 struct Container *ct_from_llist(struct Llist **l);
+struct Container *ct_from_array(struct Array **a);
 
 // Free container and all its insides. If provided, uses fn to free items.
 // Useful, if items are more complex than POD. Otherwise calls jree.
@@ -38,10 +44,11 @@ void ct_free(struct Container *c, ct_free_item fn);
 // Return number of items in container. On failure return 0.
 size_t ct_count(const struct Container *c);
 
-// Add new item to container.
-// Set *item = NULL to transfer ownership to container. (only on success)
-// Return pointer to item on success, NULL on failure.
-void *ct_add(struct Container *c, void **item_ptr);
+// Add new item to container. It may be needed to free item, based on the
+// underlaying chosen infrastructure, so provide fn. Set *item = NULL to
+// transfer ownership to container. (only on success) Return pointer to item on
+// success, NULL on failure.
+void *ct_add(struct Container *c, void **item_ptr, ct_free_item fn);
 
 // Get item at index idx.
 // Return pointer or NULL on failure.

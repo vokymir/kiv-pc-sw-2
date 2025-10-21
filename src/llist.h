@@ -1,5 +1,6 @@
 #ifndef LLIST_H
 #define LLIST_H
+// LINKED LIST
 
 #include <stddef.h>
 

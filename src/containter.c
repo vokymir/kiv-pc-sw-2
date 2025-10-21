@@ -1,3 +1,4 @@
+#include "array.h"
 #include "common.h"
 #include "container.h"
 #include "llist.h"
@@ -6,19 +7,24 @@
 struct Container *ct_create(const enum Container_Type type,
                             const size_t item_size) {
   struct Container *c = NULL;
-  CLEANUP_IF_FAIL(type != CT_NONE && item_size != 0);
+  CLEANUP_IF_FAIL(item_size != 0);
 
   c = jalloc(sizeof(struct Container));
   CLEANUP_IF_FAIL(c);
 
   switch (type) {
+  case CT_NONE:
+    goto cleanup;
+    break;
   case CT_LLIST:
     c->u.llist = llist_create(item_size);
     CLEANUP_IF_FAIL(c->u.llist);
     c->type = CT_LLIST;
     break;
-  case CT_NONE:
-    goto cleanup;
+  case CT_ARRAY:
+    c->u.array = array_create(item_size);
+    CLEANUP_IF_FAIL(c->u.array);
+    c->type = CT_ARRAY;
     break;
   default:
     goto cleanup;
@@ -50,15 +56,35 @@ cleanup:
   return NULL;
 }
 
+struct Container *ct_from_array(struct Array **a) {
+  struct Container *c = NULL;
+  CLEANUP_IF_FAIL(a && *a);
+
+  c = jalloc(sizeof(struct Container));
+  CLEANUP_IF_FAIL(c);
+
+  c->type = CT_ARRAY;
+  c->u.array = *a;
+  *a = NULL;
+
+  return c;
+
+cleanup:
+  return NULL;
+}
+
 void ct_free(struct Container *c, ct_free_item fn) {
-  CLEANUP_IF_FAIL(c && c->type != CT_NONE);
+  CLEANUP_IF_FAIL(c);
 
   switch (c->type) {
+  case CT_NONE:
+    goto cleanup;
+    break;
   case CT_LLIST:
     llist_free(c->u.llist, fn);
     break;
-  case CT_NONE:
-    goto cleanup;
+  case CT_ARRAY:
+    array_free(c->u.array, fn);
     break;
   default:
     goto cleanup;
@@ -72,14 +98,17 @@ cleanup:
 }
 
 size_t ct_count(const struct Container *c) {
-  CLEANUP_IF_FAIL(c && c->type != CT_NONE);
+  CLEANUP_IF_FAIL(c);
 
   switch (c->type) {
+  case CT_NONE:
+    goto cleanup;
+    break;
   case CT_LLIST:
     return llist_count(c->u.llist);
     break;
-  case CT_NONE:
-    goto cleanup;
+  case CT_ARRAY:
+    return array_count(c->u.array);
     break;
   default:
     goto cleanup;
@@ -89,34 +118,43 @@ cleanup:
   return 0;
 }
 
-void *ct_add(struct Container *c, void **item_ptr) {
+void *ct_add(struct Container *c, void **item_ptr, ct_free_item fn) {
   void *tmp = NULL;
-  CLEANUP_IF_FAIL(c && c->type != CT_NONE && item_ptr && *item_ptr);
+  CLEANUP_IF_FAIL(c && item_ptr && *item_ptr);
 
   switch (c->type) {
-  case CT_LLIST:
-    tmp = llist_add(c->u.llist, item_ptr);
-    CLEANUP_IF_FAIL(tmp);
-    return tmp;
   case CT_NONE:
     goto cleanup;
+    break;
+  case CT_LLIST:
+    tmp = llist_add(c->u.llist, item_ptr);
+    break;
+  case CT_ARRAY:
+    tmp = array_add(c->u.array, item_ptr, fn);
     break;
   default:
     goto cleanup;
   }
+
+  CLEANUP_IF_FAIL(tmp);
+  return tmp;
 
 cleanup:
   return NULL;
 }
 
 void *ct_get(const struct Container *c, const size_t idx) {
-  CLEANUP_IF_FAIL(c && c->type != CT_NONE);
+  CLEANUP_IF_FAIL(c);
 
   switch (c->type) {
-  case CT_LLIST:
-    return llist_get(c->u.llist, idx);
   case CT_NONE:
     goto cleanup;
+    break;
+  case CT_LLIST:
+    return llist_get(c->u.llist, idx);
+    break;
+  case CT_ARRAY:
+    return array_get(c->u.array, idx);
     break;
   default:
     goto cleanup;
@@ -127,14 +165,17 @@ cleanup:
 }
 
 void ct_remove(struct Container *c, const size_t idx, ct_free_item fn) {
-  CLEANUP_IF_FAIL(c && c->type != CT_NONE);
+  CLEANUP_IF_FAIL(c);
 
   switch (c->type) {
+  case CT_NONE:
+    goto cleanup;
+    break;
   case CT_LLIST:
     llist_remove(c->u.llist, idx, fn);
     break;
-  case CT_NONE:
-    goto cleanup;
+  case CT_ARRAY:
+    array_remove(c->u.array, idx, fn);
     break;
   default:
     goto cleanup;
@@ -148,11 +189,14 @@ void ct_foreach(const struct Container *c, void (*fn)(void *)) {
   CLEANUP_IF_FAIL(c && fn);
 
   switch (c->type) {
+  case CT_NONE:
+    goto cleanup;
+    break;
   case CT_LLIST:
     llist_foreach(c->u.llist, fn);
     break;
-  case CT_NONE:
-    goto cleanup;
+  case CT_ARRAY:
+    array_foreach(c->u.array, fn);
     break;
   default:
     break;

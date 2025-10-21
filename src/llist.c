@@ -69,9 +69,7 @@ size_t llist_count(const struct Llist *llist) {
 
 void *llist_add(struct Llist *llist, void **data_ptr) {
   struct Llist_Node *node = NULL;
-  if (!llist || !data_ptr || !*data_ptr) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(llist && data_ptr && *data_ptr);
 
   node = jalloc(sizeof(*node));
   CLEANUP_IF_FAIL(node);
