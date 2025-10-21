@@ -1,8 +1,8 @@
 TODO:
 
-1. test container
-2. use container everywhere
-3. test everything
+1. test container OK
+2. use container everywhere OK
+3. test everything OK
 4. create codeseg
     - create bufffer for container, one-place dynamic-length list
     - create the codeseg
