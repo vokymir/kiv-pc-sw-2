@@ -14,7 +14,7 @@ struct Code_Segment {
 };
 
 // Create new Code Segment.
-// Return NULL on failure. struct Code_Segment *cdsg_create(void);
+// Return NULL on failure.
 struct Code_Segment *cdsg_create(void);
 
 // Free code segment.
@@ -26,21 +26,29 @@ int cdsg_app_b(struct Code_Segment *cdsg, uint8_t b);
 
 // Code Segment Append Bytes.
 // Return 1 on success, 0 on failure.
-int cdsg_app_bs(struct Code_Segment *cdsg, uint8_t *bs, size_t count);
+int cdsg_app_bs(struct Code_Segment *cdsg, const uint8_t *bs, size_t count);
 
-// Code Segment Append DWord - little endian.
+// Code Segment Append OP-code.
 // Return 1 on success, 0 on failure.
-int cdsg_app_dw(struct Code_Segment *cdsg, uint32_t dw);
+int cdsg_app_op(struct Code_Segment *cdsg, uint8_t opcode);
+
+// Code Segment Append Register.
+// Return 1 on success, 0 on failure.
+int cdsg_app_reg(struct Code_Segment *cdsg, uint8_t reg_code);
+
+// Code Segment Append Immediate 32 bit value.
+// Return 1 on success, 0 on failure.
+int cdsg_app_imm(struct Code_Segment *cdsg, int32_t imm32b_v);
 
 // Code Segment get size.
-size_t cdsg_get_size(struct Code_Segment *cdsg);
+size_t cdsg_get_size(const struct Code_Segment *cdsg);
 
 // Get pointer to Code Segment bytes. Read-only.
-const uint8_t *cdsg_get_bytes(struct Code_Segment *cdsg);
+const uint8_t *cdsg_get_bytes(const struct Code_Segment *cdsg);
 
-// Code Segment: Reserve number of bytes (for 1st pass).
-// Reserve returns the offset where reservation started, or SIZE_MAX on failure.
-// WARN: Not actually reserving anything. Just mimics it, only use in 1st pass!
-size_t cdsg_reserve(struct Code_Segment *cdsg, size_t num_bytes);
+// Code Segment: Advance number of bytes (for 1st pass).
+// Returns the offset where started, or SIZE_MAX on failure.
+// WARN: Only use in 1st pass!
+size_t cdsg_advance(struct Code_Segment *cdsg, size_t num_bytes);
 
 #endif

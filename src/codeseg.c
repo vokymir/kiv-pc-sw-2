@@ -57,7 +57,7 @@ cleanup:
   return 0;
 }
 
-int cdsg_app_bs(struct Code_Segment *cdsg, uint8_t *bs, size_t count) {
+int cdsg_app_bs(struct Code_Segment *cdsg, const uint8_t *bs, size_t count) {
   CLEANUP_IF_FAIL(cdsg && cdsg->bytes && bs);
 
   if (count == 0) {
@@ -74,23 +74,40 @@ cleanup:
   return 0;
 }
 
-int cdsg_app_dw(struct Code_Segment *cdsg, uint32_t dw) {
+int cdsg_app_op(struct Code_Segment *cdsg, uint8_t opcode) {
   CLEANUP_IF_FAIL(cdsg && cdsg->bytes);
 
-  CLEANUP_IF_FAIL(_cdsg_ensure_capacity(cdsg, 4));
-
-  cdsg->bytes[cdsg->size++] = (uint8_t)((dw >> 0) & 0xFF);
-  cdsg->bytes[cdsg->size++] = (uint8_t)((dw >> 8) & 0xFF);
-  cdsg->bytes[cdsg->size++] = (uint8_t)((dw >> 16) & 0xFF);
-  cdsg->bytes[cdsg->size++] = (uint8_t)((dw >> 24) & 0xFF);
-
-  return 1;
+  return cdsg_app_b(cdsg, opcode);
 
 cleanup:
   return 0;
 }
 
-size_t cdsg_get_size(struct Code_Segment *cdsg) {
+int cdsg_app_reg(struct Code_Segment *cdsg, uint8_t reg_code) {
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes);
+
+  return cdsg_app_b(cdsg, reg_code);
+
+cleanup:
+  return 0;
+}
+
+int cdsg_app_imm(struct Code_Segment *cdsg, int32_t imm32b_v) {
+  uint8_t bytes[4];
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes);
+
+  bytes[0] = (uint8_t)((imm32b_v >> 0) & 0xFF);
+  bytes[1] = (uint8_t)((imm32b_v >> 8) & 0xFF);
+  bytes[2] = (uint8_t)((imm32b_v >> 16) & 0xFF);
+  bytes[3] = (uint8_t)((imm32b_v >> 24) & 0xFF);
+
+  return cdsg_app_bs(cdsg, bytes, 4);
+
+cleanup:
+  return 0;
+}
+
+size_t cdsg_get_size(const struct Code_Segment *cdsg) {
   CLEANUP_IF_FAIL(cdsg);
 
   return cdsg->size;
@@ -99,7 +116,7 @@ cleanup:
   return 0;
 }
 
-const uint8_t *cdsg_get_bytes(struct Code_Segment *cdsg) {
+const uint8_t *cdsg_get_bytes(const struct Code_Segment *cdsg) {
   CLEANUP_IF_FAIL(cdsg && cdsg->bytes);
 
   return cdsg->bytes;
@@ -108,7 +125,7 @@ cleanup:
   return NULL;
 }
 
-size_t cdsg_reserve(struct Code_Segment *cdsg, size_t num_bytes) {
+size_t cdsg_advance(struct Code_Segment *cdsg, size_t num_bytes) {
   size_t pos = 0;
   CLEANUP_IF_FAIL(cdsg);
 
