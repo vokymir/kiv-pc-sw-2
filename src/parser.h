@@ -22,14 +22,14 @@ enum Statement_Type {
 };
 
 struct Parsed_Statement {
-  Statement_Type type;
-  Err_Parse err;
+  enum Statement_Type type;
+  enum Err_Parse err;
   size_t line_number; // Which line this came from
 
   union {
-    Instruction_Statement instruction;
-    Data_Declaration data_decl;
-    Label_Definition label_def;
+    struct Instruction_Statement instruction;
+    struct Data_Declaration data_decl;
+    struct Label_Definition label_def;
   } content;
 };
 

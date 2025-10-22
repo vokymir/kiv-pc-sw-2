@@ -32,8 +32,10 @@ struct Init_Segment {
 struct Data_Declaration {
   char identifier[MAX_IDENTIFIER_LEN];
   enum Data_Type type;
+
   struct Init_Segment *segments;
   size_t segment_count;
+
   int total_size;
   int is_fully_uninit;
 };
