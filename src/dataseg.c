@@ -99,6 +99,8 @@ int dtsg_app_dws(struct Data_Segment *dtsg, const int32_t *dws, size_t count) {
     }
   }
 
+  return 1;
+
 cleanup:
   return 0;
 }
