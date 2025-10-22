@@ -26,7 +26,7 @@ enum Err_Main args_parse(const int argc, const char **argv,
 
 // Perform static syntax check on any path.
 // Checking prefix/suffix is omitted on empty string or NULL
-// Use suffix e.g. for file extension.
+// Use suffix for e.g. file extension.
 enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
                                      const char *suffix);
 
@@ -39,19 +39,12 @@ enum Err_Main args_check_config(const struct Config *config);
 
 // ===== WORKING w CONFIG =====
 
-// Clear all config members to 0.
-// Danger: if target was initialized, it is freed here.
-void args_config_clear(struct Config *config);
-
-// Initialize target path in config;
-// Meaning it copies from target, allocating new memory.
+// Initialize all config insides, if paths are given, copy them.
 // Return 1 on success, 0 on failure.
-int args_config_init(struct Config *config, const char *target);
+int args_config_init(struct Config *config, const char *source,
+                     const char *target);
 
-// Free target in config.
-// This is responsibility of Main, contrary to its name.
-// Config is inited in Args, but should only be freed at the end of program,
-// which is at the end of Main.
-void args_config_free(struct Config *config);
+// Set all config members to 0 and free all insides.
+void args_config_deinit(struct Config *config);
 
 #endif

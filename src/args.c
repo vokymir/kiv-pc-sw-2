@@ -23,6 +23,7 @@ static int _args_change_extension(char *path);
 enum Err_Main args_parse(const int argc, const char **argv,
                          struct Config *config) {
   size_t i = 0;
+  const char *src = NULL, *trg = NULL;
   enum Err_Main merr = ERR_NO_ERROR;
   enum Err_Args err = ARGS_NO_ERROR;
   if (argc < 2 || !argv || !config) { // Never could happen config == NULL
@@ -30,12 +31,7 @@ enum Err_Main args_parse(const int argc, const char **argv,
     return ERR_INVALID_INPUT_FILE;
   }
 
-  args_config_clear(config); // ensure config is clear
-  config->source = argv[1];  // source save and validation
-  if ((err = args_path_syntax_check(config->source, NULL, ".kas")) !=
-      ARGS_NO_ERROR) {
-    return ERR_INVALID_INPUT_FILE;
-  }
+  src = argv[1];
 
   for (i = 2; i < (size_t)argc; ++i) { // parse all arguments
     if ((merr = _args_parse_arg(argv[i], config)) != ERR_NO_ERROR) {
@@ -51,6 +47,11 @@ enum Err_Main args_parse(const int argc, const char **argv,
     if (!_args_change_extension(config->target)) { // only edit extension
       return ERR_INVALID_OUTPUT_FILE;
     }
+  }
+
+  if ((err = args_path_syntax_check(config->source, NULL, ".kas")) !=
+      ARGS_NO_ERROR) {
+    return ERR_INVALID_INPUT_FILE;
   }
 
   return ERR_NO_ERROR;
@@ -125,27 +126,50 @@ void args_config_clear(struct Config *config) {
   config->target = NULL;
 }
 
-int args_config_init(struct Config *config, const char *target) {
+int args_config_init(struct Config *config, const char *source,
+                     const char *target) {
   size_t len = 0;
-  if (!config) {
-    return 0;
+  CLEANUP_IF_FAIL(config);
+
+  config->flag_instruction = 0;
+  config->flag_verbose = 0;
+
+  if (source) {
+    len = strlen(source) + 1;
+    config->source = jalloc(len);
+    CLEANUP_IF_FAIL(config->source);
+    strcpy(config->source, source);
   }
 
-  len = strlen(target) + 1;
-  config->target = jalloc(len);
-  if (!config->target) {
-    return 0;
+  if (target) {
+    len = strlen(target) + 1;
+    config->target = jalloc(len);
+    CLEANUP_IF_FAIL(config->target);
+    strcpy(config->target, target);
   }
-  strcpy(config->target, target);
 
   return 1;
+
+cleanup:
+  if (config->source) {
+    jree(config->source);
+  }
+  if (config->target) {
+    jree(config->target);
+  }
+  return 0;
 }
 
-void args_config_free(struct Config *config) {
-  if (!config || !config->target) {
-    return;
-  }
-  jree_clear((void **)&config->target); // free & clear the config->target
+void args_config_deinit(struct Config *config) {
+  CLEANUP_IF_FAIL(config);
+  config->flag_verbose = 0;
+  config->flag_instruction = 0;
+
+  jree_clear((void **)&config->source);
+  jree_clear((void **)&config->target);
+
+cleanup:
+  return;
 }
 
 // ===== PRIVATE FUNCTIONS =====
