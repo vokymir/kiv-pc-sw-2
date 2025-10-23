@@ -15,11 +15,19 @@
 
 int fu_path_exists(const char *path) {
   struct stat st = {0};
+  if (!path) {
+    return 0;
+  }
+
   return (stat(path, &st) == 0);
 }
 
 int fu_is_file(const char *path) {
   struct stat st = {0};
+  if (!path) {
+    return 0;
+  }
+
   if (stat(path, &st) != 0) {
     return 0;
   }
@@ -32,6 +40,10 @@ int fu_is_file(const char *path) {
 
 int fu_is_dir(const char *path) {
   struct stat st = {0};
+  if (!path) {
+    return 0;
+  }
+
   if (stat(path, &st) != 0) {
     return 0;
   }
@@ -42,9 +54,19 @@ int fu_is_dir(const char *path) {
 #endif
 }
 
-int fu_can_read(const char *path) { return access(path, R_OK) == 0; }
+int fu_can_read(const char *path) {
+  if (!path) {
+    return 0;
+  }
+
+  return access(path, R_OK) == 0;
+}
 
 int fu_can_write(const char *path) {
+  if (!path) {
+    return 0;
+  }
+
   if (fu_is_dir(path)) {
     return fu_can_write_dir(path);
   } else if (fu_is_file(path)) {
@@ -57,9 +79,27 @@ int fu_can_write(const char *path) {
   }
 }
 
-int fu_can_write_file(const char *path) { return access(path, W_OK) == 0; }
+int fu_can_write_file(const char *path) {
+  if (!path) {
+    return 0;
+  }
 
-int fu_can_write_dir(const char *path) { return access(path, W_OK) == 0; }
+  if (!fu_is_file(path)) {
+    return 0;
+  }
+  return access(path, W_OK) == 0;
+}
+
+int fu_can_write_dir(const char *path) {
+  if (!path) {
+    return 0;
+  }
+
+  if (!fu_is_dir(path)) {
+    return 0;
+  }
+  return access(path, W_OK) == 0;
+}
 
 int fu_can_write_parent_dir(const char *path) {
   char *dup, *slash = NULL;
