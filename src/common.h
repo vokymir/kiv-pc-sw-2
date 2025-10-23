@@ -28,8 +28,8 @@ enum Err_Main {
 
 // Holds information needed throughout the whole program.
 struct Config {
-  char flag_verbose;
-  char flag_instruction;
+  int flag_verbose;
+  int flag_instruction;
   char *source;
   char *target;
 };

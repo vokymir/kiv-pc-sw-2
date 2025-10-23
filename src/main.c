@@ -10,12 +10,7 @@ int main(const int argc, const char **argv) {
   enum Err_Main err = ERR_NO_ERROR;
 
   // Parse arguments and save results into config.
-  if ((err = args_parse(argc, argv, &config)) != ERR_NO_ERROR) {
-    goto finalize;
-  }
-
-  // Check source/target paths.
-  if ((err = args_check_config(&config)) != ERR_NO_ERROR) {
+  if ((err = args_parse(&config, argc, argv)) != ERR_NO_ERROR) {
     goto finalize;
   }
 
@@ -25,7 +20,7 @@ int main(const int argc, const char **argv) {
 
   // Free all main-related memory, check for leaks and end
 finalize:
-  args_config_free(&config);
+  args_config_deinit(&config);
   assert(jemory() == 0);
   return err;
 }

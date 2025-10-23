@@ -82,7 +82,7 @@ enum Err_Main args_parse(struct Config *config, const int argc,
   return args_path_check_semantic(config);
 }
 
-enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
+enum Err_Args args_path_check_syntax(const char *path, const char *prefix,
                                      const char *suffix) {
   size_t plen, len = 0;
   if (!path) {
@@ -191,7 +191,7 @@ cleanup:
 }
 
 static const char *_args_find_tgt(const int argc, const char **argv) {
-  size_t i = 0;
+  int i = 0;
   CLEANUP_IF_FAIL(argc > 2 && argv);
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
@@ -205,7 +205,7 @@ cleanup:
 }
 
 static int _args_is_v(const int argc, const char **argv) {
-  size_t i = 0;
+  int i = 0;
   CLEANUP_IF_FAIL(argc > 2 && argv);
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
@@ -219,7 +219,7 @@ cleanup:
 }
 
 static int _args_is_i(const int argc, const char **argv) {
-  size_t i = 0;
+  int i = 0;
   CLEANUP_IF_FAIL(argc > 2 && argv);
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
