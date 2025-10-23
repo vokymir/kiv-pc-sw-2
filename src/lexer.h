@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "container.h"
+#define TOKEN_MAX_VALUE_LEN 256
 
 // All possible types of token.
 enum Token_Type {
@@ -30,16 +30,16 @@ enum Token_Type {
 // Representation of one token.
 struct Token {
   enum Token_Type type;
-  char *value;
+  char value[TOKEN_MAX_VALUE_LEN];
   size_t line_number;
 };
 
 // Tokenize given line (ended by \0).
-// Return pointer to list of tokens, ended by TOKEN_EOF.
-// Return NULL on failure.
-struct Container *lexer_tokenize_line(const char *line, const size_t nl);
+// Return pointer to array of tokens, ended by TOKEN_EOF, this array must be
+// later freed by calling lexer_free_tokens. Return NULL on failure.
+struct Token *lexer_tokenize_line(const char *line, const size_t nl);
 
-// Free tokens insides, then free the token itself;
-void lexer_free_token(struct Token *token);
+// Free token array created by tokenizing one line.
+void lexer_free_tokens(struct Token *tokens);
 
 #endif
