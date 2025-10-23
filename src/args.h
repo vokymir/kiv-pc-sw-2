@@ -18,9 +18,9 @@ enum Err_Args {
 // ===== PARSING/VALIDATING ARGS =====
 
 // Parse all arguments given and write the results into
-// the given Config structure. Performs static syntax and semantic check
-// on source/target by calling args_path_check_syntax/semantic.
-// Returns adequate Err_Main
+// the given Config structure. Assumes the first argument is the name of running
+// executable. Performs static syntax and semantic check on source/target by
+// calling args_path_check_syntax/semantic. Returns adequate Err_Main
 enum Err_Main args_parse(struct Config *config, const int argc,
                          const char **argv);
 
