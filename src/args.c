@@ -10,9 +10,21 @@
 
 // ===== PRIVATE FUNCTION DECLARATIONS =====
 
-// Parse one argument. Set flags or target path in config.
-// Return ERR_NO_ERROR on success.
-static enum Err_Main _args_parse_arg(const char *arg, struct Config *config);
+// Using ARGS find the source and return pointer to it.
+// Return NULL on failure.
+static const char *_args_find_src(const int argc, const char **argv);
+
+// Using ARGS find the target and return pointer to it.
+// Return NULL on failure.
+static const char *_args_find_tgt(const int argc, const char **argv);
+
+// Using ARGS find if verbose flag was set to true.
+// Return 1 if was, 0 if wasnt.
+static int _args_is_v(const int argc, const char **argv);
+
+// Using ARGS find if instruction flag was set to true.
+// Return 1 if was, 0 if wasnt.
+static int _args_is_i(const int argc, const char **argv);
 
 // Change extension from '.kas' to '.kmx'.
 // Return 1 on success, 0 on failure.
@@ -20,41 +32,54 @@ static int _args_change_extension(char *path);
 
 // ===== PARSING ARGS =====
 
-enum Err_Main args_parse(const int argc, const char **argv,
-                         struct Config *config) {
-  size_t i = 0;
-  const char *src = NULL, *trg = NULL;
-  enum Err_Main merr = ERR_NO_ERROR;
-  enum Err_Args err = ARGS_NO_ERROR;
+enum Err_Main args_parse(struct Config *config, const int argc,
+                         const char **argv) {
+  const char *src = NULL, *tgt = NULL;
+  int v = 0, i = 0, tgt_edit = 0;
+
   if (argc < 2 || !argv || !config) { // Never could happen config == NULL
     printf("Usage: ./kmas.exe <source.kas> [target.kmx] [-v] [-i]\n");
     return ERR_INVALID_INPUT_FILE;
   }
 
-  src = argv[1];
-
-  for (i = 2; i < (size_t)argc; ++i) { // parse all arguments
-    if ((merr = _args_parse_arg(argv[i], config)) != ERR_NO_ERROR) {
-      return merr;
-    }
-  }
-
-  if (!config->target) { // if no target path, set default
-    if (!args_config_init(config,
-                          config->source)) { // set to the same as source
-      return ERR_INVALID_OUTPUT_FILE;
-    }
-    if (!_args_change_extension(config->target)) { // only edit extension
-      return ERR_INVALID_OUTPUT_FILE;
-    }
-  }
-
-  if ((err = args_path_syntax_check(config->source, NULL, ".kas")) !=
-      ARGS_NO_ERROR) {
+  if (!(src = _args_find_src(argc, argv))) {
     return ERR_INVALID_INPUT_FILE;
   }
 
-  return ERR_NO_ERROR;
+  if (!(tgt = _args_find_tgt(argc, argv))) {
+    tgt_edit = 1; // should edit the path in a moment
+    tgt = src;    // same path for src and tgt file - if was not set
+  }
+
+  v = _args_is_v(argc, argv);
+  i = _args_is_i(argc, argv);
+
+  if (!args_config_init(config, src, tgt, v, i)) { // INIT CONFIG
+    args_config_deinit(config);
+    return ERR_INVALID_INPUT_FILE;
+  }
+
+  if (tgt_edit) { // target didnt exist, now must exit extension
+    if (!_args_change_extension(config->target)) {
+      args_config_deinit(config);
+      return ERR_INVALID_INPUT_FILE; // input because output is purely based on
+                                     // input file
+    }
+  }
+
+  // check both paths
+  if (args_path_check_syntax(config->source, NULL, ".kas") != ARGS_NO_ERROR) {
+    args_config_deinit(config);
+    return ERR_INVALID_INPUT_FILE;
+  }
+
+  if (args_path_check_syntax(config->target, NULL, ".kmx") != ARGS_NO_ERROR) {
+    args_config_deinit(config);
+    return ERR_INVALID_OUTPUT_FILE;
+  }
+
+  // last and final check
+  return args_path_check_semantic(config);
 }
 
 enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
@@ -90,7 +115,7 @@ enum Err_Args args_path_syntax_check(const char *path, const char *prefix,
   return ARGS_NO_ERROR;
 }
 
-enum Err_Main args_check_config(const struct Config *config) {
+enum Err_Main args_path_check_semantic(const struct Config *config) {
   if (!config ||
       !config
            ->source) { // this shouldn't happen, so suspect first possible error
@@ -113,26 +138,13 @@ enum Err_Main args_check_config(const struct Config *config) {
 
 // ===== WORKING w CONFIG =====
 
-void args_config_clear(struct Config *config) {
-  if (!config) {
-    return;
-  }
-  config->flag_verbose = 0;
-  config->flag_instruction = 0;
-  config->source = NULL;
-  if (config->target) {
-    args_config_free(config);
-  }
-  config->target = NULL;
-}
-
 int args_config_init(struct Config *config, const char *source,
-                     const char *target) {
+                     const char *target, int verbose, int instruction) {
   size_t len = 0;
   CLEANUP_IF_FAIL(config);
 
-  config->flag_instruction = 0;
-  config->flag_verbose = 0;
+  config->flag_instruction = instruction;
+  config->flag_verbose = verbose;
 
   if (source) {
     len = strlen(source) + 1;
@@ -151,12 +163,7 @@ int args_config_init(struct Config *config, const char *source,
   return 1;
 
 cleanup:
-  if (config->source) {
-    jree(config->source);
-  }
-  if (config->target) {
-    jree(config->target);
-  }
+  args_config_deinit(config);
   return 0;
 }
 
@@ -174,17 +181,55 @@ cleanup:
 
 // ===== PRIVATE FUNCTIONS =====
 
-static enum Err_Main _args_parse_arg(const char *arg, struct Config *config) {
-  if (strcmp(arg, "-v") == 0) { // is verbose?
-    config->flag_verbose = 1;
-  } else if (strcmp(arg, "-i") == 0) { // Is instruction?
-    config->flag_instruction = 1;
-  } else if (!config->target) {           // Is target still empty?
-    if (!args_config_init(config, arg)) { // Was filling target a failure?
-      return ERR_INVALID_OUTPUT_FILE;
+static const char *_args_find_src(const int argc, const char **argv) {
+  CLEANUP_IF_FAIL(argc > 1 && argv && argv[1]);
+
+  return argv[1];
+
+cleanup:
+  return NULL;
+}
+
+static const char *_args_find_tgt(const int argc, const char **argv) {
+  size_t i = 0;
+  CLEANUP_IF_FAIL(argc > 2 && argv);
+
+  for (i = 2; i < argc; i++) { // skip .exe and src argumnets
+    if (argv[i][0] != '-') {   // if is not a flag
+      return argv[i];
     }
   }
-  return ERR_NO_ERROR;
+
+cleanup:
+  return NULL;
+}
+
+static int _args_is_v(const int argc, const char **argv) {
+  size_t i = 0;
+  CLEANUP_IF_FAIL(argc > 2 && argv);
+
+  for (i = 2; i < argc; i++) { // skip .exe and src argumnets
+    if (strcmp(argv[i], "-v") == 0) {
+      return 1;
+    }
+  }
+
+cleanup:
+  return 0;
+}
+
+static int _args_is_i(const int argc, const char **argv) {
+  size_t i = 0;
+  CLEANUP_IF_FAIL(argc > 2 && argv);
+
+  for (i = 2; i < argc; i++) { // skip .exe and src argumnets
+    if (strcmp(argv[i], "-i") == 0) {
+      return 1;
+    }
+  }
+
+cleanup:
+  return 0;
 }
 
 static int _args_change_extension(char *path) {
