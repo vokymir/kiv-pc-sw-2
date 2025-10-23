@@ -22,11 +22,11 @@ struct Init_Segment {
     struct {
       int count;
       int32_t value;
-      int is_uninit;
     } dup;
     char *string;
   } data;
   int element_count;
+  int is_uninit;
 };
 
 struct Data_Declaration {
@@ -39,5 +39,14 @@ struct Data_Declaration {
   int total_size;
   int is_fully_uninit;
 };
+
+// NOT YET SURE
+struct Data_Declaration *datad_create(void);
+
+int datad_init(struct Data_Declaration *dd);
+
+void datad_deinit(struct Data_Declaration *dd);
+
+void datad_free(struct Data_Declaration **dd);
 
 #endif
