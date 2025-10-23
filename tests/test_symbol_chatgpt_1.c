@@ -7,17 +7,21 @@
 #define TEST(name) printf("\n=== %s ===\n", name)
 
 int main(void) {
-  printf("Running Symbol table tests...\n");
+  printf("Running Symbol table tests (new interface)...\n");
 
   // === Test 1: Creation and cleanup ===
   TEST("symtab_create() and symtab_free()");
   struct Symbol_Table *table = symtab_create();
   assert(table != NULL);
-  printf("✅ Symbol table created.\n");
+  assert(table->symbols != NULL);
+  assert(table->count == 0);
+  assert(table->capacity >= SYMTAB_INITIAL_CAPACITY);
+  printf("✅ Symbol table created and initialized.\n");
 
-  symtab_free(table);
+  symtab_free(&table);
+  assert(table == NULL);
   assert(jemory() == 0);
-  printf("✅ Symbol table freed, no memory leaks.\n");
+  printf("✅ Symbol table freed, pointer cleared, no leaks.\n");
 
   // === Test 2: Adding symbols ===
   TEST("symtab_add()");
@@ -31,7 +35,8 @@ int main(void) {
   assert(symA && symB && symC);
   assert(strcmp(symA->name, "START") == 0);
   assert(symB->address == 0x0080);
-  printf("✅ Added three symbols.\n");
+  assert(table->count == 3);
+  printf("✅ Added three symbols successfully.\n");
 
   // === Test 3: Find symbols ===
   TEST("symtab_find()");
@@ -52,7 +57,8 @@ int main(void) {
 
   // === Test 5: Memory cleanup ===
   TEST("symtab_free()");
-  symtab_free(table);
+  symtab_free(&table);
+  assert(table == NULL);
   assert(jemory() == 0);
   printf("✅ Symbol table freed with no leaks.\n");
 

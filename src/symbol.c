@@ -65,7 +65,7 @@ void symtab_free(struct Symbol_Table **table) {
   CLEANUP_IF_FAIL(table);
 
   symtab_deinit(*table);
-  jree(table);
+  jree(*table);
   *table = NULL;
 
 cleanup:

@@ -7,13 +7,16 @@
 #define TEST(name) printf("\n=== %s ===\n", name)
 
 int main(void) {
-  printf("Running Symbol table tests...\n");
+  printf("Running Symbol table tests (new interface)...\n");
 
   // === Test 1: Creation ===
   TEST("symtab_create()");
   struct Symbol_Table *table = symtab_create();
   assert(table != NULL);
-  printf("✅ Created symbol table.\n");
+  assert(table->symbols != NULL);
+  assert(table->count == 0);
+  assert(table->capacity >= SYMTAB_INITIAL_CAPACITY);
+  printf("✅ Created and initialized symbol table.\n");
 
   // === Test 2: Add symbols ===
   TEST("symtab_add()");
@@ -26,12 +29,13 @@ int main(void) {
   assert(s1->address == 0x1000);
   assert(strcmp(s2->name, "START") == 0);
   assert(s3->address == 0x1FFF);
+  assert(table->count == 3);
   printf("✅ Added 3 valid symbols.\n");
 
   // === Test 3: Duplicate name handling ===
   TEST("symtab_add() duplicate");
   struct Symbol *dup = symtab_add(table, "START", 0x9999);
-  assert(dup != NULL); // currently allowed (depends on design)
+  assert(dup != NULL); // Allowed unless interface defines otherwise
   assert(strcmp(dup->name, "START") == 0);
   printf("✅ Duplicate allowed (if not explicitly prevented).\n");
 
@@ -57,9 +61,10 @@ int main(void) {
 
   // === Test 6: Cleanup ===
   TEST("symtab_free()");
-  symtab_free(table);
+  symtab_free(&table);
+  assert(table == NULL);
   assert(jemory() == 0);
-  printf("✅ Table freed, no leaks detected.\n");
+  printf("✅ Table freed, pointer cleared, no leaks detected.\n");
 
   printf("\n🎉 All Symbol table tests passed successfully!\n");
   return 0;
