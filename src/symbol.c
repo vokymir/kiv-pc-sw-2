@@ -1,27 +1,17 @@
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
 #include "common.h"
-#include "container.h"
 #include "memory.h"
 #include "symbol.h"
 
-// ===== STRUCT DEFINITIONS =====
-
-struct Symbol_Table {
-  struct Container *symbols;
-};
-
 // ===== PRIVATE FUNCTION DEFINITIONS =====
 
-// Create new symbol. COPY the name to own new location.
-// If some arg is not provided, the symbol will be created with uninicialized
-// parameter, but would create.
-// Return NULL on failure, pointer on success.
-static struct Symbol *_symtab_create_symbol(const char *name, uint32_t addr);
-
-// Free symbol and its insides.
-static void _symtab_free_symbol(struct Symbol *symbol);
+// Grow sym array if needed. Ensures the array have capacity of current +
+// additional_symbols*sizeof(symbol). Return 0 on failure, 1 on success.
+static int _symtab_ensure_capacity(struct Symbol_Table *symtab,
+                                   size_t additional_symbols);
 
 // ===== PUBLIC FUNCTIONS =====
 
@@ -31,8 +21,7 @@ struct Symbol_Table *symtab_create(void) {
   table = jalloc(sizeof(struct Symbol_Table));
   CLEANUP_IF_FAIL(table);
 
-  table->symbols = ct_create(CT_LLIST, sizeof(struct Symbol));
-  CLEANUP_IF_FAIL(table->symbols);
+  CLEANUP_IF_FAIL(symtab_init(table));
 
   return table;
 
@@ -43,93 +32,109 @@ cleanup:
   return NULL;
 }
 
-void symtab_free(struct Symbol_Table *table) {
-  if (!table) {
-    return;
-  }
+int symtab_init(struct Symbol_Table *table) {
+  CLEANUP_IF_FAIL(table);
+
+  table->symbols = jalloc(SYMTAB_INITIAL_CAPACITY * sizeof(struct Symbol));
+  CLEANUP_IF_FAIL(table->symbols);
+
+  table->count = 0;
+  table->capacity = SYMTAB_INITIAL_CAPACITY;
+
+  return 1;
+
+cleanup:
+  return 0;
+}
+
+void symtab_deinit(struct Symbol_Table *table) {
+  CLEANUP_IF_FAIL(table);
+
   if (table->symbols) {
-    ct_free(table->symbols, (ct_free_item)_symtab_free_symbol);
+    jree(table->symbols);
   }
+
+  table->count = 0;
+  table->capacity = 0;
+
+cleanup:
+  return;
+}
+
+void symtab_free(struct Symbol_Table **table) {
+  CLEANUP_IF_FAIL(table);
+
+  symtab_deinit(*table);
   jree(table);
+  *table = NULL;
+
+cleanup:
   return;
 }
 
 struct Symbol *symtab_add(struct Symbol_Table *table, const char *name,
                           const uint32_t address) {
   struct Symbol *symbol = NULL;
-  void *tmp = NULL;
-  if (!table || !table->symbols || !name) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(table && table->symbols && name);
+  symbol = &table->symbols[table->count];
 
-  symbol = _symtab_create_symbol(name, address);
-  CLEANUP_IF_FAIL(symbol);
+  CLEANUP_IF_FAIL(_symtab_ensure_capacity(table, 1));
 
-  tmp = ct_add(table->symbols, (void **)&symbol);
-  CLEANUP_IF_FAIL(tmp);
-  symbol = tmp;
+  symbol->address = address;
+  strcpy(symbol->name, name);
+  table->count++;
 
   return symbol;
 
 cleanup:
-  if (symbol) {
-    _symtab_free_symbol(symbol);
-  }
   return NULL;
 }
 
 struct Symbol *symtab_find(const struct Symbol_Table *table, const char *name) {
   size_t i = 0;
   struct Symbol *symbol = NULL;
-  if (!table || !table->symbols || !name) {
-    return NULL;
-  }
+  CLEANUP_IF_FAIL(table && table->symbols && name);
 
-  for (i = 0; i < ct_count(table->symbols); i++) { // iterate all symbols
-    symbol = ct_get(table->symbols, i);
-    if (symbol && symbol->name && strcmp(symbol->name, name) == 0) {
-      return symbol; // found with the same name
+  for (i = 0; i < table->count; i++) {
+    symbol = &table->symbols[i];
+    if (strcmp(symbol->name, name) == 0) {
+      return symbol; // found
     }
-    symbol = NULL;
   }
 
+cleanup:
   return NULL; // not found
 }
 
 // ===== PRIVATE FUNCTIONS =====
 
-static struct Symbol *_symtab_create_symbol(const char *name, uint32_t addr) {
-  struct Symbol *symbol = NULL;
+static int _symtab_ensure_capacity(struct Symbol_Table *symtab,
+                                   size_t additional_symbols) {
+  size_t req = 0, new_cap = 0;
+  struct Symbol *new_s = NULL;
+  CLEANUP_IF_FAIL(symtab && symtab->symbols);
 
-  symbol = jalloc(sizeof(struct Symbol));
-  CLEANUP_IF_FAIL(symbol);
-
-  if (name) {
-    symbol->name = jtrdup(name);
+  if (additional_symbols == 0) {
+    return 1;
   }
-  CLEANUP_IF_FAIL(symbol->name);
 
-  symbol->address = addr;
+  req = symtab->count + additional_symbols;
+  if (req <= symtab->capacity) {
+    return 1;
+  }
 
-  return symbol;
+  new_cap = symtab->capacity ? symtab->capacity : SYMTAB_INITIAL_CAPACITY;
+  while (new_cap < req) {
+    new_cap *= SYMTAB_CAPACITY_MULT;
+  }
+
+  new_s = jealloc(symtab->symbols, new_cap * sizeof(struct Symbol));
+  CLEANUP_IF_FAIL(new_s);
+
+  symtab->symbols = new_s;
+  symtab->capacity = new_cap;
+  return 1;
 
 cleanup:
-  if (symbol) {
-    if (symbol->name) {
-      jree(symbol->name);
-    }
-    jree(symbol);
-  }
-  return NULL;
-}
-
-static void _symtab_free_symbol(struct Symbol *symbol) {
-  if (!symbol) {
-    return;
-  }
-  if (symbol->name) {
-    jree(symbol->name);
-  }
-  jree(symbol);
-  return;
+  return 0;
 }
