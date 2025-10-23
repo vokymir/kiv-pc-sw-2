@@ -1,23 +1,14 @@
-#include "../src/container.h"
 #include "../src/lexer.h"
 #include "../src/memory.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
-// =============================================
-//  Choose container implementation here
-// =============================================
-#define CONTAINER_TYPE CT_LLIST
-// #define CONTAINER_TYPE CT_ARRAY   // <- uncomment to switch
-// =============================================
-
 // Forward decl
 const char *lexer_token_type_to_str(enum Token_Type type);
 
-// Helper to print tokens (optional)
-static void print_token(void *data) {
-  struct Token *t = (struct Token *)data;
+// Helper to print a single token (optional)
+static void print_token(const struct Token *t) {
   printf("[%s:%zu] \"%s\"\n", lexer_token_type_to_str(t->type), t->line_number,
          t->value);
 }
@@ -66,22 +57,36 @@ const char *lexer_token_type_to_str(enum Token_Type type) {
   }
 }
 
+// Count tokens in the returned array (includes the terminating TOKEN_EOF)
+static size_t token_count(const struct Token *tokens) {
+  size_t i = 0;
+  if (!tokens)
+    return 0;
+  while (tokens[i].type != TOKEN_EOF) {
+    i++;
+  }
+  // include the EOF token in the count to match previous behavior
+  return i + 1;
+}
+
 int main(void) {
-  printf("Running lexer tests using container type %d...\n", CONTAINER_TYPE);
+  printf("Running lexer tests (array-based interface)...\n");
 
   const char *line = "MOV A, 42 ; comment\n";
   size_t nl = 1;
 
   // === Tokenize line ===
-  struct Container *tokens = lexer_tokenize_line(line, nl);
+  struct Token *tokens = lexer_tokenize_line(line, nl);
   assert(tokens != NULL);
-  assert(ct_count(tokens) > 0);
-  printf("Tokenized successfully, token count = %zu\n", ct_count(tokens));
+
+  size_t count = token_count(tokens);
+  assert(count > 0);
+  printf("Tokenized successfully, token count = %zu\n", count);
 
   // === Inspect tokens ===
-  struct Token *t0 = (struct Token *)ct_get(tokens, 0);
-  struct Token *t1 = (struct Token *)ct_get(tokens, 1);
-  struct Token *t2 = (struct Token *)ct_get(tokens, 2);
+  struct Token *t0 = &tokens[0];
+  struct Token *t1 = &tokens[1];
+  struct Token *t2 = &tokens[2];
 
   assert(t0 && t1 && t2);
   assert(t0->type == TOKEN_INSTRUCTION);
@@ -94,16 +99,18 @@ int main(void) {
   printf("First 3 tokens verified (MOV, A, ,)\n");
 
   // === Last token should be EOF ===
-  struct Token *last = (struct Token *)ct_get(tokens, ct_count(tokens) - 1);
+  struct Token *last = &tokens[count - 1];
   assert(last && last->type == TOKEN_EOF);
   printf("EOF token present.\n");
 
   // === Optional print ===
   printf("Token list:\n");
-  ct_foreach(tokens, print_token);
+  for (size_t i = 0; i < count; ++i) {
+    print_token(&tokens[i]);
+  }
 
   // === Free ===
-  ct_free(tokens, (ct_free_item)lexer_free_token);
+  lexer_free_tokens(tokens);
   assert(jemory() == 0);
   printf("Freed tokens, no leaks detected.\n");
 
