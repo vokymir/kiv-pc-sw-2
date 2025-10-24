@@ -4,23 +4,17 @@
 #include "memory.h"
 #include "parser_code.h"
 #include "parser_data.h"
+#include "parser_grammar.h"
 
 struct Parsed_Statement *parse_tokens(const struct Token *tokens[], size_t nl) {
   struct Parsed_Statement *stmt = NULL;
   CLEANUP_IF_FAIL(tokens);
 
-  // reallly build the whole grammar here?
-  switch (tokens[0]->type) {
-  case TOKEN_UNKNOWN:
-  case TOKEN_EOF:
-  }
+  CLEANUP_IF_FAIL(grammar_line(stmt, tokens));
 
   return stmt;
 
 cleanup:
-  if (stmt) {
-    p_stmt_free(&stmt);
-  }
   return NULL;
 }
 

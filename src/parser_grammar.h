@@ -38,11 +38,69 @@
  * <identifier_db_dec2> | NUMBER, DUP, LPAREN, QUESTION, RPAREN,
  * <identifier_db_dec2>
  *
+ * POZOR: MOHL BY BYT PROBLEM S DUP: PROTOZE TAKY ZACINA NA NUMBER
+ *
  * 14) <instruction_line> --> INSTRUCTION, <instruction_rhs>
  * 15) <instruction_rhs> --> EOF | LABEL, EOF | REG, EOF | NUM, EOF | REG,
  * COMMA, <instruction_rhs_after>
  * 16) <instruction_rhs_after> --> REG, EOF | NUMBER, EOF | OFFSET, IDENTIFIER,
  * EOF
  */
+
+#include "lexer.h"
+#include "parser.h"
+
+// Using grammar, parse the line. Update the pstmt to hold the answer.
+// On success return 1 AND fill the pstmt, so the caller must free.
+// On failure return 0 and allocates nothing.
+int grammar_line(struct Parsed_Statement *pstmt, const struct Token *tokens[]);
+
+int grammar_line_kma(struct Parsed_Statement *pstmt,
+                     const struct Token *tokens[]);
+
+int grammar_line_code(struct Parsed_Statement *pstmt,
+                      const struct Token *tokens[]);
+
+int grammar_line_data(struct Parsed_Statement *pstmt,
+                      const struct Token *tokens[]);
+
+int grammar_line_label(struct Parsed_Statement *pstmt,
+                       const struct Token *tokens[]);
+
+int grammar_line_identifier(struct Parsed_Statement *pstmt,
+                            const struct Token *tokens[]);
+
+int grammar_line_instruction(struct Parsed_Statement *pstmt,
+                             const struct Token *tokens[]);
+
+int grammar_identifier_def(struct Parsed_Statement *pstmt,
+                           const struct Token *tokens[]);
+
+int grammar_identifier_dw_dec(struct Parsed_Statement *pstmt,
+                              const struct Token *tokens[]);
+
+int grammar_identifier_dw_dec2(struct Parsed_Statement *pstmt,
+                               const struct Token *tokens[]);
+
+int grammar_identifier_dw_dup(struct Parsed_Statement *pstmt,
+                              const struct Token *tokens[]);
+
+int grammar_identifier_db_dec(struct Parsed_Statement *pstmt,
+                              const struct Token *tokens[]);
+
+int grammar_identifier_db_dec2(struct Parsed_Statement *pstmt,
+                               const struct Token *tokens[]);
+
+int grammar_identifier_db_dup(struct Parsed_Statement *pstmt,
+                              const struct Token *tokens[]);
+
+int grammar_instruction_rhs(struct Parsed_Statement *pstmt,
+                            const struct Token *tokens[]);
+
+int grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
+                                  const struct Token *tokens[]);
+
+// Return 1 if the token is EOF.
+int grammar_eof(struct Parsed_Statement *pstmt, const struct Token *tokens[]);
 
 #endif
