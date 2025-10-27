@@ -3,6 +3,8 @@
 #include "lexer.h"
 #include "parser.h"
 #include "parser_data.h"
+#include <inttypes.h>
+#include <stdlib.h>
 #include <string.h>
 
 enum Err_Grm grammar_line(struct Parsed_Statement *pstmt,
@@ -164,19 +166,34 @@ cleanup:
 
 enum Err_Grm grammar_identifier_dw_dec(struct Parsed_Statement *pstmt,
                                        const struct Token *tokens[]) {
+  size_t segment_idx = 0;
+  struct Init_Segment *segment = NULL;
+  const struct Token *token = NULL;
+  char *end = NULL;
   CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  token = tokens[0];
 
-  if (tokens[0]->type == TOKEN_NUMBER && tokens[1]->type == TOKEN_DUP) {
+  if (token->type == TOKEN_NUMBER && tokens[1]->type == TOKEN_DUP) {
     CLEANUP_IF_FAIL(grammar_identifier_dw_dup(pstmt, &tokens[0]));
   }
-  if (tokens[0]->type == TOKEN_NUMBER) {
+  if (token->type == TOKEN_NUMBER) {
+    segment_idx = pstmt->content.data_decl.segment_count;
+    pstmt->content.data_decl.segment_count++;
+
     CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &tokens[1]));
-    // HERE
+    segment = &pstmt->content.data_decl.segments[segment_idx];
+    segment->data.value = strtoimax(token->value, &end, 10);
+
+    CLEANUP_IF_FAIL(token->value != end);
+    segment->type = INIT_SEG_VALUE;
+    segment->is_uninit = 0;
+    segment->element_count = 1;
   }
 
   return GRM_MATCH;
 
 cleanup:
+  pstmt->content.data_decl.segment_count--;
   return GRM_NO_MATCH;
 }
 

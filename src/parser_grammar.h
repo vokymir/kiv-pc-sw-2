@@ -26,15 +26,15 @@
  * 6) <identifier_line> --> IDENTIFIER, <identifier_def>
  * 7) <identifier_def> --> DATA_TYPE_DW, <identifier_dw_dec> | DATA_TYPE_DB,
  * <identifier_db_dec>
- * 8) <identifier_dw_dec> --> NUMBER, <identifier_dw_dec2> | <identifier_dw_dup>
- * 9) <identifier_dw_dec2> --> COMMA, <identifier_dw_dec> | EOF
- * 10) <identifier_dw_dup> --> NUMBER, DUP, LPAREN, NUM, RPAREN,
- * <identifier_dw_dec2> | NUMBER, DUP, LPAREN, QUESTION, RPAREN,
+ * 8) <identifier_dw_dec> --> QUESTION, <identifier_dw_dec2> | NUMBER,
+ * <identifier_dw_dec2> | <identifier_dw_dup> 9) <identifier_dw_dec2> --> COMMA,
+ * <identifier_dw_dec> | EOF 10) <identifier_dw_dup> --> NUMBER, DUP, LPAREN,
+ * NUM, RPAREN, <identifier_dw_dec2> | NUMBER, DUP, LPAREN, QUESTION, RPAREN,
  * <identifier_dw_dec2>
- * 11) <identifier_db_dec> --> NUMBER, <identifier_db_dec2> | STRING,
- * <identifier_db_dec2> | <identifier_db_dup>
- * 12) <identifier_db_dec2> --> COMMA, <identifier_db_dec> | EOF
- * 13) <identifier_db_dup> --> NUMBER, DUP, LPAREN, NUM, RPAREN,
+ * 11) <identifier_db_dec> --> QUESTION, <identifier_db_dec2> | NUMBER,
+ * <identifier_db_dec2> | STRING, <identifier_db_dec2> | <identifier_db_dup> 12)
+ * <identifier_db_dec2> --> COMMA, <identifier_db_dec> | EOF 13)
+ * <identifier_db_dup> --> NUMBER, DUP, LPAREN, NUM, RPAREN,
  * <identifier_db_dec2> | NUMBER, DUP, LPAREN, QUESTION, RPAREN,
  * <identifier_db_dec2>
  *
