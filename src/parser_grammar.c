@@ -329,6 +329,8 @@ static int _exist_tokens(const struct Token *tokens[], size_t count) {
     CLEANUP_IF_FAIL(tokens[i]->type != TOKEN_EOF);
   }
 
+  return 1;
+
 cleanup:
   return 0;
 }
