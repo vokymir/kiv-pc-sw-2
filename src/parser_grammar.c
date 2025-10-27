@@ -153,11 +153,12 @@ enum Err_Grm grammar_identifier_def(struct Parsed_Statement *pstmt,
 
   CLEANUP_IF_FAIL(tokens[0]->type == TOKEN_DATA_TYPE);
 
-  if (strcmp(tokens[0]->value, "DWORD") || strcmp(tokens[0]->value, "DW")) {
+  if (strcmp(tokens[0]->value, "DWORD") == 0 ||
+      strcmp(tokens[0]->value, "DW") == 0) {
     CLEANUP_IF_FAIL(grammar_identifier_dw_dec(pstmt, &tokens[1]) == GRM_MATCH);
     pstmt->content.data_decl.type = DATA_DWORD;
-  } else if (strcmp(tokens[0]->value, "BYTE") ||
-             strcmp(tokens[0]->value, "DB")) {
+  } else if (strcmp(tokens[0]->value, "BYTE") == 0 ||
+             strcmp(tokens[0]->value, "DB") == 0) {
     CLEANUP_IF_FAIL(grammar_identifier_db_dec(pstmt, &tokens[1]) == GRM_MATCH);
     pstmt->content.data_decl.type = DATA_BYTE;
   } else {
