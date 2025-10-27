@@ -28,13 +28,13 @@
  * <identifier_db_dec>
  * 8) <identifier_dw_dec> --> NUMBER, <identifier_dw_dec2> | <identifier_dw_dup>
  * 9) <identifier_dw_dec2> --> COMMA, <identifier_dw_dec> | EOF
- * 10) <identifitr_dw_dup> --> NUMBER, DUP, LPAREN, NUM, RPAREN,
+ * 10) <identifier_dw_dup> --> NUMBER, DUP, LPAREN, NUM, RPAREN,
  * <identifier_dw_dec2> | NUMBER, DUP, LPAREN, QUESTION, RPAREN,
  * <identifier_dw_dec2>
  * 11) <identifier_db_dec> --> NUMBER, <identifier_db_dec2> | STRING,
  * <identifier_db_dec2> | <identifier_db_dup>
  * 12) <identifier_db_dec2> --> COMMA, <identifier_db_dec> | EOF
- * 13) <identifitr_db_dup> --> NUMBER, DUP, LPAREN, NUM, RPAREN,
+ * 13) <identifier_db_dup> --> NUMBER, DUP, LPAREN, NUM, RPAREN,
  * <identifier_db_dec2> | NUMBER, DUP, LPAREN, QUESTION, RPAREN,
  * <identifier_db_dec2>
  *
@@ -50,57 +50,68 @@
 #include "lexer.h"
 #include "parser.h"
 
+enum Err_Grm {
+  GRM_MATCH,
+  GRM_NO_MATCH,
+  GRM_GENERIC_ERROR,
+};
+
+// VSECHNY FCE POKUD VOLAJI NEJAKOU DALSI, PREDAJI POINTER UZ POSUNUTEJ NA DALSI
+// TOKEN
+
 // Using grammar, parse the line. Update the pstmt to hold the answer.
 // On success return 1 AND fill the pstmt, so the caller must free.
 // On failure return 0 and allocates nothing.
-int grammar_line(struct Parsed_Statement *pstmt, const struct Token *tokens[]);
+enum Err_Grm grammar_line(struct Parsed_Statement *pstmt,
+                          const struct Token *tokens[]);
 
-int grammar_line_kma(struct Parsed_Statement *pstmt,
-                     const struct Token *tokens[]);
-
-int grammar_line_code(struct Parsed_Statement *pstmt,
-                      const struct Token *tokens[]);
-
-int grammar_line_data(struct Parsed_Statement *pstmt,
-                      const struct Token *tokens[]);
-
-int grammar_line_label(struct Parsed_Statement *pstmt,
-                       const struct Token *tokens[]);
-
-int grammar_line_identifier(struct Parsed_Statement *pstmt,
-                            const struct Token *tokens[]);
-
-int grammar_line_instruction(struct Parsed_Statement *pstmt,
-                             const struct Token *tokens[]);
-
-int grammar_identifier_def(struct Parsed_Statement *pstmt,
-                           const struct Token *tokens[]);
-
-int grammar_identifier_dw_dec(struct Parsed_Statement *pstmt,
+enum Err_Grm grammar_line_kma(struct Parsed_Statement *pstmt,
                               const struct Token *tokens[]);
 
-int grammar_identifier_dw_dec2(struct Parsed_Statement *pstmt,
+enum Err_Grm grammar_line_code(struct Parsed_Statement *pstmt,
                                const struct Token *tokens[]);
 
-int grammar_identifier_dw_dup(struct Parsed_Statement *pstmt,
-                              const struct Token *tokens[]);
-
-int grammar_identifier_db_dec(struct Parsed_Statement *pstmt,
-                              const struct Token *tokens[]);
-
-int grammar_identifier_db_dec2(struct Parsed_Statement *pstmt,
+enum Err_Grm grammar_line_data(struct Parsed_Statement *pstmt,
                                const struct Token *tokens[]);
 
-int grammar_identifier_db_dup(struct Parsed_Statement *pstmt,
-                              const struct Token *tokens[]);
+enum Err_Grm grammar_line_label(struct Parsed_Statement *pstmt,
+                                const struct Token *tokens[]);
 
-int grammar_instruction_rhs(struct Parsed_Statement *pstmt,
-                            const struct Token *tokens[]);
+enum Err_Grm grammar_line_identifier(struct Parsed_Statement *pstmt,
+                                     const struct Token *tokens[]);
 
-int grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
-                                  const struct Token *tokens[]);
+enum Err_Grm grammar_line_instruction(struct Parsed_Statement *pstmt,
+                                      const struct Token *tokens[]);
+
+enum Err_Grm grammar_identifier_def(struct Parsed_Statement *pstmt,
+                                    const struct Token *tokens[]);
+
+enum Err_Grm grammar_identifier_dw_dec(struct Parsed_Statement *pstmt,
+                                       const struct Token *tokens[]);
+
+enum Err_Grm grammar_identifier_dw_dec2(struct Parsed_Statement *pstmt,
+                                        const struct Token *tokens[]);
+
+enum Err_Grm grammar_identifier_dw_dup(struct Parsed_Statement *pstmt,
+                                       const struct Token *tokens[]);
+
+enum Err_Grm grammar_identifier_db_dec(struct Parsed_Statement *pstmt,
+                                       const struct Token *tokens[]);
+
+enum Err_Grm grammar_identifier_db_dec2(struct Parsed_Statement *pstmt,
+                                        const struct Token *tokens[]);
+
+enum Err_Grm grammar_identifier_db_dup(struct Parsed_Statement *pstmt,
+                                       const struct Token *tokens[]);
+
+enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
+                                     const struct Token *tokens[]);
+
+enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
+                                           const struct Token *tokens[]);
 
 // Return 1 if the token is EOF.
-int grammar_eof(struct Parsed_Statement *pstmt, const struct Token *tokens[]);
+enum Err_Grm grammar_eof(struct Parsed_Statement *pstmt,
+                         const struct Token *tokens[]);
 
 #endif

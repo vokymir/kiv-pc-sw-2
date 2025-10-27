@@ -14,6 +14,7 @@ enum Err_Parse {
 
 enum Statement_Type {
   STMT_NONE,         // Empty line or comment-only
+  STMT_KMA,          // defines assembler file
   STMT_SECTION_DATA, // .DATA
   STMT_SECTION_CODE, // .CODE
   STMT_LABEL_DEF,    // Label definition
