@@ -1,4 +1,5 @@
 #include <inttypes.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,9 +12,23 @@
 #include "parser_data.h"
 #include "parser_grammar.h"
 
-// Check wheter next <count> tokens are not EOF.
+// Check whether next <count> tokens exist - only the last one can be EOF.
 // On success return 1, on failure 0.
 static int _exist_tokens(const struct Token *tokens[], size_t count);
+
+// Check if token is not null and its type is <type>.
+static int _tok_is(const struct Token *tok, enum Token_Type type);
+
+// Check if token is not null and its type is EOF.
+static int _tok_is_eof(const struct Token *tok);
+
+// Check if first n tokens exist are exact types.
+static int _tok_start_with(const struct Token *tokens[], size_t n,
+                           const enum Token_Type types[]);
+
+// Check if token on idx exist and have type.
+static int _peek_type(const struct Token *tokens[], size_t idx,
+                      enum Token_Type type);
 
 enum Err_Grm grammar_line(struct Parsed_Statement *pstmt,
                           const struct Token *tokens[]) {
@@ -542,7 +557,9 @@ cleanup:
 
 static int _exist_tokens(const struct Token *tokens[], size_t count) {
   size_t i = 0;
-  CLEANUP_IF_FAIL(*tokens);
+  if (!tokens && !*tokens) {
+    return 0;
+  }
 
   for (i = 0; i < count; i++) {
     if (i < count - 1 && tokens[i]->type == TOKEN_EOF) {
@@ -551,7 +568,44 @@ static int _exist_tokens(const struct Token *tokens[], size_t count) {
   }
 
   return 1;
+}
 
-cleanup:
-  return 0;
+static int _tok_is(const struct Token *tok, enum Token_Type type) {
+  return (tok && tok->type == type);
+}
+
+static int _tok_is_eof(const struct Token *tok) {
+  return (tok && tok->type == TOKEN_EOF);
+}
+
+static int _tok_start_with(const struct Token *tokens[], size_t n,
+                           const enum Token_Type types[]) {
+  size_t i = 0;
+  if (!tokens && !*tokens) {
+    return 0;
+  }
+
+  for (i = 0; i < n; i++) {
+    if (!_tok_is(tokens[i], types[i])) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+static int _peek_type(const struct Token *tokens[], size_t idx,
+                      enum Token_Type type) {
+  size_t i = 0;
+  if (!tokens && !*tokens) {
+    return 0;
+  }
+
+  for (i = 0; i < idx - 1; i++) {
+    if (_tok_is_eof(tokens[i])) {
+      return 0;
+    }
+  }
+
+  return _tok_is(tokens[idx], type);
 }
