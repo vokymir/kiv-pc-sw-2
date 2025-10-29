@@ -133,6 +133,7 @@ enum Err_Grm grammar_line_data(struct Parsed_Statement *pstmt,
 
 enum Err_Grm grammar_line_label(struct Parsed_Statement *pstmt,
                                 const struct Token *tokens[]) {
+  char *lab_name = NULL;
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
   NOMATCH_IF_FAIL(
@@ -141,14 +142,16 @@ enum Err_Grm grammar_line_label(struct Parsed_Statement *pstmt,
   pstmt->type = STMT_LABEL_DEF;
   pstmt->err = PAR_NO_ERROR;
 
-  strncpy(pstmt->content.label_def.label_name, tokens[0]->value,
-          sizeof(pstmt->content.label_def.label_name));
+  lab_name = pstmt->content.label_def.label_name;
+  RETURN_IF_FAIL(_copy_token_value(tokens[0], lab_name, sizeof(lab_name)),
+                 GRM_GENERIC_ERROR);
 
   return GRM_MATCH;
 }
 
 enum Err_Grm grammar_line_identifier(struct Parsed_Statement *pstmt,
                                      const struct Token *tokens[]) {
+  char *idtf_name = NULL;
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
   NOMATCH_IF_FAIL(_token_is(tokens[0], TOKEN_IDENTIFIER));
@@ -157,8 +160,10 @@ enum Err_Grm grammar_line_identifier(struct Parsed_Statement *pstmt,
 
   pstmt->type = STMT_DATA_DECL;
   pstmt->err = PAR_NO_ERROR;
-  strncpy(pstmt->content.data_decl.identifier, tokens[0]->value,
-          sizeof(pstmt->content.data_decl.identifier));
+
+  idtf_name = pstmt->content.data_decl.identifier;
+  RETURN_IF_FAIL(_copy_token_value(tokens[0], idtf_name, sizeof(idtf_name)),
+                 GRM_GENERIC_ERROR);
 
   return GRM_MATCH;
 }
@@ -188,12 +193,11 @@ enum Err_Grm grammar_identifier_def(struct Parsed_Statement *pstmt,
 
   NOMATCH_IF_FAIL(_token_is(tokens[0], TOKEN_DATA_TYPE));
 
-  if (strcmp(tokens[0]->value, "DWORD") == 0 ||
-      strcmp(tokens[0]->value, "DW") == 0) {
+  if (_token_value_eq(tokens[0], "DWORD") || _token_value_eq(tokens[0], "DW")) {
     CLEANUP_IF_FAIL(grammar_identifier_dw_dec(pstmt, &tokens[1]) == GRM_MATCH);
     pstmt->content.data_decl.type = DATA_DWORD;
-  } else if (strcmp(tokens[0]->value, "BYTE") == 0 ||
-             strcmp(tokens[0]->value, "DB") == 0) {
+  } else if (_token_value_eq(tokens[0], "BYTE") ||
+             _token_value_eq(tokens[0], "DB")) {
     CLEANUP_IF_FAIL(grammar_identifier_db_dec(pstmt, &tokens[1]) == GRM_MATCH);
     pstmt->content.data_decl.type = DATA_BYTE;
   } else {
@@ -234,7 +238,8 @@ enum Err_Grm grammar_identifier_dw_dec(struct Parsed_Statement *pstmt,
   } else if (_token_is(tokens[0], TOKEN_NUMBER)) {
     CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &tokens[1]) == GRM_MATCH);
     segment = &pstmt->content.data_decl.segments[segment_idx];
-    segment->data.value = strtoimax(token->value, &end, 10);
+    segment->data.value =
+        strtoimax(token->value, &end, 10); // TODO: continue here
 
     CLEANUP_IF_FAIL(token->value != end);
     segment->type = INIT_SEG_VALUE;
