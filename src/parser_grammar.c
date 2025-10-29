@@ -9,8 +9,12 @@
 #include "lexer.h"
 #include "memory.h"
 #include "parser.h"
+#include "parser_code.h"
 #include "parser_data.h"
 #include "parser_grammar.h"
+
+#define NOMATCH_IF_FAIL(cond) RETURN_IF_FAIL((cond), GRM_NO_MATCH)
+#define TOK_ARR(...) ((const enum Token_Type[]){__VA_ARGS__})
 
 // Check whether next <count> tokens exist - only the last one can be EOF.
 // On success return 1, on failure 0.
@@ -32,7 +36,7 @@ static int _peek_type(const struct Token *tokens[], size_t idx,
 
 enum Err_Grm grammar_line(struct Parsed_Statement *pstmt,
                           const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
   if (grammar_line_kma(pstmt, tokens) == GRM_MATCH) {
     return GRM_MATCH;
@@ -52,74 +56,58 @@ enum Err_Grm grammar_line(struct Parsed_Statement *pstmt,
   if (grammar_line_instruction(pstmt, tokens) == GRM_MATCH) {
     return GRM_MATCH;
   }
-  if (grammar_eof(pstmt, tokens) == GRM_MATCH) {
+  if (_tok_is_eof(tokens[0])) {
     pstmt->type = STMT_NONE;
     pstmt->err = PAR_EMPTY_LINE;
     return GRM_MATCH;
   }
 
-cleanup:
   return GRM_NO_MATCH;
 }
 
 enum Err_Grm grammar_line_kma(struct Parsed_Statement *pstmt,
                               const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  CLEANUP_IF_FAIL(tokens[0]->type == TOKEN_KMA);
-
-  CLEANUP_IF_FAIL(grammar_eof(pstmt, &tokens[1]) == GRM_MATCH);
+  NOMATCH_IF_FAIL(_tok_start_with(tokens, 2, TOK_ARR(TOKEN_KMA, TOKEN_EOF)));
 
   pstmt->type = STMT_KMA;
   pstmt->err = PAR_NO_ERROR;
 
   return GRM_MATCH;
-
-cleanup:
-  return GRM_NO_MATCH;
 }
 
 enum Err_Grm grammar_line_code(struct Parsed_Statement *pstmt,
                                const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  CLEANUP_IF_FAIL(tokens[0]->type == TOKEN_SECTION_CODE);
-
-  CLEANUP_IF_FAIL(grammar_eof(pstmt, &tokens[1]) == GRM_MATCH);
+  NOMATCH_IF_FAIL(
+      _tok_start_with(tokens, 2, TOK_ARR(TOKEN_SECTION_CODE, TOKEN_EOF)));
 
   pstmt->type = STMT_SECTION_CODE;
   pstmt->err = PAR_NO_ERROR;
 
   return GRM_MATCH;
-
-cleanup:
-  return GRM_NO_MATCH;
 }
 
 enum Err_Grm grammar_line_data(struct Parsed_Statement *pstmt,
                                const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  CLEANUP_IF_FAIL(tokens[0]->type == TOKEN_SECTION_DATA);
+  NOMATCH_IF_FAIL(
+      _tok_start_with(tokens, 2, TOK_ARR(TOKEN_SECTION_DATA, TOKEN_EOF)));
 
-  CLEANUP_IF_FAIL(grammar_eof(pstmt, &tokens[1]) == GRM_MATCH);
-
-  pstmt->type = STMT_SECTION_DATA;
+  pstmt->type = STMT_SECTION_CODE;
   pstmt->err = PAR_NO_ERROR;
 
   return GRM_MATCH;
-
-cleanup:
-  return GRM_NO_MATCH;
 }
 
 enum Err_Grm grammar_line_label(struct Parsed_Statement *pstmt,
                                 const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  CLEANUP_IF_FAIL(tokens[0]->type == TOKEN_LABEL);
-
-  CLEANUP_IF_FAIL(grammar_eof(pstmt, &tokens[1]) == GRM_MATCH);
+  NOMATCH_IF_FAIL(_tok_start_with(tokens, 2, TOK_ARR(TOKEN_LABEL, TOKEN_EOF)));
 
   pstmt->type = STMT_LABEL_DEF;
   pstmt->err = PAR_NO_ERROR;
@@ -128,18 +116,15 @@ enum Err_Grm grammar_line_label(struct Parsed_Statement *pstmt,
           sizeof(pstmt->content.label_def.label_name));
 
   return GRM_MATCH;
-
-cleanup:
-  return GRM_NO_MATCH;
 }
 
 enum Err_Grm grammar_line_identifier(struct Parsed_Statement *pstmt,
                                      const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  CLEANUP_IF_FAIL(tokens[0]->type == TOKEN_IDENTIFIER);
+  NOMATCH_IF_FAIL(_tok_is(tokens[0], TOKEN_IDENTIFIER));
 
-  CLEANUP_IF_FAIL(grammar_identifier_def(pstmt, &tokens[1]) == GRM_MATCH);
+  NOMATCH_IF_FAIL(grammar_identifier_def(pstmt, &tokens[1]) == GRM_MATCH);
 
   pstmt->type = STMT_DATA_DECL;
   pstmt->err = PAR_NO_ERROR;
@@ -147,37 +132,32 @@ enum Err_Grm grammar_line_identifier(struct Parsed_Statement *pstmt,
           sizeof(pstmt->content.data_decl.identifier));
 
   return GRM_MATCH;
-
-cleanup:
-  return GRM_NO_MATCH;
 }
 
 enum Err_Grm grammar_line_instruction(struct Parsed_Statement *pstmt,
                                       const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  struct Instruction_Statement *is = NULL;
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  CLEANUP_IF_FAIL(tokens[0]->type == TOKEN_LABEL);
-  CLEANUP_IF_FAIL(grammar_instruction_rhs(pstmt, &tokens[1]) == GRM_MATCH);
+  NOMATCH_IF_FAIL(_tok_is(tokens[0], TOKEN_LABEL));
+
+  NOMATCH_IF_FAIL(grammar_instruction_rhs(pstmt, &tokens[1]) == GRM_MATCH);
 
   pstmt->type = STMT_INSTRUCTION;
   pstmt->err = PAR_NO_ERROR;
-  pstmt->content.instruction.descriptor =
-      instruction_find(tokens[0]->value, strlen(tokens[0]->value),
-                       pstmt->content.instruction.operands[0].type,
-                       pstmt->content.instruction.operands[1].type);
-  CLEANUP_IF_FAIL(pstmt->content.instruction.descriptor);
+  is = &pstmt->content.instruction;
+  is->descriptor = instruction_find(tokens[0]->value, strlen(tokens[0]->value),
+                                    is->operands[0].type, is->operands[1].type);
+  NOMATCH_IF_FAIL(is->descriptor);
 
   return GRM_MATCH;
-
-cleanup:
-  return GRM_NO_MATCH;
 }
 
 enum Err_Grm grammar_identifier_def(struct Parsed_Statement *pstmt,
                                     const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  CLEANUP_IF_FAIL(tokens[0]->type == TOKEN_DATA_TYPE);
+  NOMATCH_IF_FAIL(_tok_is(tokens[0], TOKEN_DATA_TYPE));
 
   if (strcmp(tokens[0]->value, "DWORD") == 0 ||
       strcmp(tokens[0]->value, "DW") == 0) {
@@ -188,7 +168,7 @@ enum Err_Grm grammar_identifier_def(struct Parsed_Statement *pstmt,
     CLEANUP_IF_FAIL(grammar_identifier_db_dec(pstmt, &tokens[1]) == GRM_MATCH);
     pstmt->content.data_decl.type = DATA_BYTE;
   } else {
-    goto cleanup;
+    return GRM_NO_MATCH;
   }
 
   pstmt->type = STMT_DATA_DECL;
@@ -210,19 +190,18 @@ enum Err_Grm grammar_identifier_dw_dec(struct Parsed_Statement *pstmt,
   const struct Token *token = NULL;
   char *end = NULL;
 
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
-  CLEANUP_IF_FAIL(_exist_tokens(tokens, 2)); // checking tokens[1]->type
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
   token = tokens[0];
   segment_idx = pstmt->content.data_decl.segment_count;
   pstmt->content.data_decl.segment_count++;
 
-  if (token->type == TOKEN_NUMBER && tokens[1]->type == TOKEN_DUP) {
+  if (_tok_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_DUP))) {
     CLEANUP_IF_FAIL(grammar_identifier_dw_dup(pstmt, &tokens[0]) == GRM_MATCH);
     segment = &pstmt->content.data_decl.segments[segment_idx];
     segment->type = INIT_SEG_DUP;
     segment->element_count = 1;
-  } else if (token->type == TOKEN_NUMBER) {
+  } else if (_tok_is(tokens[0], TOKEN_NUMBER)) {
     CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &tokens[1]) == GRM_MATCH);
     segment = &pstmt->content.data_decl.segments[segment_idx];
     segment->data.value = strtoimax(token->value, &end, 10);
@@ -232,7 +211,7 @@ enum Err_Grm grammar_identifier_dw_dec(struct Parsed_Statement *pstmt,
     segment->is_uninit = 0;
     pstmt->content.data_decl.is_fully_uninit = 0;
     segment->element_count = 1;
-  } else if (token->type == TOKEN_QUESTION) {
+  } else if (_tok_is(tokens[0], TOKEN_QUESTION)) {
     CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &tokens[1]) == GRM_MATCH);
 
     segment = &pstmt->content.data_decl.segments[segment_idx];
@@ -254,7 +233,7 @@ cleanup:
 
 enum Err_Grm grammar_identifier_dw_dec2(struct Parsed_Statement *pstmt,
                                         const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
   if (tokens[0]->type == TOKEN_COMMA) {
     CLEANUP_IF_FAIL(grammar_identifier_dw_dec(pstmt, &tokens[1]) == GRM_MATCH);
@@ -279,7 +258,7 @@ enum Err_Grm grammar_identifier_dw_dup(struct Parsed_Statement *pstmt,
   size_t segment_idx = SIZE_MAX, dup_len = 5;
   struct Init_Segment *segment = NULL;
 
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
   CLEANUP_IF_FAIL(_exist_tokens(tokens, dup_len));
 
   CLEANUP_IF_FAIL(
@@ -334,7 +313,7 @@ enum Err_Grm grammar_identifier_db_dec(struct Parsed_Statement *pstmt,
   const struct Token *token = NULL;
   char *end = NULL;
 
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
   CLEANUP_IF_FAIL(_exist_tokens(tokens, 2)); // checking tokens[1]->type
 
   token = tokens[0];
@@ -386,7 +365,7 @@ cleanup:
 
 enum Err_Grm grammar_identifier_db_dec2(struct Parsed_Statement *pstmt,
                                         const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
   if (tokens[0]->type == TOKEN_COMMA) {
     CLEANUP_IF_FAIL(grammar_identifier_db_dec(pstmt, &tokens[1]) == GRM_MATCH);
@@ -411,7 +390,7 @@ enum Err_Grm grammar_identifier_db_dup(struct Parsed_Statement *pstmt,
   size_t segment_idx = SIZE_MAX, dup_len = 5;
   struct Init_Segment *segment = NULL;
 
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
   CLEANUP_IF_FAIL(_exist_tokens(tokens, dup_len));
 
   CLEANUP_IF_FAIL(
@@ -461,7 +440,7 @@ cleanup:
 
 enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
                                      const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
   if (tokens[0]->type == TOKEN_EOF) {
     pstmt->content.instruction.operand_count = 0;
@@ -512,7 +491,7 @@ cleanup:
 
 enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
                                            const struct Token *tokens[]) {
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
   CLEANUP_IF_FAIL(_exist_tokens(tokens, 2));
 
@@ -548,7 +527,7 @@ cleanup:
 enum Err_Grm grammar_eof(const struct Parsed_Statement *pstmt,
                          const struct Token *tokens[]) {
 
-  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
   return (tokens[0]->type == TOKEN_EOF) ? GRM_MATCH : GRM_NO_MATCH;
 
 cleanup:
@@ -581,7 +560,7 @@ static int _tok_is_eof(const struct Token *tok) {
 static int _tok_start_with(const struct Token *tokens[], size_t n,
                            const enum Token_Type types[]) {
   size_t i = 0;
-  if (!tokens && !*tokens) {
+  if (!tokens || !*tokens) {
     return 0;
   }
 
@@ -597,7 +576,7 @@ static int _tok_start_with(const struct Token *tokens[], size_t n,
 static int _peek_type(const struct Token *tokens[], size_t idx,
                       enum Token_Type type) {
   size_t i = 0;
-  if (!tokens && !*tokens) {
+  if (!tokens || !*tokens) {
     return 0;
   }
 

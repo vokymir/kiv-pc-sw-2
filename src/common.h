@@ -13,6 +13,12 @@
 // If condition is not satisfied, go to label 'cleanup'.
 #define CLEANUP_IF_FAIL(cond) GOTO_IF_FAIL((cond), cleanup)
 
+#define RETURN_IF_FAIL(cond, retval)                                           \
+  do {                                                                         \
+    if (!(cond))                                                               \
+      return retval;                                                           \
+  } while (0)
+
 // Errors specific to main, which the program outputs.
 enum Err_Main {
   ERR_NO_ERROR = 0,
