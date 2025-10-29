@@ -142,8 +142,4 @@ enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
 
 enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
                                            const struct Token *tokens[]);
-
-// Return GRM_MATCH if the token is EOF.
-enum Err_Grm grammar_eof(const struct Parsed_Statement *pstmt,
-                         const struct Token *tokens[]);
 #endif
