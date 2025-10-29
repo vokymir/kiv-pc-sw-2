@@ -1,4 +1,5 @@
 #include <inttypes.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -39,8 +40,7 @@ static int _peek_type(const struct Token *tokens[], size_t idx,
 // ===== STRING HELPER DECLARATIONS =====
 
 // copy token->value into dest and NULL-terminates
-static void _copy_token_value(const struct Token *token, char *dest,
-                              size_t len);
+static int _copy_token_value(const struct Token *token, char *dest, size_t len);
 
 // Safe wrapper of strcmp(token->value, s)
 static int _token_value_eq(const struct Token *token, const char *s);
@@ -52,7 +52,7 @@ static int _parse_int(const struct Token *token, int *out);
 // ===== SEGMENT HELPER DECLARATIONS =====
 
 // Increment pstmt segment count
-static void _append_segment(struct Parsed_Statement *pstmt);
+static int _append_segment(struct Parsed_Statement *pstmt);
 
 // Allocate space for segments
 static int _finalize_segments(struct Parsed_Statement *pstmt);
@@ -588,4 +588,65 @@ static int _peek_type(const struct Token *tokens[], size_t idx,
   }
 
   return _token_is(tokens[idx], type);
+}
+
+// ===== STRING HELPER DEFINITIONS =====
+
+static int _copy_token_value(const struct Token *token, char *dest,
+                             size_t len) {
+  RETURN_IF_FAIL(token && dest && len > 0, 0);
+
+  strncpy(dest, token->value, len);
+  dest[len] = '\0';
+
+  return 1;
+}
+
+static int _token_value_eq(const struct Token *token, const char *s) {
+  RETURN_IF_FAIL(token && s, 0);
+
+  return (strcmp(token->value, s) == 0);
+}
+
+// ===== NUMBER HELPER DEFINITIONS =====
+
+static int _parse_int(const struct Token *token, int *out) {
+  intmax_t res = 0;
+  char *end = NULL;
+  RETURN_IF_FAIL(token && out, 0);
+
+  res = strtoimax(token->value, &end, 10);
+  RETURN_IF_FAIL(token->value != end, 0);
+  RETURN_IF_FAIL(res <= INT_MIN && res <= INT_MAX, 0);
+
+  *out = (int)res;
+  return 1;
+}
+
+// ===== SEGMENT HELPER DEFINITIONS =====
+
+static int _append_segment(struct Parsed_Statement *pstmt) {
+  RETURN_IF_FAIL(pstmt, 0);
+
+  pstmt->content.data_decl.segment_count++;
+  return 1;
+}
+
+static int _finalize_segments(struct Parsed_Statement *pstmt) {
+  struct Data_Declaration *dd = NULL;
+  RETURN_IF_FAIL(pstmt, 0);
+
+  dd = &pstmt->content.data_decl;
+  dd->segments = jalloc(dd->segment_count * sizeof(struct Init_Segment));
+  RETURN_IF_FAIL(dd->segments, 0);
+
+  return 1;
+}
+
+static void _remove_last_segment(struct Parsed_Statement *pstmt) {
+  if (!pstmt) {
+    return;
+  }
+
+  pstmt->content.data_decl.segment_count--;
 }
