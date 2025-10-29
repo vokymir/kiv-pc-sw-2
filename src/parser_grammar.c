@@ -17,6 +17,8 @@
 // ===== TOKEN HELPER MACROS =====
 #define NOMATCH_IF_FAIL(cond) RETURN_IF_FAIL((cond), GRM_NO_MATCH)
 #define TOK_ARR(...) ((const enum Token_Type[]){__VA_ARGS__})
+#define TOK_CURR tokens[0]
+#define TOK_NEXT tokens[1]
 
 // ===== TOKEN HELPER DECLARATIONS =====
 // Check whether next <count> tokens exist - only the last one can be EOF.
@@ -47,11 +49,12 @@ static int _token_value_eq(const struct Token *token, const char *s);
 
 // ===== NUMBER HELPER DECLARATIONS =====
 
-static int _parse_int(const struct Token *token, int *out);
+static int32_t _parse_int(const struct Token *token, int32_t *out);
 
 // ===== SEGMENT HELPER DECLARATIONS =====
 
-// Increment pstmt segment count
+// Increment pstmt segment count.
+// Return idx of appended segment on success, -1 on failure.
 static int _append_segment(struct Parsed_Statement *pstmt);
 
 // Allocate space for segments
@@ -84,7 +87,7 @@ enum Err_Grm grammar_line(struct Parsed_Statement *pstmt,
   if (grammar_line_instruction(pstmt, tokens) == GRM_MATCH) {
     return GRM_MATCH;
   }
-  if (_token_is_eof(tokens[0])) {
+  if (_token_is_eof(TOK_CURR)) {
     pstmt->type = STMT_NONE;
     pstmt->err = PAR_EMPTY_LINE;
     return GRM_MATCH;
@@ -143,7 +146,7 @@ enum Err_Grm grammar_line_label(struct Parsed_Statement *pstmt,
   pstmt->err = PAR_NO_ERROR;
 
   lab_name = pstmt->content.label_def.label_name;
-  RETURN_IF_FAIL(_copy_token_value(tokens[0], lab_name, sizeof(lab_name)),
+  RETURN_IF_FAIL(_copy_token_value(TOK_CURR, lab_name, sizeof(lab_name)),
                  GRM_GENERIC_ERROR);
 
   return GRM_MATCH;
@@ -154,15 +157,15 @@ enum Err_Grm grammar_line_identifier(struct Parsed_Statement *pstmt,
   char *idtf_name = NULL;
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  NOMATCH_IF_FAIL(_token_is(tokens[0], TOKEN_IDENTIFIER));
+  NOMATCH_IF_FAIL(_token_is(TOK_CURR, TOKEN_IDENTIFIER));
 
-  NOMATCH_IF_FAIL(grammar_identifier_def(pstmt, &tokens[1]) == GRM_MATCH);
+  NOMATCH_IF_FAIL(grammar_identifier_def(pstmt, &TOK_NEXT) == GRM_MATCH);
 
   pstmt->type = STMT_DATA_DECL;
   pstmt->err = PAR_NO_ERROR;
 
   idtf_name = pstmt->content.data_decl.identifier;
-  RETURN_IF_FAIL(_copy_token_value(tokens[0], idtf_name, sizeof(idtf_name)),
+  RETURN_IF_FAIL(_copy_token_value(TOK_CURR, idtf_name, sizeof(idtf_name)),
                  GRM_GENERIC_ERROR);
 
   return GRM_MATCH;
@@ -173,14 +176,14 @@ enum Err_Grm grammar_line_instruction(struct Parsed_Statement *pstmt,
   struct Instruction_Statement *is = NULL;
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  NOMATCH_IF_FAIL(_token_is(tokens[0], TOKEN_LABEL));
+  NOMATCH_IF_FAIL(_token_is(TOK_CURR, TOKEN_LABEL));
 
-  NOMATCH_IF_FAIL(grammar_instruction_rhs(pstmt, &tokens[1]) == GRM_MATCH);
+  NOMATCH_IF_FAIL(grammar_instruction_rhs(pstmt, &TOK_NEXT) == GRM_MATCH);
 
   pstmt->type = STMT_INSTRUCTION;
   pstmt->err = PAR_NO_ERROR;
   is = &pstmt->content.instruction;
-  is->descriptor = instruction_find(tokens[0]->value, strlen(tokens[0]->value),
+  is->descriptor = instruction_find(TOK_CURR->value, strlen(TOK_CURR->value),
                                     is->operands[0].type, is->operands[1].type);
   NOMATCH_IF_FAIL(is->descriptor);
 
@@ -191,14 +194,14 @@ enum Err_Grm grammar_identifier_def(struct Parsed_Statement *pstmt,
                                     const struct Token *tokens[]) {
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  NOMATCH_IF_FAIL(_token_is(tokens[0], TOKEN_DATA_TYPE));
+  NOMATCH_IF_FAIL(_token_is(TOK_CURR, TOKEN_DATA_TYPE));
 
-  if (_token_value_eq(tokens[0], "DWORD") || _token_value_eq(tokens[0], "DW")) {
-    CLEANUP_IF_FAIL(grammar_identifier_dw_dec(pstmt, &tokens[1]) == GRM_MATCH);
+  if (_token_value_eq(TOK_CURR, "DWORD") || _token_value_eq(TOK_CURR, "DW")) {
+    CLEANUP_IF_FAIL(grammar_identifier_dw_dec(pstmt, &TOK_NEXT) == GRM_MATCH);
     pstmt->content.data_decl.type = DATA_DWORD;
-  } else if (_token_value_eq(tokens[0], "BYTE") ||
-             _token_value_eq(tokens[0], "DB")) {
-    CLEANUP_IF_FAIL(grammar_identifier_db_dec(pstmt, &tokens[1]) == GRM_MATCH);
+  } else if (_token_value_eq(TOK_CURR, "BYTE") ||
+             _token_value_eq(TOK_CURR, "DB")) {
+    CLEANUP_IF_FAIL(grammar_identifier_db_dec(pstmt, &TOK_NEXT) == GRM_MATCH);
     pstmt->content.data_decl.type = DATA_BYTE;
   } else {
     return GRM_NO_MATCH;
@@ -220,35 +223,32 @@ enum Err_Grm grammar_identifier_dw_dec(struct Parsed_Statement *pstmt,
                                        const struct Token *tokens[]) {
   size_t segment_idx = SIZE_MAX;
   struct Init_Segment *segment = NULL;
-  const struct Token *token = NULL;
   char *end = NULL;
 
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  token = tokens[0];
-  segment_idx = pstmt->content.data_decl.segment_count;
-  pstmt->content.data_decl.segment_count++;
+  segment_idx = _append_segment(pstmt);
+  NOMATCH_IF_FAIL(segment_idx >= 0);
 
   if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_DUP))) {
-    CLEANUP_IF_FAIL(grammar_identifier_dw_dup(pstmt, &tokens[0]) == GRM_MATCH);
+    CLEANUP_IF_FAIL(grammar_identifier_dw_dup(pstmt, &TOK_CURR, segment_idx) ==
+                    GRM_MATCH);
     segment = &pstmt->content.data_decl.segments[segment_idx];
     segment->type = INIT_SEG_DUP;
     segment->element_count = 1;
 
-  } else if (_token_is(tokens[0], TOKEN_NUMBER)) {
-    CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &tokens[1]) == GRM_MATCH);
+  } else if (_token_is(TOK_CURR, TOKEN_NUMBER)) {
+    CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &TOK_NEXT) == GRM_MATCH);
     segment = &pstmt->content.data_decl.segments[segment_idx];
-    segment->data.value =
-        strtoimax(token->value, &end, 10); // TODO: continue here
+    CLEANUP_IF_FAIL(_parse_int(TOK_CURR, &segment->data.value));
 
-    CLEANUP_IF_FAIL(token->value != end);
     segment->type = INIT_SEG_VALUE;
     segment->is_uninit = 0;
     pstmt->content.data_decl.is_fully_uninit = 0;
     segment->element_count = 1;
 
-  } else if (_token_is(tokens[0], TOKEN_QUESTION)) {
-    CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &tokens[1]) == GRM_MATCH);
+  } else if (_token_is(TOK_CURR, TOKEN_QUESTION)) {
+    CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &TOK_NEXT) == GRM_MATCH);
 
     segment = &pstmt->content.data_decl.segments[segment_idx];
     segment->type = INIT_SEG_VALUE;
@@ -263,7 +263,7 @@ enum Err_Grm grammar_identifier_dw_dec(struct Parsed_Statement *pstmt,
 
 cleanup:
   if (segment_idx < SIZE_MAX) {
-    pstmt->content.data_decl.segment_count--;
+    _remove_last_segment(pstmt);
   }
   return GRM_NO_MATCH;
 }
@@ -272,12 +272,11 @@ enum Err_Grm grammar_identifier_dw_dec2(struct Parsed_Statement *pstmt,
                                         const struct Token *tokens[]) {
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  if (_token_is(tokens[0], TOKEN_COMMA)) {
-    NOMATCH_IF_FAIL(grammar_identifier_dw_dec(pstmt, &tokens[1]) == GRM_MATCH);
-  } else if (_token_is_eof(tokens[0])) {
-    pstmt->content.data_decl.segments = jalloc(
-        sizeof(struct Init_Segment) * pstmt->content.data_decl.segment_count);
-    NOMATCH_IF_FAIL(pstmt);
+  if (_token_is(TOK_CURR, TOKEN_COMMA)) {
+    NOMATCH_IF_FAIL(grammar_identifier_dw_dec(pstmt, &TOK_NEXT) == GRM_MATCH);
+
+  } else if (_token_is_eof(TOK_CURR)) {
+    NOMATCH_IF_FAIL(_finalize_segments(pstmt));
   } else {
     return GRM_NO_MATCH;
   }
@@ -286,10 +285,10 @@ enum Err_Grm grammar_identifier_dw_dec2(struct Parsed_Statement *pstmt,
 }
 
 enum Err_Grm grammar_identifier_dw_dup(struct Parsed_Statement *pstmt,
-                                       const struct Token *tokens[]) {
+                                       const struct Token *tokens[],
+                                       size_t segment_idx) {
   int is_uninit = 0;
-  char *end = NULL;
-  size_t segment_idx = SIZE_MAX, dup_len = 5;
+  size_t dup_len = 5;
   struct Init_Segment *segment = NULL;
 
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
@@ -304,27 +303,20 @@ enum Err_Grm grammar_identifier_dw_dup(struct Parsed_Statement *pstmt,
   } else if (_token_is(tokens[3], TOKEN_QUESTION)) {
     is_uninit = 1;
   } else {
-    goto cleanup;
+    return GRM_NO_MATCH;
   }
 
-  segment_idx = pstmt->content.data_decl.segment_count;
-  pstmt->content.data_decl.segment_count++;
-
   // parse next part of line
-  CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &tokens[dup_len]) ==
+  NOMATCH_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &tokens[dup_len]) ==
                   GRM_MATCH);
 
   segment = &pstmt->content.data_decl.segments[segment_idx];
-  segment->data.dup.count = strtoimax(tokens[0]->value, &end, 10);
-  CLEANUP_IF_FAIL(tokens[0]->value != end);
-
+  NOMATCH_IF_FAIL(_parse_int(TOK_CURR, &segment->data.dup.count));
   segment->type = INIT_SEG_DUP;
   segment->element_count = segment->data.dup.count;
 
   if (!is_uninit) {
-    segment->data.dup.value = strtoimax(tokens[3]->value, &end, 10);
-    CLEANUP_IF_FAIL(tokens[3]->value != end);
-
+    NOMATCH_IF_FAIL(_parse_int(tokens[3], &segment->data.dup.value));
     pstmt->content.data_decl.is_fully_uninit = 0;
     segment->is_uninit = 0;
   } else {
@@ -332,14 +324,10 @@ enum Err_Grm grammar_identifier_dw_dup(struct Parsed_Statement *pstmt,
   }
 
   return GRM_MATCH;
-
-cleanup:
-  if (segment_idx < SIZE_MAX) {
-    pstmt->content.data_decl.segment_count--;
-  }
-  return GRM_NO_MATCH;
 }
 
+// TODO: extract common logic from db/dw
+// till then, no changes to *_db_* because its redundant
 enum Err_Grm grammar_identifier_db_dec(struct Parsed_Statement *pstmt,
                                        const struct Token *tokens[]) {
   size_t segment_idx = SIZE_MAX;
@@ -349,18 +337,18 @@ enum Err_Grm grammar_identifier_db_dec(struct Parsed_Statement *pstmt,
 
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  token = tokens[0];
+  token = TOK_CURR;
   segment_idx = pstmt->content.data_decl.segment_count;
   pstmt->content.data_decl.segment_count++;
 
   if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_DUP))) {
-    CLEANUP_IF_FAIL(grammar_identifier_db_dup(pstmt, &tokens[0]) == GRM_MATCH);
+    CLEANUP_IF_FAIL(grammar_identifier_db_dup(pstmt, &TOK_CURR) == GRM_MATCH);
     segment = &pstmt->content.data_decl.segments[segment_idx];
     segment->type = INIT_SEG_DUP;
     segment->element_count = 1;
 
-  } else if (_token_is(tokens[0], TOKEN_NUMBER)) {
-    CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &tokens[1]) == GRM_MATCH);
+  } else if (_token_is(TOK_CURR, TOKEN_NUMBER)) {
+    CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) == GRM_MATCH);
     segment = &pstmt->content.data_decl.segments[segment_idx];
     segment->data.value = strtoimax(token->value, &end, 10);
 
@@ -370,8 +358,8 @@ enum Err_Grm grammar_identifier_db_dec(struct Parsed_Statement *pstmt,
     pstmt->content.data_decl.is_fully_uninit = 0;
     segment->element_count = 1;
 
-  } else if (_token_is(tokens[0], TOKEN_QUESTION)) {
-    CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &tokens[1]) == GRM_MATCH);
+  } else if (_token_is(TOK_CURR, TOKEN_QUESTION)) {
+    CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) == GRM_MATCH);
 
     segment = &pstmt->content.data_decl.segments[segment_idx];
     segment->type = INIT_SEG_VALUE;
@@ -395,9 +383,9 @@ enum Err_Grm grammar_identifier_db_dec2(struct Parsed_Statement *pstmt,
                                         const struct Token *tokens[]) {
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  if (_token_is(tokens[0], TOKEN_COMMA)) {
-    NOMATCH_IF_FAIL(grammar_identifier_db_dec(pstmt, &tokens[1]) == GRM_MATCH);
-  } else if (_token_is_eof(tokens[0])) {
+  if (_token_is(TOK_CURR, TOKEN_COMMA)) {
+    NOMATCH_IF_FAIL(grammar_identifier_db_dec(pstmt, &TOK_NEXT) == GRM_MATCH);
+  } else if (_token_is_eof(TOK_CURR)) {
     pstmt->content.data_decl.segments = jalloc(
         sizeof(struct Init_Segment) * pstmt->content.data_decl.segment_count);
     NOMATCH_IF_FAIL(pstmt);
@@ -438,8 +426,8 @@ enum Err_Grm grammar_identifier_db_dup(struct Parsed_Statement *pstmt,
                   GRM_MATCH);
 
   segment = &pstmt->content.data_decl.segments[segment_idx];
-  segment->data.dup.count = strtoimax(tokens[0]->value, &end, 10);
-  CLEANUP_IF_FAIL(tokens[0]->value != end);
+  segment->data.dup.count = strtoimax(TOK_CURR->value, &end, 10);
+  CLEANUP_IF_FAIL(TOK_CURR->value != end);
 
   segment->type = INIT_SEG_DUP;
   segment->element_count = segment->data.dup.count;
@@ -465,43 +453,40 @@ cleanup:
 
 enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
                                      const struct Token *tokens[]) {
+  struct Instruction_Statement *is = NULL;
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
+  is = &pstmt->content.instruction; // TODO: continue here
 
-  if (_token_is_eof(tokens[0])) {
-    pstmt->content.instruction.operand_count = 0;
-    pstmt->content.instruction.operands[0].type = OP_NONE;
+  if (_token_is_eof(TOK_CURR)) {
+    is->operand_count = 0;
+    is->operands[0].type = OP_NONE;
     return GRM_MATCH;
   }
-  NOMATCH_IF_FAIL(_exist_tokens(tokens, 2));
 
   if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_LABEL, TOKEN_EOF))) {
-    pstmt->content.instruction.operand_count = 1;
-    pstmt->content.instruction.operands[0].type = OP_IMM32;
-    strncpy(pstmt->content.instruction.operands[0].value.label,
-            tokens[0]->value,
-            sizeof(pstmt->content.instruction.operands[0].value.label));
+    is->operand_count = 1;
+    is->operands[0].type = OP_IMM32;
+    strncpy(is->operands[0].value.label, TOK_CURR->value,
+            sizeof(is->operands[0].value.label));
   } else if (_tokens_start_with(tokens, 2,
                                 TOK_ARR(TOKEN_REGISTER, TOKEN_EOF))) {
-    pstmt->content.instruction.operand_count = 1;
-    pstmt->content.instruction.operands[0].type = OP_REG;
-    strncpy(pstmt->content.instruction.operands[0].value.register_name,
-            tokens[0]->value,
-            sizeof(pstmt->content.instruction.operands[0].value.register_name));
+    is->operand_count = 1;
+    is->operands[0].type = OP_REG;
+    strncpy(is->operands[0].value.register_name, TOK_CURR->value,
+            sizeof(is->operands[0].value.register_name));
   } else if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_EOF))) {
-    pstmt->content.instruction.operand_count = 1;
-    pstmt->content.instruction.operands[0].type = OP_IMM32;
-    pstmt->content.instruction.operands[0].value.immediate_value =
-        42; // TODO: strotoimax
+    is->operand_count = 1;
+    is->operands[0].type = OP_IMM32;
+    is->operands[0].value.immediate_value = 42; // TODO: strotoimax
   } else if (_tokens_start_with(tokens, 2,
                                 TOK_ARR(TOKEN_REGISTER, TOKEN_COMMA))) {
-    NOMATCH_IF_FAIL(grammar_instruction_rhs_after(pstmt, &tokens[1]) ==
+    NOMATCH_IF_FAIL(grammar_instruction_rhs_after(pstmt, &TOK_NEXT) ==
                     GRM_MATCH);
 
-    pstmt->content.instruction.operand_count = 1;
-    pstmt->content.instruction.operands[0].type = OP_REG;
-    strncpy(pstmt->content.instruction.operands[0].value.register_name,
-            tokens[0]->value,
-            sizeof(pstmt->content.instruction.operands[0].value.register_name));
+    is->operand_count = 1;
+    is->operands[0].type = OP_REG;
+    strncpy(is->operands[0].value.register_name, TOK_CURR->value,
+            sizeof(is->operands[0].value.register_name));
 
   } else {
     return GRM_NO_MATCH;
@@ -517,7 +502,7 @@ enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
   if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_REGISTER, TOKEN_EOF))) {
     pstmt->content.instruction.operands[1].type = OP_REG;
     strncpy(pstmt->content.instruction.operands[1].value.register_name,
-            tokens[0]->value,
+            TOK_CURR->value,
             sizeof(pstmt->content.instruction.operands[1].value.register_name));
   } else if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_EOF))) {
     pstmt->content.instruction.operands[1].type = OP_IMM32;
@@ -528,7 +513,7 @@ enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
                  TOK_ARR(TOKEN_OFFSET, TOKEN_IDENTIFIER, TOKEN_EOF))) {
     pstmt->content.instruction.operands[1].type = OP_OFFSET;
     strncpy(pstmt->content.instruction.operands[1].value.register_name,
-            tokens[1]->value,
+            TOK_NEXT->value,
             sizeof(pstmt->content.instruction.operands[1].value.register_name));
 
   } else {
@@ -615,26 +600,27 @@ static int _token_value_eq(const struct Token *token, const char *s) {
 
 // ===== NUMBER HELPER DEFINITIONS =====
 
-static int _parse_int(const struct Token *token, int *out) {
+static int32_t _parse_int(const struct Token *token, int32_t *out) {
   intmax_t res = 0;
   char *end = NULL;
   RETURN_IF_FAIL(token && out, 0);
 
   res = strtoimax(token->value, &end, 10);
   RETURN_IF_FAIL(token->value != end, 0);
-  RETURN_IF_FAIL(res <= INT_MIN && res <= INT_MAX, 0);
+  RETURN_IF_FAIL(res <= INT32_MIN && res <= INT32_MAX, 0);
 
-  *out = (int)res;
+  *out = (int32_t)res;
   return 1;
 }
 
 // ===== SEGMENT HELPER DEFINITIONS =====
 
 static int _append_segment(struct Parsed_Statement *pstmt) {
-  RETURN_IF_FAIL(pstmt, 0);
+  RETURN_IF_FAIL(pstmt, -1);
 
-  pstmt->content.data_decl.segment_count++;
-  return 1;
+  // current count = next segment idx (0 vs 1 indexing)
+  // return current but increment after
+  return pstmt->content.data_decl.segment_count++;
 }
 
 static int _finalize_segments(struct Parsed_Statement *pstmt) {

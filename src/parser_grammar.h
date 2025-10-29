@@ -49,6 +49,7 @@
 #include "common.h"
 #include "lexer.h"
 #include "parser.h"
+#include <stddef.h>
 
 enum Err_Grm {
   GRM_MATCH,
@@ -126,7 +127,8 @@ enum Err_Grm grammar_identifier_dw_dec2(struct Parsed_Statement *pstmt,
 // success fills its segment in data_decl with all info and return GRM_MATCH. On
 // failure return GRM_NO_MATCH.
 enum Err_Grm grammar_identifier_dw_dup(struct Parsed_Statement *pstmt,
-                                       const struct Token *tokens[]);
+                                       const struct Token *tokens[],
+                                       size_t segment_idx);
 
 enum Err_Grm grammar_identifier_db_dec(struct Parsed_Statement *pstmt,
                                        const struct Token *tokens[]);
