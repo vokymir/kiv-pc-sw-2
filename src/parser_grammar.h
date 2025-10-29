@@ -39,8 +39,6 @@
  * <identifier_db_dec2> | NUMBER, DUP, LPAREN, QUESTION, RPAREN,
  * <identifier_db_dec2>
  *
- * POZOR: MOHL BY BYT PROBLEM S DUP: PROTOZE TAKY ZACINA NA NUMBER
- *
  * 14) <instruction_line> --> INSTRUCTION, <instruction_rhs>
  * 15) <instruction_rhs> --> EOF | LABEL, EOF | REG, EOF | NUM, EOF | REG,
  * COMMA, <instruction_rhs_after>

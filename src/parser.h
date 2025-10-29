@@ -10,6 +10,7 @@
 
 enum Err_Parse {
   PAR_NO_ERROR = 0,
+  PAR_EMPTY_LINE = 1,
 };
 
 enum Statement_Type {
