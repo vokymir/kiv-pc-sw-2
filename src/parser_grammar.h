@@ -137,7 +137,8 @@ enum Err_Grm grammar_identifier_db_dec2(struct Parsed_Statement *pstmt,
                                         const struct Token *tokens[]);
 
 enum Err_Grm grammar_identifier_db_dup(struct Parsed_Statement *pstmt,
-                                       const struct Token *tokens[]);
+                                       const struct Token *tokens[],
+                                       size_t segment_idx);
 
 enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
                                      const struct Token *tokens[]);
