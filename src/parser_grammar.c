@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <stddef.h>
@@ -21,10 +22,6 @@
 #define TOK_NEXT tokens[1]
 
 // ===== TOKEN HELPER DECLARATIONS =====
-
-// Check whether next <count> tokens exist - only the last one can be EOF.
-// On success return 1, on failure 0.
-static int _exist_tokens(const struct Token *tokens[], size_t count);
 
 // Check if token is not null and its type is <type>.
 static int _token_is(const struct Token *token, enum Token_Type type);
@@ -176,7 +173,7 @@ enum Err_Grm grammar_line_data(struct Parsed_Statement *pstmt,
   NOMATCH_IF_FAIL(
       _tokens_start_with(tokens, 2, TOK_ARR(TOKEN_SECTION_DATA, TOKEN_EOF)));
 
-  pstmt->type = STMT_SECTION_CODE;
+  pstmt->type = STMT_SECTION_DATA;
   pstmt->err = PAR_NO_ERROR;
 
   return GRM_MATCH;
@@ -337,11 +334,13 @@ enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
                                      sizeof(operand->value.register_name)),
                    GRM_GENERIC_ERROR);
     operand->type = OP_REG;
+    operand->specifier = OPS_NONE;
     return GRM_MATCH;
   } else if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_EOF))) {
     RETURN_IF_FAIL(_parse_int(TOK_CURR, &operand->value.immediate_value),
                    GRM_GENERIC_ERROR);
     operand->type = OP_IMM32;
+    operand->specifier = OPS_NONE;
     return GRM_MATCH;
   } else if (_tokens_start_with(
                  tokens, 3,
@@ -349,7 +348,8 @@ enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
     RETURN_IF_FAIL(_copy_token_value(TOK_CURR, operand->value.register_name,
                                      sizeof(operand->value.register_name)),
                    GRM_GENERIC_ERROR);
-    operand->type = OP_OFFSET;
+    operand->type = OP_IMM32;
+    operand->specifier = OPS_OFFSET;
     return GRM_MATCH;
   }
 
@@ -357,21 +357,6 @@ enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
 }
 
 // ===== TOKEN HELPER DEFINITIONS =====
-
-static int _exist_tokens(const struct Token *tokens[], size_t count) {
-  size_t i = 0;
-  if (!tokens && !*tokens) {
-    return 0;
-  }
-
-  for (i = 0; i < count; i++) {
-    if (i < count - 1 && tokens[i]->type == TOKEN_EOF) {
-      return 0;
-    }
-  }
-
-  return 1;
-}
 
 static int _token_is(const struct Token *tok, enum Token_Type type) {
   return (tok && tok->type == type);
@@ -384,13 +369,16 @@ static int _token_is_eof(const struct Token *tok) {
 static int _tokens_start_with(const struct Token *tokens[], size_t n,
                               const enum Token_Type types[]) {
   size_t i = 0;
-  if (!tokens || !*tokens) {
+  if (!tokens || !*tokens || !types) {
     return 0;
   }
 
   for (i = 0; i < n; i++) {
     if (!_token_is(tokens[i], types[i])) {
       return 0;
+    }
+    if (i < n - 1 && _token_is_eof(tokens[i])) {
+      return 0; // don't go past the end of array
     }
   }
 
@@ -400,14 +388,12 @@ static int _tokens_start_with(const struct Token *tokens[], size_t n,
 static int _peek_type(const struct Token *tokens[], size_t idx,
                       enum Token_Type type) {
   size_t i = 0;
-  if (!tokens || !*tokens) {
+  if (!tokens || !*tokens)
     return 0;
-  }
 
-  for (i = 0; i < idx - 1; i++) {
-    if (_token_is_eof(tokens[i])) {
+  for (i = 0; i < idx; i++) {
+    if (_token_is_eof(tokens[i]))
       return 0;
-    }
   }
 
   return _token_is(tokens[idx], type);
@@ -419,8 +405,8 @@ static int _copy_token_value(const struct Token *token, char *dest,
                              size_t len) {
   RETURN_IF_FAIL(token && dest && len > 0, 0);
 
-  strncpy(dest, token->value, len);
-  dest[len] = '\0';
+  strncpy(dest, token->value, len - 1);
+  dest[len - 1] = '\0';
 
   return 1;
 }
@@ -438,9 +424,14 @@ static int32_t _parse_int(const struct Token *token, int32_t *out) {
   char *end = NULL;
   RETURN_IF_FAIL(token && out, 0);
 
+  errno = 0;
   res = strtoimax(token->value, &end, 10);
-  RETURN_IF_FAIL(token->value != end, 0);
-  RETURN_IF_FAIL(res <= INT32_MIN && res <= INT32_MAX, 0);
+  if (end == token->value)
+    return 0; // no digits parsed
+  if (errno == ERANGE)
+    return 0; // out of range
+  if (res < INT32_MIN || res > INT32_MAX)
+    return 0;
 
   *out = (int32_t)res;
   return 1;
@@ -450,6 +441,10 @@ static int32_t _parse_int(const struct Token *token, int32_t *out) {
 
 static size_t _append_segment(struct Parsed_Statement *pstmt) {
   RETURN_IF_FAIL(pstmt, SIZE_MAX);
+
+  if (pstmt->content.data_decl.segment_count == SIZE_MAX) {
+    return SIZE_MAX;
+  }
 
   // current count = next segment idx (0 vs 1 indexing)
   // return current but increment after
@@ -564,7 +559,7 @@ enum Err_Grm _grammar_identifier_dup(struct Parsed_Statement *pstmt,
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
   NOMATCH_IF_FAIL(
       _token_is(tokens[0], TOKEN_NUMBER) && _token_is(tokens[1], TOKEN_DUP) &&
-      _token_is(tokens[2], TOKEN_LPAREN) && _token_is(tokens[4], TOKEN_LPAREN));
+      _token_is(tokens[2], TOKEN_LPAREN) && _token_is(tokens[4], TOKEN_RPAREN));
 
   // MATCH VALUE/QUESTION
   if (_token_is(tokens[3], TOKEN_NUMBER)) {
@@ -683,6 +678,7 @@ static int _set_op_label(struct Instruction_Statement *is,
     is->operand_count = idx + 1;
   }
   is->operands[idx].type = OP_IMM32;
+  is->operands[idx].specifier = OPS_LABEL;
 
   return 1;
 }
@@ -700,6 +696,7 @@ static int _set_op_register(struct Instruction_Statement *is,
     is->operand_count = idx + 1;
   }
   is->operands[idx].type = OP_REG;
+  is->operands[idx].specifier = OPS_NONE;
 
   return 1;
 }
@@ -715,6 +712,7 @@ static int _set_op_number(struct Instruction_Statement *is,
     is->operand_count = idx + 1;
   }
   is->operands[idx].type = OP_IMM32;
+  is->operands[idx].specifier = OPS_NONE;
 
   return 1;
 }
