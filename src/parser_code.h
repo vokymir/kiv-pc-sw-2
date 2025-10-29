@@ -12,7 +12,7 @@ struct Operand {
   union {
     char register_name[MAX_REGISTER_NAME_LEN]; // A, B, C,...
     int32_t immediate_value;
-    char *label; // Name of label/variable being referenced
+    char label[MAX_LABEL_NAME_LEN]; // Name of label/variable being referenced
   } value;
 };
 

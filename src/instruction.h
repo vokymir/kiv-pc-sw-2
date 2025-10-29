@@ -9,7 +9,7 @@ enum Operand_Type {
   OP_NONE,
   OP_REG,
   OP_IMM32, // immediate 32 bit value
-  OP_REG_OR_IMM32
+  OP_OFFSET,
 };
 
 struct Instruction_Descriptor {

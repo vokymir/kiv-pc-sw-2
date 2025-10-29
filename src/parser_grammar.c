@@ -150,7 +150,7 @@ enum Err_Grm grammar_line_instruction(struct Parsed_Statement *pstmt,
       instruction_find(tokens[0]->value, strlen(tokens[0]->value),
                        pstmt->content.instruction.operands[0].type,
                        pstmt->content.instruction.operands[1].type);
-  CLEANUP_IF_FAIL(pstmt->content.instruction.descriptor); // TODO:
+  CLEANUP_IF_FAIL(pstmt->content.instruction.descriptor);
 
   return GRM_MATCH;
 
@@ -445,10 +445,89 @@ cleanup:
 }
 
 enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
-                                     const struct Token *tokens[]) {}
+                                     const struct Token *tokens[]) {
+  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+
+  if (tokens[0]->type == TOKEN_EOF) {
+    pstmt->content.instruction.operand_count = 0;
+    pstmt->content.instruction.operands[0].type = OP_NONE;
+    goto success;
+  }
+  CLEANUP_IF_FAIL(_exist_tokens(tokens, 2));
+
+  if (tokens[0]->type == TOKEN_LABEL && tokens[1]->type == TOKEN_EOF) {
+    pstmt->content.instruction.operand_count = 1;
+    pstmt->content.instruction.operands[0].type = OP_IMM32;
+    strncpy(pstmt->content.instruction.operands[0].value.label,
+            tokens[0]->value,
+            sizeof(pstmt->content.instruction.operands[0].value.label));
+  } else if (tokens[0]->type == TOKEN_REGISTER &&
+             tokens[1]->type == TOKEN_EOF) {
+    pstmt->content.instruction.operand_count = 1;
+    pstmt->content.instruction.operands[0].type = OP_REG;
+    strncpy(pstmt->content.instruction.operands[0].value.register_name,
+            tokens[0]->value,
+            sizeof(pstmt->content.instruction.operands[0].value.register_name));
+  } else if (tokens[0]->type == TOKEN_NUMBER && tokens[1]->type == TOKEN_EOF) {
+    pstmt->content.instruction.operand_count = 1;
+    pstmt->content.instruction.operands[0].type = OP_IMM32;
+    pstmt->content.instruction.operands[0].value.immediate_value =
+        42; // TODO: strotoimax
+  } else if (tokens[0]->type == TOKEN_REGISTER &&
+             tokens[1]->type == TOKEN_COMMA) {
+    CLEANUP_IF_FAIL(grammar_instruction_rhs_after(pstmt, &tokens[1]) ==
+                    GRM_MATCH);
+
+    pstmt->content.instruction.operand_count = 1;
+    pstmt->content.instruction.operands[0].type = OP_REG;
+    strncpy(pstmt->content.instruction.operands[0].value.register_name,
+            tokens[0]->value,
+            sizeof(pstmt->content.instruction.operands[0].value.register_name));
+
+  } else {
+    goto cleanup;
+  }
+
+success:
+  return GRM_MATCH;
+
+cleanup:
+  return GRM_NO_MATCH;
+}
 
 enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
-                                           const struct Token *tokens[]);
+                                           const struct Token *tokens[]) {
+  CLEANUP_IF_FAIL(pstmt && tokens && *tokens);
+
+  CLEANUP_IF_FAIL(_exist_tokens(tokens, 2));
+
+  if (tokens[0]->type == TOKEN_REGISTER && tokens[1]->type == TOKEN_EOF) {
+    pstmt->content.instruction.operands[1].type = OP_REG;
+    strncpy(pstmt->content.instruction.operands[1].value.register_name,
+            tokens[0]->value,
+            sizeof(pstmt->content.instruction.operands[1].value.register_name));
+  } else if (tokens[0]->type == TOKEN_NUMBER && tokens[1]->type == TOKEN_EOF) {
+    pstmt->content.instruction.operands[1].type = OP_IMM32;
+    pstmt->content.instruction.operands[1].value.immediate_value =
+        42; // TODO: strotoimax
+  } else if (tokens[0]->type == TOKEN_OFFSET &&
+             tokens[1]->type == TOKEN_IDENTIFIER) {
+    CLEANUP_IF_FAIL(_exist_tokens(tokens, 3) && tokens[2]->type == TOKEN_EOF);
+
+    pstmt->content.instruction.operands[1].type = OP_OFFSET;
+    strncpy(pstmt->content.instruction.operands[1].value.register_name,
+            tokens[1]->value,
+            sizeof(pstmt->content.instruction.operands[1].value.register_name));
+
+  } else {
+    goto cleanup;
+  }
+
+  return GRM_MATCH;
+
+cleanup:
+  return GRM_NO_MATCH;
+}
 
 // Return 1 if the token is EOF.
 enum Err_Grm grammar_eof(const struct Parsed_Statement *pstmt,
@@ -466,7 +545,9 @@ static int _exist_tokens(const struct Token *tokens[], size_t count) {
   CLEANUP_IF_FAIL(*tokens);
 
   for (i = 0; i < count; i++) {
-    CLEANUP_IF_FAIL(tokens[i]->type != TOKEN_EOF);
+    if (i < count - 1 && tokens[i]->type == TOKEN_EOF) {
+      return 0;
+    }
   }
 
   return 1;
