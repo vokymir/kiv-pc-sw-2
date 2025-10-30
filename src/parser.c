@@ -27,7 +27,7 @@ struct Parsed_Statement *p_stmt_create(enum Statement_Type stype, size_t nl) {
   struct Parsed_Statement *ps = jalloc(sizeof(struct Parsed_Statement));
   CLEANUP_IF_FAIL(ps);
 
-  CLEANUP_IF_FAIL(!p_stmt_init(ps, stype, nl));
+  CLEANUP_IF_FAIL(p_stmt_init(ps, stype, nl));
 
   return ps;
 
