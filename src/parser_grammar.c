@@ -278,7 +278,14 @@ enum Err_Grm grammar_identifier_dw_dec2(struct Parsed_Statement *pstmt,
 enum Err_Grm grammar_identifier_dw_dup(struct Parsed_Statement *pstmt,
                                        const struct Token *tokens[],
                                        size_t segment_idx) {
-  return _grammar_identifier_dup(pstmt, tokens, segment_idx, 1);
+  enum Err_Grm res = _grammar_identifier_dup(pstmt, tokens, segment_idx, 1);
+  if (res != GRM_MATCH) {
+    return res;
+  }
+  if (!_set_segment_dup(pstmt, segment_idx)) {
+    return GRM_GENERIC_ERROR;
+  }
+  return GRM_MATCH;
 }
 
 enum Err_Grm grammar_identifier_db_dec(struct Parsed_Statement *pstmt,
@@ -294,7 +301,14 @@ enum Err_Grm grammar_identifier_db_dec2(struct Parsed_Statement *pstmt,
 enum Err_Grm grammar_identifier_db_dup(struct Parsed_Statement *pstmt,
                                        const struct Token *tokens[],
                                        size_t segment_idx) {
-  return _grammar_identifier_dup(pstmt, tokens, segment_idx, 0);
+  enum Err_Grm res = _grammar_identifier_dup(pstmt, tokens, segment_idx, 0);
+  if (res != GRM_MATCH) {
+    return res;
+  }
+  if (!_set_segment_dup(pstmt, segment_idx)) {
+    return GRM_GENERIC_ERROR;
+  }
+  return GRM_MATCH;
 }
 
 enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
@@ -488,7 +502,6 @@ static enum Err_Grm _grammar_identifier_dec(struct Parsed_Statement *pstmt,
       CLEANUP_IF_FAIL(grammar_identifier_db_dup(pstmt, &TOK_CURR,
                                                 segment_idx) == GRM_MATCH);
     }
-    CLEANUP_IF_FAIL(_set_segment_dup(pstmt, segment_idx));
     return GRM_MATCH;
   } else if (_token_is(TOK_CURR, TOKEN_NUMBER)) {
     if (is_dw) {
@@ -575,6 +588,7 @@ enum Err_Grm _grammar_identifier_dup(struct Parsed_Statement *pstmt,
                     GRM_MATCH);
   }
   segment = &pstmt->content.data_decl.segments[segment_idx];
+  segment->is_uninit = is_uninit;
 
   // DUP COUNT
   NOMATCH_IF_FAIL(_parse_int32(TOK_CURR, &segment->data.dup.count));
