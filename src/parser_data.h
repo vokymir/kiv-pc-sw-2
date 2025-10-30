@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #define MAX_IDENTIFIER_LEN 256
+#define MAX_INIT_SEGMENT_STRING_LEN 256
 
 enum Data_Type { DATA_DWORD, DATA_BYTE, DATA_ERROR };
 
@@ -21,10 +22,10 @@ struct Init_Segment {
   union {
     int32_t value; // number
     struct {
-      int count;     // how many
-      int32_t value; // number - or ? if is_uninit
-    } dup;           // dup
-    char *string;    // string
+      int count;                              // how many
+      int32_t value;                          // number - or ? if is_uninit
+    } dup;                                    // dup
+    char string[MAX_INIT_SEGMENT_STRING_LEN]; // string
   } data;
   int element_count; // length of string/count in dup/1 for number
   int is_uninit;     // is value/dup un-initialized

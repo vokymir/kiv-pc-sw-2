@@ -47,7 +47,7 @@ static int _token_value_eq(const struct Token *token, const char *s);
 
 // ===== NUMBER HELPER DECLARATIONS =====
 
-static int32_t _parse_int(const struct Token *token, int32_t *out);
+static int _parse_int32(const struct Token *token, int32_t *out);
 
 // ===== SEGMENT HELPER DECLARATIONS =====
 
@@ -181,7 +181,6 @@ enum Err_Grm grammar_line_data(struct Parsed_Statement *pstmt,
 
 enum Err_Grm grammar_line_label(struct Parsed_Statement *pstmt,
                                 const struct Token *tokens[]) {
-  char *lab_name = NULL;
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
   NOMATCH_IF_FAIL(
       _tokens_start_with(tokens, 2, TOK_ARR(TOKEN_LABEL, TOKEN_EOF)));
@@ -189,8 +188,9 @@ enum Err_Grm grammar_line_label(struct Parsed_Statement *pstmt,
   pstmt->type = STMT_LABEL_DEF;
   pstmt->err = PAR_NO_ERROR;
 
-  lab_name = pstmt->content.label_def.label_name;
-  RETURN_IF_FAIL(_copy_token_value(TOK_CURR, lab_name, sizeof(lab_name)),
+  RETURN_IF_FAIL(_copy_token_value(TOK_CURR,
+                                   pstmt->content.label_def.label_name,
+                                   sizeof(pstmt->content.label_def.label_name)),
                  GRM_GENERIC_ERROR);
 
   return GRM_MATCH;
@@ -198,7 +198,6 @@ enum Err_Grm grammar_line_label(struct Parsed_Statement *pstmt,
 
 enum Err_Grm grammar_line_identifier(struct Parsed_Statement *pstmt,
                                      const struct Token *tokens[]) {
-  char *idtf_name = NULL;
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
   NOMATCH_IF_FAIL(_token_is(TOK_CURR, TOKEN_IDENTIFIER));
   NOMATCH_IF_FAIL(grammar_identifier_def(pstmt, &TOK_NEXT) == GRM_MATCH);
@@ -206,8 +205,9 @@ enum Err_Grm grammar_line_identifier(struct Parsed_Statement *pstmt,
   pstmt->type = STMT_DATA_DECL;
   pstmt->err = PAR_NO_ERROR;
 
-  idtf_name = pstmt->content.data_decl.identifier;
-  RETURN_IF_FAIL(_copy_token_value(TOK_CURR, idtf_name, sizeof(idtf_name)),
+  RETURN_IF_FAIL(_copy_token_value(TOK_CURR,
+                                   pstmt->content.data_decl.identifier,
+                                   sizeof(pstmt->content.data_decl.identifier)),
                  GRM_GENERIC_ERROR);
 
   return GRM_MATCH;
@@ -337,7 +337,7 @@ enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
     operand->specifier = OPS_NONE;
     return GRM_MATCH;
   } else if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_EOF))) {
-    RETURN_IF_FAIL(_parse_int(TOK_CURR, &operand->value.immediate_value),
+    RETURN_IF_FAIL(_parse_int32(TOK_CURR, &operand->value.immediate_value),
                    GRM_GENERIC_ERROR);
     operand->type = OP_IMM32;
     operand->specifier = OPS_NONE;
@@ -419,7 +419,7 @@ static int _token_value_eq(const struct Token *token, const char *s) {
 
 // ===== NUMBER HELPER DEFINITIONS =====
 
-static int32_t _parse_int(const struct Token *token, int32_t *out) {
+static int _parse_int32(const struct Token *token, int32_t *out) {
   intmax_t res = 0;
   char *end = NULL;
   RETURN_IF_FAIL(token && out, 0);
@@ -482,7 +482,7 @@ static enum Err_Grm _grammar_identifier_dec(struct Parsed_Statement *pstmt,
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
   segment_idx = _append_segment(pstmt);
-  NOMATCH_IF_FAIL(segment_idx <= SIZE_MAX);
+  NOMATCH_IF_FAIL(segment_idx != SIZE_MAX);
 
   if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_DUP))) {
     if (is_dw) {
@@ -581,11 +581,11 @@ enum Err_Grm _grammar_identifier_dup(struct Parsed_Statement *pstmt,
   segment = &pstmt->content.data_decl.segments[segment_idx];
 
   // DUP COUNT
-  NOMATCH_IF_FAIL(_parse_int(TOK_CURR, &segment->data.dup.count));
+  NOMATCH_IF_FAIL(_parse_int32(TOK_CURR, &segment->data.dup.count));
 
   // DUP VALUE
   if (!is_uninit) {
-    NOMATCH_IF_FAIL(_parse_int(tokens[3], &segment->data.dup.value));
+    NOMATCH_IF_FAIL(_parse_int32(tokens[3], &segment->data.dup.value));
   }
 
   return GRM_MATCH;
@@ -614,7 +614,7 @@ static int _set_segment_number(struct Parsed_Statement *pstmt,
   RETURN_IF_FAIL(pstmt, 0);
   segment = &pstmt->content.data_decl.segments[segment_idx];
 
-  RETURN_IF_FAIL(_parse_int(token, &segment->data.value), 0);
+  RETURN_IF_FAIL(_parse_int32(token, &segment->data.value), 0);
   segment->type = INIT_SEG_VALUE;
   segment->element_count = 1;
   segment->is_uninit = 0;
@@ -706,7 +706,7 @@ static int _set_op_number(struct Instruction_Statement *is,
                           const struct Token *token, size_t idx) {
   RETURN_IF_FAIL(
       is && token && idx < sizeof(is->operands) / sizeof(struct Operand), 0);
-  RETURN_IF_FAIL(_parse_int(token, &is->operands[idx].value.immediate_value),
+  RETURN_IF_FAIL(_parse_int32(token, &is->operands[idx].value.immediate_value),
                  0);
   if (idx + 1 > is->operand_count) {
     is->operand_count = idx + 1;

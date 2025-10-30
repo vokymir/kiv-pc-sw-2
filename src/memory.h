@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 // Somewhere/Somehow allocate these bytes.
+// If bytes == 0, return NULL and not alocate.
 // Returns pointer on success, NULL on failure.
 void *jalloc(const size_t bytes);
 
