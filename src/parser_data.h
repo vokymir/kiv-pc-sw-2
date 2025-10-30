@@ -43,13 +43,4 @@ struct Data_Declaration {
   int is_fully_uninit; // if 1 if and only if every init segment is_uninit
 };
 
-// NOT YET SURE
-struct Data_Declaration *datad_create(void);
-
-int datad_init(struct Data_Declaration *dd);
-
-void datad_deinit(struct Data_Declaration *dd);
-
-void datad_free(struct Data_Declaration **dd);
-
 #endif

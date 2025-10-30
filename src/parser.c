@@ -1,20 +1,25 @@
-#include "parser.h"
+#include <string.h>
+
 #include "common.h"
 #include "lexer.h"
 #include "memory.h"
-#include "parser_code.h"
-#include "parser_data.h"
+#include "parser.h"
 #include "parser_grammar.h"
 
 struct Parsed_Statement *parse_tokens(const struct Token *tokens[], size_t nl) {
   struct Parsed_Statement *stmt = NULL;
-  CLEANUP_IF_FAIL(tokens);
+  RETURN_IF_FAIL(tokens, NULL);
+  stmt = p_stmt_create(STMT_NONE, nl);
+  RETURN_IF_FAIL(stmt, NULL);
 
-  CLEANUP_IF_FAIL(grammar_line(stmt, tokens));
+  CLEANUP_IF_FAIL(grammar_line(stmt, tokens) == GRM_MATCH);
 
   return stmt;
 
 cleanup:
+  if (stmt) {
+    p_stmt_free(&stmt);
+  }
   return NULL;
 }
 
@@ -43,17 +48,18 @@ int p_stmt_init(struct Parsed_Statement *ps, enum Statement_Type type,
 
   switch (ps->type) {
   case STMT_NONE:
+  case STMT_KMA:
   case STMT_SECTION_DATA:
   case STMT_SECTION_CODE:
     break;
   case STMT_LABEL_DEF:
-    CLEANUP_IF_FAIL(labdef_init(&ps->content.label_def, NULL));
+    *ps->content.label_def.label_name = 0;
     break;
   case STMT_DATA_DECL:
-    CLEANUP_IF_FAIL(datad_init(&ps->content.data_decl));
+    memset(&ps->content.data_decl, 0, sizeof(ps->content.data_decl));
     break;
   case STMT_INSTRUCTION:
-    CLEANUP_IF_FAIL(i_stmt_init(&ps->content.instruction, 0, NULL, NULL, NULL));
+    memset(&ps->content.instruction, 0, sizeof(ps->content.instruction));
     break;
   case STMT_ERROR:
   default:
@@ -74,17 +80,21 @@ void p_stmt_deinit(struct Parsed_Statement *ps) {
 
   switch (ps->type) {
   case STMT_NONE:
+  case STMT_KMA:
   case STMT_SECTION_DATA:
   case STMT_SECTION_CODE:
     break;
   case STMT_LABEL_DEF:
-    labdef_deinit(&ps->content.label_def);
+    *ps->content.label_def.label_name = 0;
     break;
   case STMT_DATA_DECL:
-    datad_deinit(&ps->content.data_decl);
+    if (ps->content.data_decl.segments) {
+      jree(ps->content.data_decl.segments);
+    }
+    memset(&ps->content.data_decl, 0, sizeof(ps->content.data_decl));
     break;
   case STMT_INSTRUCTION:
-    i_stmt_deinit(&ps->content.instruction);
+    memset(&ps->content.instruction, 0, sizeof(ps->content.instruction));
     break;
   case STMT_ERROR:
   default:
