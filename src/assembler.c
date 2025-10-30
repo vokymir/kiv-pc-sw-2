@@ -2,8 +2,16 @@
 #include "codeseg.h"
 #include "common.h"
 #include "dataseg.h"
+#include "fileutil.h"
+#include "lexer.h"
 #include "memory.h"
+#include "parser.h"
 #include "symbol.h"
+#include <stdio.h>
+
+#define ERR_IF_FAIL(cond, er)                                                  \
+  err = (er);                                                                  \
+  CLEANUP_IF_FAIL(cond);
 
 enum Err_Main process_assembler(struct Assembler_Processing *asp) {
   enum Err_Main res = ERR_NO_ERROR;
@@ -16,9 +24,75 @@ enum Err_Main process_assembler(struct Assembler_Processing *asp) {
   return res;
 }
 
-enum Err_Main pass1(struct Assembler_Processing *asp) { return (asp == 4); }
+enum Err_Asm pass1(struct Assembler_Processing *asp) {
+  enum Assembler_Context ctx = ASC_FILE_START;
+  char *line = NULL;
+  size_t line_len = 0, nl = 1;
+  FILE *f = NULL;
+  enum Err_Asm err = ASM_NO_ERROR;
+  struct Token *tokens = NULL;
+  struct Parsed_Statement *pstmt = NULL;
+  RETURN_IF_FAIL(asp, ASM_INVALID_ASP);
+  RETURN_IF_FAIL(fu_open(asp->config->source, &f), ASM_CANNOT_OPEN_FILE);
 
-enum Err_Main pass2(struct Assembler_Processing *asp) { return asp == 1; }
+  while (fu_getline(&line, &line_len, f)) {
+    tokens = lexer_tokenize_line(line, nl);
+    ERR_IF_FAIL(tokens, ASM_CREATING_TOKENS);
+    pstmt = parse_tokens(tokens, nl);
+    ERR_IF_FAIL(pstmt && pstmt->err == PAR_NO_ERROR, ASM_CREATING_PSTMT);
+
+    switch (pstmt->type) {
+    case STMT_KMA:
+      ERR_IF_FAIL(nl == 1, ASM_KMA_IN_THE_MIDDLE);
+      break;
+    case STMT_NONE:
+      break;
+    case STMT_SECTION_CODE:
+      ctx = ASC_CODE;
+      break;
+    case STMT_SECTION_DATA:
+      ctx = ASC_DATA;
+      break;
+    case STMT_DATA_DECL:
+      ERR_IF_FAIL(ctx == ASC_DATA, ASM_DATA_ABROAD);
+      // dtsg advance
+      // symtab define
+      break;
+    case STMT_INSTRUCTION:
+      ERR_IF_FAIL(ctx == ASC_CODE, ASM_CODE_ABROAD);
+      // cdsg advance
+      break;
+    case STMT_LABEL_DEF:
+      // symtab define
+      break;
+    case STMT_ERROR:
+    default:
+      err = ASM_UNKNOWN_PSTMT_TYPE;
+      goto cleanup;
+      break;
+    }
+    // enforce .KMA on the start of file
+    if (nl == 1 && pstmt->type != STMT_KMA) {
+      err = ASM_MISSING_KMA;
+      goto cleanup;
+    }
+
+    lexer_free_tokens(&tokens);
+    p_stmt_free(&pstmt);
+    nl++;
+  }
+
+cleanup:
+  if (tokens) {
+    lexer_free_tokens(&tokens);
+  }
+  if (pstmt) {
+    p_stmt_free(&pstmt);
+  }
+  return err;
+}
+
+enum Err_Asm pass2(struct Assembler_Processing *asp) { return asp == 1; }
 
 struct Assembler_Processing *asp_create(const struct Config *config,
                                         struct Symbol_Table *symtab,

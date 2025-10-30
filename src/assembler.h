@@ -13,6 +13,25 @@ struct Assembler_Processing {
   struct Code_Segment *cdsg;
 };
 
+enum Assembler_Context {
+  ASC_FILE_START,
+  ASC_DATA,
+  ASC_CODE,
+};
+
+enum Err_Asm {
+  ASM_NO_ERROR,
+  ASM_MISSING_KMA,
+  ASM_KMA_IN_THE_MIDDLE,
+  ASM_CANNOT_OPEN_FILE,
+  ASM_INVALID_ASP,
+  ASM_CREATING_TOKENS,
+  ASM_CREATING_PSTMT,
+  ASM_DATA_ABROAD,
+  ASM_CODE_ABROAD,
+  ASM_UNKNOWN_PSTMT_TYPE,
+};
+
 // Wrapper around 2-pass assembler to binary process.
 // Return exact error code.
 enum Err_Main process_assembler(struct Assembler_Processing *asp);
@@ -20,12 +39,12 @@ enum Err_Main process_assembler(struct Assembler_Processing *asp);
 // First pass of assembler code = evaluates the whole file, creates a symbol
 // table and fills it with actual values in code/data segment. Return error
 // codes based on assignment error codes table
-enum Err_Main pass1(struct Assembler_Processing *asp);
+enum Err_Asm pass1(struct Assembler_Processing *asp);
 
 // Second pass of assembler code = evaluates the whole file, using a symbol
 // table it writes into code segment with actual values. Return adequate error
 // code.
-enum Err_Main pass2(struct Assembler_Processing *asp);
+enum Err_Asm pass2(struct Assembler_Processing *asp);
 
 // Create new ASsembler Processing struct. Call asp_init to initialize from
 // given parameters. If any is missing (NULL), the init will allocate new.
