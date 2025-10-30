@@ -351,7 +351,6 @@ void test_grammar_identifier_dw_dup_with_value() {
   struct Parsed_Statement stmt;
   p_stmt_init(&stmt, STMT_DATA_DECL, 45);
   stmt.content.data_decl.type = DATA_DWORD;
-  stmt.content.data_decl.segments = calloc(1, sizeof(struct Init_Segment));
   stmt.content.data_decl.segment_count = 1;
 
   enum Err_Grm result = grammar_identifier_dw_dup(&stmt, const_tokens, 0);
@@ -362,8 +361,8 @@ void test_grammar_identifier_dw_dup_with_value() {
   assert(stmt.content.data_decl.segments[0].data.dup.value == 5);
   assert(stmt.content.data_decl.segments[0].is_uninit == 0);
 
-  p_stmt_deinit(&stmt);
   cleanup_tokens(tokens, 6);
+  p_stmt_deinit(&stmt);
 
   printf("  PASSED\n");
 }
@@ -387,7 +386,6 @@ void test_grammar_identifier_dw_dup_uninit() {
   struct Parsed_Statement stmt;
   p_stmt_init(&stmt, STMT_DATA_DECL, 50);
   stmt.content.data_decl.type = DATA_DWORD;
-  stmt.content.data_decl.segments = calloc(1, sizeof(struct Init_Segment));
   stmt.content.data_decl.segment_count = 1;
 
   enum Err_Grm result = grammar_identifier_dw_dup(&stmt, const_tokens, 0);
@@ -397,8 +395,8 @@ void test_grammar_identifier_dw_dup_uninit() {
   assert(stmt.content.data_decl.segments[0].data.dup.count == 20);
   assert(stmt.content.data_decl.segments[0].is_uninit == 1);
 
-  p_stmt_deinit(&stmt);
   cleanup_tokens(tokens, 6);
+  p_stmt_deinit(&stmt);
 
   printf("  PASSED\n");
 }
