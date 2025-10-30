@@ -32,12 +32,16 @@ int fu_can_write_dir(const char *path);
 // valid.
 int fu_can_write_parent_dir(const char *path);
 
+// Open file from path.
+// Return 1 on success, 0 on failure.
+int fu_open(const char *path, FILE **f);
+
 // Read a line from stream. Reallocate *lineptr as needed (like POSIX getline).
 // On success, return number of read bytes (not including terminator '\0').
 // *n is updated to the current buffer size.
 // On EOF/no bytes read/error return -1.
 //
 // If *lineptr is NULL or *n is 0, allocate a buffer(caller must free).
-int fu_getline(char **lineptr, size_t *n, FILE *stream);
+long fu_getline(char **lineptr, size_t *n, FILE *stream);
 
 #endif

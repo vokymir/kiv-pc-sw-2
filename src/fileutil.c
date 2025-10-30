@@ -141,7 +141,20 @@ int fu_can_write_parent_dir(const char *path) {
   return res;
 }
 
-int fu_getline(char **lineptr, size_t *n, FILE *stream) {
+int fu_open(const char *path, FILE **f) {
+  if (!path || !f || !fu_is_file(path) || !fu_can_read(path)) {
+    return 0;
+  }
+
+  *f = fopen(path, "r");
+  if (!*f) {
+    return 0;
+  }
+
+  return 1;
+}
+
+long fu_getline(char **lineptr, size_t *n, FILE *stream) {
   size_t pos = 0, new_n = 0;
   int ch = 0;
   char *tmp = NULL;
@@ -188,5 +201,5 @@ int fu_getline(char **lineptr, size_t *n, FILE *stream) {
 
   // NULL terminate & return
   (*lineptr)[pos] = '\0';
-  return pos;
+  return (long)pos;
 }
