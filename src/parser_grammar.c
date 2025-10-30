@@ -111,6 +111,10 @@ static int _set_op_register(struct Instruction_Statement *is,
 static int _set_op_number(struct Instruction_Statement *is,
                           const struct Token *token, size_t idx);
 
+// set is->op[idx] to offset, token must point to identifier
+static int _set_op_offset(struct Instruction_Statement *is,
+                          const struct Token *token, size_t idx);
+
 // ===== HEADER DEFINITIONS =====
 
 enum Err_Grm grammar_line(struct Parsed_Statement *pstmt,
@@ -218,7 +222,7 @@ enum Err_Grm grammar_line_instruction(struct Parsed_Statement *pstmt,
   struct Instruction_Statement *is = NULL;
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
 
-  NOMATCH_IF_FAIL(_token_is(TOK_CURR, TOKEN_LABEL));
+  NOMATCH_IF_FAIL(_token_is(TOK_CURR, TOKEN_INSTRUCTION));
 
   NOMATCH_IF_FAIL(grammar_instruction_rhs(pstmt, &TOK_NEXT) == GRM_MATCH);
 
@@ -314,7 +318,7 @@ enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
     return GRM_MATCH;
   } else if (_tokens_start_with(tokens, 2,
                                 TOK_ARR(TOKEN_REGISTER, TOKEN_COMMA))) {
-    NOMATCH_IF_FAIL(grammar_instruction_rhs_after(pstmt, &TOK_NEXT) ==
+    NOMATCH_IF_FAIL(grammar_instruction_rhs_after(pstmt, &tokens[2]) ==
                     GRM_MATCH);
     RETURN_IF_FAIL(_set_op_register(is, TOK_CURR, 0), GRM_GENERIC_ERROR);
     return GRM_MATCH;
@@ -330,26 +334,18 @@ enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
   operand = &pstmt->content.instruction.operands[1];
 
   if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_REGISTER, TOKEN_EOF))) {
-    RETURN_IF_FAIL(_copy_token_value(TOK_CURR, operand->value.register_name,
-                                     sizeof(operand->value.register_name)),
+    RETURN_IF_FAIL(_set_op_register(&pstmt->content.instruction, TOK_CURR, 1),
                    GRM_GENERIC_ERROR);
-    operand->type = OP_REG;
-    operand->specifier = OPS_NONE;
     return GRM_MATCH;
   } else if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_EOF))) {
-    RETURN_IF_FAIL(_parse_int32(TOK_CURR, &operand->value.immediate_value),
+    RETURN_IF_FAIL(_set_op_number(&pstmt->content.instruction, TOK_CURR, 1),
                    GRM_GENERIC_ERROR);
-    operand->type = OP_IMM32;
-    operand->specifier = OPS_NONE;
     return GRM_MATCH;
   } else if (_tokens_start_with(
                  tokens, 3,
                  TOK_ARR(TOKEN_OFFSET, TOKEN_IDENTIFIER, TOKEN_EOF))) {
-    RETURN_IF_FAIL(_copy_token_value(TOK_CURR, operand->value.register_name,
-                                     sizeof(operand->value.register_name)),
+    RETURN_IF_FAIL(_set_op_offset(&pstmt->content.instruction, tokens[1], 1),
                    GRM_GENERIC_ERROR);
-    operand->type = OP_IMM32;
-    operand->specifier = OPS_OFFSET;
     return GRM_MATCH;
   }
 
@@ -713,6 +709,22 @@ static int _set_op_number(struct Instruction_Statement *is,
   }
   is->operands[idx].type = OP_IMM32;
   is->operands[idx].specifier = OPS_NONE;
+
+  return 1;
+}
+
+static int _set_op_offset(struct Instruction_Statement *is,
+                          const struct Token *token, size_t idx) {
+  RETURN_IF_FAIL(
+      is && token && idx < sizeof(is->operands) / sizeof(struct Operand), 0);
+  RETURN_IF_FAIL(_copy_token_value(token, is->operands[idx].value.label,
+                                   sizeof(is->operands[idx].value.label)),
+                 0);
+  if (idx + 1 > is->operand_count) {
+    is->operand_count = idx + 1;
+  }
+  is->operands[idx].type = OP_IMM32;
+  is->operands[idx].specifier = OPS_OFFSET;
 
   return 1;
 }
