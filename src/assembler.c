@@ -7,21 +7,32 @@
 #include "memory.h"
 #include "parser.h"
 #include "symbol.h"
+#include <stddef.h>
 #include <stdio.h>
 
 #define ERR_IF_FAIL(cond, er)                                                  \
   err = (er);                                                                  \
   CLEANUP_IF_FAIL(cond);
 
+// ===== STATIC HELPER DECLARATIONS =====
+
+// Process one line in the first pass of the assembler code.
+// Return adequate error code, edit context if changed.
+static enum Err_Asm _pass1_line(const char *line, size_t nl,
+                                enum Assembler_Context *ctx);
+
+// ===== HEADER DEFINITIONS =====
+
 enum Err_Main process_assembler(struct Assembler_Processing *asp) {
-  enum Err_Main res = ERR_NO_ERROR;
-  if ((res = pass1(asp)) != ERR_NO_ERROR) {
-    return res;
+  enum Err_Asm res = ASM_NO_ERROR;
+  if ((res = pass1(asp)) != ASM_NO_ERROR) {
+    return ERR_SYNTAX_ERROR; // what else
   }
-  if ((res = pass2(asp)) != ERR_NO_ERROR) {
-    return res;
+  if ((res = pass2(asp)) != ASM_NO_ERROR) {
+    return ERR_SYNTAX_ERROR; // what else
   }
-  return res;
+
+  return ERR_NO_ERROR;
 }
 
 enum Err_Asm pass1(struct Assembler_Processing *asp) {
@@ -30,7 +41,8 @@ enum Err_Asm pass1(struct Assembler_Processing *asp) {
   size_t line_len = 0, nl = 1;
   FILE *f = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
-  struct Token *tokens = NULL;
+  struct Token *tokens = NULL;        // because cannot free const
+  const struct Token *ctokens = NULL; // but parse_tokens needs const
   struct Parsed_Statement *pstmt = NULL;
   RETURN_IF_FAIL(asp, ASM_INVALID_ASP);
   RETURN_IF_FAIL(fu_open(asp->config->source, &f), ASM_CANNOT_OPEN_FILE);
@@ -38,7 +50,8 @@ enum Err_Asm pass1(struct Assembler_Processing *asp) {
   while (fu_getline(&line, &line_len, f)) {
     tokens = lexer_tokenize_line(line, nl);
     ERR_IF_FAIL(tokens, ASM_CREATING_TOKENS);
-    pstmt = parse_tokens(tokens, nl);
+    ctokens = tokens;
+    pstmt = parse_tokens(&ctokens, nl);
     ERR_IF_FAIL(pstmt && pstmt->err == PAR_NO_ERROR, ASM_CREATING_PSTMT);
 
     switch (pstmt->type) {
@@ -77,14 +90,14 @@ enum Err_Asm pass1(struct Assembler_Processing *asp) {
       goto cleanup;
     }
 
-    lexer_free_tokens(&tokens);
+    lexer_free_tokens(tokens);
     p_stmt_free(&pstmt);
     nl++;
   }
 
 cleanup:
   if (tokens) {
-    lexer_free_tokens(&tokens);
+    lexer_free_tokens(tokens);
   }
   if (pstmt) {
     p_stmt_free(&pstmt);
@@ -171,3 +184,8 @@ void asp_free(struct Assembler_Processing **asp) {
   asp_deinit(*asp);
   jree(asp);
 }
+
+// ===== STATIC HELPER DEFINITIONS =====
+
+static enum Err_Asm _pass1_line(const char *line, size_t nl,
+                                enum Assembler_Context *ctx);
