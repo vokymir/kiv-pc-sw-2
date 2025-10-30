@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #if defined(_WIN32)
@@ -137,4 +139,54 @@ int fu_can_write_parent_dir(const char *path) {
 
   jree(dup);
   return res;
+}
+
+int fu_getline(char **lineptr, size_t *n, FILE *stream) {
+  size_t pos = 0, new_n = 0;
+  int ch = 0;
+  char *tmp = NULL;
+  if (!lineptr || !n || !stream) {
+    return -1;
+  }
+
+  // Allocate if *lineptr doesn't exist
+  if (*lineptr == NULL || *n == 0) {
+    *n = FU_GETLINE_INIT_LEN;
+    *lineptr = jalloc(*n);
+    if (!*lineptr) {
+      return -1;
+    }
+  }
+
+  // while have something to read
+  while ((ch = fgetc(stream)) != EOF) {
+    // extend if needed
+    if (pos + 1 >= *n) {
+      new_n = (*n) * 2;
+      tmp = jealloc(*lineptr, new_n);
+      if (!tmp) {
+        return -1;
+      }
+      *lineptr = tmp;
+      *n = new_n;
+      tmp = NULL;
+    }
+
+    // set actual character & optionally exit
+    (*lineptr)[pos] = (char)ch;
+    pos++;
+
+    if (ch == '\n') {
+      break;
+    }
+  }
+
+  // if found EOF & nothing is read
+  if (pos == 0 && ch == EOF) {
+    return -1;
+  }
+
+  // NULL terminate & return
+  (*lineptr)[pos] = '\0';
+  return pos;
 }
