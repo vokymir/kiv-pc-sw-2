@@ -1,0 +1,51 @@
+#ifndef ASSEMBLER_H
+#define ASSEMBLER_H
+
+#include "codeseg.h"
+#include "common.h"
+#include "dataseg.h"
+#include "symbol.h"
+
+struct Assembler_Processing {
+  const struct Config *config;
+  struct Symbol_Table *symtab;
+  struct Data_Segment *dtsg;
+  struct Code_Segment *cdsg;
+};
+
+// Wrapper around 2-pass assembler to binary process.
+// Return exact error code.
+enum Err_Main process_assembler(struct Assembler_Processing *asp);
+
+// First pass of assembler code = evaluates the whole file, creates a symbol
+// table and fills it with actual values in code/data segment. Return error
+// codes based on assignment error codes table
+enum Err_Main pass1(struct Assembler_Processing *asp);
+
+// Second pass of assembler code = evaluates the whole file, using a symbol
+// table it writes into code segment with actual values. Return adequate error
+// code.
+enum Err_Main pass2(struct Assembler_Processing *asp);
+
+// Create new ASsembler Processing struct. Call asp_init to initialize from
+// given parameters. If any is missing (NULL), the init will allocate new.
+// Only exception is config, which can only be given.
+struct Assembler_Processing *asp_create(const struct Config *config,
+                                        struct Symbol_Table *symtab,
+                                        struct Data_Segment *dtsg,
+                                        struct Code_Segment *cdsg);
+
+// Initialize any given ASsembler Processing struct with given paramters. If any
+// is NULL, allocates new.
+// Return 1 on success, 0 on failure.
+int asp_init(struct Assembler_Processing *asp, const struct Config *config,
+             struct Symbol_Table *symtab, struct Data_Segment *dtsg,
+             struct Code_Segment *cdsg);
+
+// Free all inside structures of given asp.
+void asp_deinit(struct Assembler_Processing *asp);
+
+// Call asp_deinit & free ASP, then set pointer to NULL.
+void asp_free(struct Assembler_Processing **asp);
+
+#endif
