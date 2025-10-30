@@ -10,16 +10,39 @@
 #include <stddef.h>
 #include <stdio.h>
 
+// If condition fail, set variable 'err' to given er
+// & goto cleanup.
 #define ERR_IF_FAIL(cond, er)                                                  \
-  err = (er);                                                                  \
-  CLEANUP_IF_FAIL(cond);
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      err = (er);                                                              \
+      goto cleanup;                                                            \
+    }                                                                          \
+  } while (0)
+
+// Check if func == ASM_NO_ERROR
+// Reuse error given from func & goto cleanup
+#define REUSE_ERR_IF_FAIL(func)                                                \
+  do {                                                                         \
+    if ((err = (func)) != ASM_NO_ERROR) {                                      \
+      goto cleanup;                                                            \
+    }                                                                          \
+  } while (0)
 
 // ===== STATIC HELPER DECLARATIONS =====
 
+// ????? ARE HEADERS SUFFICIENT and MINIMALY SUFFICIENT ????? TODO:
+
 // Process one line in the first pass of the assembler code.
 // Return adequate error code, edit context if changed.
-static enum Err_Asm _pass1_line(const char *line, size_t nl,
-                                enum Assembler_Context *ctx);
+static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
+                                enum Assembler_Context *ctx, size_t nl,
+                                const char *line);
+
+// Decide what to do in pass1 with given pstmt in pass one.
+static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
+                                  struct Assembler_Processing *asp,
+                                  enum Assembler_Context *ctx, size_t nl);
 
 // ===== HEADER DEFINITIONS =====
 
@@ -41,70 +64,19 @@ enum Err_Asm pass1(struct Assembler_Processing *asp) {
   size_t line_len = 0, nl = 1;
   FILE *f = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
-  struct Token *tokens = NULL;        // because cannot free const
-  const struct Token *ctokens = NULL; // but parse_tokens needs const
-  struct Parsed_Statement *pstmt = NULL;
-  RETURN_IF_FAIL(asp, ASM_INVALID_ASP);
+  RETURN_IF_FAIL(asp, ASM_INVALID_ARGS);
   RETURN_IF_FAIL(fu_open(asp->config->source, &f), ASM_CANNOT_OPEN_FILE);
 
   while (fu_getline(&line, &line_len, f)) {
-    tokens = lexer_tokenize_line(line, nl);
-    ERR_IF_FAIL(tokens, ASM_CREATING_TOKENS);
-    ctokens = tokens;
-    pstmt = parse_tokens(&ctokens, nl);
-    ERR_IF_FAIL(pstmt && pstmt->err == PAR_NO_ERROR, ASM_CREATING_PSTMT);
-
-    switch (pstmt->type) {
-    case STMT_KMA:
-      ERR_IF_FAIL(nl == 1, ASM_KMA_IN_THE_MIDDLE);
-      break;
-    case STMT_NONE:
-      break;
-    case STMT_SECTION_CODE:
-      ctx = ASC_CODE;
-      break;
-    case STMT_SECTION_DATA:
-      ctx = ASC_DATA;
-      break;
-    case STMT_DATA_DECL:
-      ERR_IF_FAIL(ctx == ASC_DATA, ASM_DATA_ABROAD);
-      // dtsg advance
-      // symtab define
-      break;
-    case STMT_INSTRUCTION:
-      ERR_IF_FAIL(ctx == ASC_CODE, ASM_CODE_ABROAD);
-      // cdsg advance
-      break;
-    case STMT_LABEL_DEF:
-      // symtab define
-      break;
-    case STMT_ERROR:
-    default:
-      err = ASM_UNKNOWN_PSTMT_TYPE;
-      goto cleanup;
-      break;
-    }
-    // enforce .KMA on the start of file
-    if (nl == 1 && pstmt->type != STMT_KMA) {
-      err = ASM_MISSING_KMA;
-      goto cleanup;
-    }
-
-    lexer_free_tokens(tokens);
-    p_stmt_free(&pstmt);
+    REUSE_ERR_IF_FAIL(_pass1_line(line, nl, &ctx));
     nl++;
   }
 
 cleanup:
-  if (tokens) {
-    lexer_free_tokens(tokens);
-  }
-  if (pstmt) {
-    p_stmt_free(&pstmt);
-  }
   return err;
 }
 
+// TODO:
 enum Err_Asm pass2(struct Assembler_Processing *asp) { return asp == 1; }
 
 struct Assembler_Processing *asp_create(const struct Config *config,
@@ -187,5 +159,72 @@ void asp_free(struct Assembler_Processing **asp) {
 
 // ===== STATIC HELPER DEFINITIONS =====
 
-static enum Err_Asm _pass1_line(const char *line, size_t nl,
-                                enum Assembler_Context *ctx);
+static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
+                                enum Assembler_Context *ctx, size_t nl,
+                                const char *line) {
+  struct Token *tokens = NULL;
+  const struct Token *ctokens = NULL;
+  struct Parsed_Statement *pstmt = NULL;
+  enum Err_Asm err = ASM_NO_ERROR;
+
+  tokens = lexer_tokenize_line(line, nl);
+  ERR_IF_FAIL(tokens, ASM_CREATING_TOKENS);
+  ctokens = tokens;
+  pstmt = parse_tokens(&ctokens, nl);
+  ERR_IF_FAIL(pstmt && pstmt->err == PAR_NO_ERROR, ASM_CREATING_PSTMT);
+
+  REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx, nl));
+
+cleanup:
+  if (tokens) {
+    lexer_free_tokens(tokens);
+    tokens = NULL;
+    ctokens = NULL;
+  }
+  if (pstmt) {
+    p_stmt_free(&pstmt);
+  }
+  return err;
+}
+
+static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
+                                  struct Assembler_Processing *asp,
+                                  enum Assembler_Context *ctx, size_t nl) {
+  RETURN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
+
+  switch (pstmt->type) {
+  case STMT_KMA:
+    RETURN_IF_FAIL(nl == 1, ASM_KMA_IN_THE_MIDDLE);
+    break;
+  case STMT_NONE:
+    break;
+  case STMT_SECTION_CODE:
+    *ctx = ASC_CODE;
+    break;
+  case STMT_SECTION_DATA:
+    *ctx = ASC_DATA;
+    break;
+  case STMT_DATA_DECL:
+    RETURN_IF_FAIL(*ctx == ASC_DATA, ASM_DATA_ABROAD);
+    // dtsg advance
+    // symtab define
+    break;
+  case STMT_INSTRUCTION:
+    RETURN_IF_FAIL(*ctx == ASC_CODE, ASM_CODE_ABROAD);
+    // cdsg advance
+    break;
+  case STMT_LABEL_DEF:
+    // symtab define
+    break;
+  case STMT_ERROR:
+  default:
+    return ASM_UNKNOWN_PSTMT_TYPE;
+    break;
+  }
+  // enforce .KMA on the start of file
+  if (nl == 1 && pstmt->type != STMT_KMA) {
+    return ASM_MISSING_KMA;
+  }
+
+  return ASM_NO_ERROR;
+}
