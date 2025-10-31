@@ -32,14 +32,15 @@ cleanup:
   return NULL;
 }
 
-void cdsg_free(struct Code_Segment *cdsg) {
-  if (!cdsg) {
+void cdsg_free(struct Code_Segment **cdsg) {
+  if (!cdsg || !*cdsg) {
     return;
   }
-  if (cdsg->bytes) {
-    jree(cdsg->bytes);
+  if ((*cdsg)->bytes) {
+    jree((*cdsg)->bytes);
   }
-  jree(cdsg);
+  jree(*cdsg);
+  *cdsg = NULL;
   return;
 }
 

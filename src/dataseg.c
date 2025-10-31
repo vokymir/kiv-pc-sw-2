@@ -32,14 +32,15 @@ cleanup:
   return NULL;
 }
 
-void dtsg_free(struct Data_Segment *dtsg) {
-  if (!dtsg) {
+void dtsg_free(struct Data_Segment **dtsg) {
+  if (!dtsg || !*dtsg) {
     return;
   }
-  if (dtsg->bytes) {
-    jree(dtsg->bytes);
+  if ((*dtsg)->bytes) {
+    jree((*dtsg)->bytes);
   }
-  jree(dtsg);
+  jree(*dtsg);
+  *dtsg = NULL;
   return;
 }
 

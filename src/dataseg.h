@@ -18,7 +18,7 @@ struct Data_Segment {
 struct Data_Segment *dtsg_create(void);
 
 // Free Data segment.
-void dtsg_free(struct Data_Segment *dtsg);
+void dtsg_free(struct Data_Segment **dtsg);
 
 // Data Segment Append Byte.
 // Return 1 on success, 0 on failure.

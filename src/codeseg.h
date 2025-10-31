@@ -18,7 +18,7 @@ struct Code_Segment {
 struct Code_Segment *cdsg_create(void);
 
 // Free code segment.
-void cdsg_free(struct Code_Segment *cdsg);
+void cdsg_free(struct Code_Segment **cdsg);
 
 // Code Segment Append Byte.
 // Return 1 on success, 0 on failure.
