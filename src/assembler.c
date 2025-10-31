@@ -1,3 +1,7 @@
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+
 #include "assembler.h"
 #include "codeseg.h"
 #include "common.h"
@@ -8,9 +12,6 @@
 #include "memory.h"
 #include "parser.h"
 #include "symbol.h"
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
 
 // If condition fail, set variable 'err' to given er
 // & goto cleanup.
@@ -42,7 +43,36 @@ static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
 // Decide what to do in pass1 with given pstmt in pass one.
 static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
                                   struct Assembler_Processing *asp,
-                                  enum Assembler_Context *ctx);
+                                  enum Assembler_Context *ctx, size_t nl);
+
+// Perform all actions required for first pass, case STMT_KMA.
+// Return adequate err_asm, preferably asm_no_error
+static enum Err_Asm _pass1_kma(struct Assembler_Processing *asp,
+                               enum Assembler_Context *ctx, size_t nl);
+
+static enum Err_Asm _pass1_code_section(struct Assembler_Processing *asp,
+                                        enum Assembler_Context *ctx, size_t nl);
+
+static enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
+                                        enum Assembler_Context *ctx, size_t nl);
+
+static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
+                                     struct Assembler_Processing *asp,
+                                     enum Assembler_Context *ctx, size_t nl);
+
+static enum Err_Asm _pass1_instruction(struct Parsed_Statement *pstmt,
+                                       struct Assembler_Processing *asp,
+                                       enum Assembler_Context *ctx, size_t nl);
+
+static enum Err_Asm _pass1_label_def(struct Parsed_Statement *pstmt,
+                                     struct Assembler_Processing *asp,
+                                     enum Assembler_Context *ctx, size_t nl);
+
+static enum Err_Asm _pass1_none(struct Assembler_Processing *asp,
+                                enum Assembler_Context *ctx, size_t nl);
+
+static enum Err_Asm _pass1_error(struct Assembler_Processing *asp,
+                                 enum Assembler_Context *ctx, size_t nl);
 
 // ===== HEADER DEFINITIONS =====
 
@@ -180,7 +210,7 @@ static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
   pstmt = parse_tokens(&ctokens, nl);
   ERR_IF_FAIL(pstmt && pstmt->err == PAR_NO_ERROR, ASM_CREATING_PSTMT);
 
-  REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx));
+  REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx, nl));
 
 cleanup:
   if (tokens) {
@@ -196,35 +226,19 @@ cleanup:
 
 static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
                                   struct Assembler_Processing *asp,
-                                  enum Assembler_Context *ctx) {
+                                  enum Assembler_Context *ctx, size_t nl) {
   size_t pos = SIZE_MAX, size = SIZE_MAX;
   RETURN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
 
   switch (pstmt->type) {
   case STMT_KMA:
-    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_DOUBLE);
-    *ctx = ASC_AFTER_KMA;
-    break;
+    return _pass1_kma(asp, ctx, nl);
   case STMT_SECTION_CODE:
-    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_EXPECTED);
-    *ctx = ASC_CODE;
-    break;
+    return _pass1_code_section(asp, ctx, nl);
   case STMT_SECTION_DATA:
-    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_EXPECTED);
-    *ctx = ASC_DATA;
-    break;
+    return _pass1_data_section(asp, ctx, nl);
   case STMT_DATA_DECL:
-    RETURN_IF_FAIL(*ctx == ASC_DATA, ASM_DATA_ABROAD);
-    pos = dtsg_advance(asp->dtsg, pstmt->content.data_decl.total_size);
-    RETURN_IF_FAIL(pos != SIZE_MAX, ASM_DTSG_CANNOT_ADVANCE);
-    RETURN_IF_FAIL(
-        symtab_find(asp->symtab, pstmt->content.data_decl.identifier) == NULL,
-        ASM_SYMTAB_ALREADY_EXIST);
-    RETURN_IF_FAIL(pos <= UINT32_MAX, ASM_SYMTAB_DATA_TOO_LARGE);
-    RETURN_IF_FAIL(symtab_add(asp->symtab, pstmt->content.data_decl.identifier,
-                              (uint32_t)pos),
-                   ASM_SYMTAB_CANNOT_ADD);
-    break;
+    return _pass1_data_decl(pstmt, asp, ctx, nl);
   case STMT_INSTRUCTION:
     RETURN_IF_FAIL(*ctx == ASC_CODE, ASM_CODE_ABROAD);
     size = instruction_get_encoded_size(pstmt->content.instruction.descriptor);
@@ -250,6 +264,134 @@ static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
   default:
     return ASM_UNKNOWN_PSTMT_TYPE;
     break;
+  }
+
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm _pass1_kma(struct Assembler_Processing *asp,
+                               enum Assembler_Context *ctx, size_t nl) {
+  if (!asp || !asp->config || !*ctx) {
+    print_verbose(asp->config->flag_verbose,
+                  "Found KMA label on line %zu, but something went WRONG.", nl);
+    return ASM_INVALID_ARGS;
+  }
+
+  if (*ctx != ASC_FILE_START) {
+    print_verbose(asp->config->flag_verbose,
+                  "Found KMA label on line %zu, resulting in error, because it "
+                  "IS NOT at the start of file.",
+                  nl);
+    return ASM_KMA_DOUBLE;
+  }
+
+  *ctx = ASC_AFTER_KMA;
+  print_verbose(asp->config->flag_verbose,
+                "Found KMA label on line %zu, which is OK, because its "
+                "start of file.",
+                nl);
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm _pass1_code_section(struct Assembler_Processing *asp,
+                                        enum Assembler_Context *ctx,
+                                        size_t nl) {
+  if (!asp || !asp->config || !*ctx) {
+    print_verbose(
+        asp->config->flag_verbose,
+        "Found CODE SECTION label on line %zu, but something went WRONG.", nl);
+    return ASM_INVALID_ARGS;
+  }
+
+  if (*ctx == ASC_FILE_START) {
+    print_verbose(asp->config->flag_verbose,
+                  "Found CODE SECTION label on line %zu, resulting in error, "
+                  "because it IS at the start of file and KMA was expected.",
+                  nl);
+    return ASM_KMA_EXPECTED;
+  }
+
+  *ctx = ASC_CODE;
+  print_verbose(asp->config->flag_verbose,
+                "Found CODE SECTION label on line %zu, which is OK.", nl);
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
+                                        enum Assembler_Context *ctx,
+                                        size_t nl) {
+  if (!asp || !asp->config || !*ctx) {
+    print_verbose(
+        asp->config->flag_verbose,
+        "Found DATA SECTION label on line %zu, but something went WRONG.", nl);
+    return ASM_INVALID_ARGS;
+  }
+
+  if (*ctx == ASC_FILE_START) {
+    print_verbose(asp->config->flag_verbose,
+                  "Found DATA SECTION label on line %zu, resulting in error, "
+                  "because it IS at the start of file and KMA was expected.",
+                  nl);
+    return ASM_KMA_EXPECTED;
+  }
+
+  *ctx = ASC_DATA;
+  print_verbose(asp->config->flag_verbose,
+                "Found DATA SECTION label on line %zu, which is OK.", nl);
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
+                                     struct Assembler_Processing *asp,
+                                     enum Assembler_Context *ctx, size_t nl) {
+  size_t position = SIZE_MAX;
+  if (!pstmt || !asp || !asp->config || !*ctx) {
+    print_verbose(
+        asp->config->flag_verbose,
+        "Found DATA DECLARATION on line %zu, but something went WRONG.", nl);
+    return ASM_INVALID_ARGS;
+  }
+
+  if (*ctx != ASC_DATA) {
+    print_verbose(asp->config->flag_verbose,
+                  "Found DATA DECLARATION on line %zu, but that IS NOT in the "
+                  "data section, resultion in ERROR.");
+    return ASM_DATA_ABROAD;
+  }
+
+  position = dtsg_advance(asp->dtsg, pstmt->content.data_decl.total_size);
+
+  if (position == SIZE_MAX) {
+    print_verbose(asp->config->flag_verbose,
+                  "Found DATA DECLARATION on line %zu, but when trying to "
+                  "'reserve' the space in data segment, ERROR happened.",
+                  nl);
+    return ASM_DTSG_CANNOT_ADVANCE;
+  }
+
+  if (position > UINT32_MAX) {
+    print_verbose(asp->config->flag_verbose,
+                  "Found DATA DECLARATION on line %zu, but data segment is "
+                  "definitely too large for KMA computer (%zu). ",
+                  nl, position);
+    return ASM_SYMTAB_DATA_TOO_LARGE;
+  }
+
+  if (symtab_find(asp->symtab, pstmt->content.data_decl.identifier) != NULL) {
+    print_verbose(asp->config->flag_verbose,
+                  "Found DATA DECLARATION on line %zu, but identifier %s was "
+                  "already used = illegal redeclaration.",
+                  nl, pstmt->content.data_decl.identifier);
+    return ASM_SYMTAB_ALREADY_EXIST;
+  }
+
+  if (!symtab_add(asp->symtab, pstmt->content.data_decl.identifier,
+                  (uint32_t)position)) {
+    print_verbose(asp->config->flag_verbose,
+                  "Found DATA DECLARATION on line %zu, but identifier %s "
+                  "couldn't be added to the symbol table.",
+                  nl, pstmt->content.data_decl.identifier);
+    return ASM_SYMTAB_CANNOT_ADD;
   }
 
   return ASM_NO_ERROR;
