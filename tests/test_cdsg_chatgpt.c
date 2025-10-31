@@ -27,7 +27,7 @@ static void test_create_and_free(void) {
   assert(seg->capacity >= CDSG_INITIAL_CAPACITY);
   assert(seg->size == 0);
 
-  cdsg_free(seg);
+  cdsg_free(&seg);
   printf("✅ create_and_free passed.\n");
 }
 
@@ -48,7 +48,7 @@ static void test_append_single_bytes(void) {
     assert(bytes[i] == (uint8_t)i);
   }
 
-  cdsg_free(seg);
+  cdsg_free(&seg);
   printf("✅ append_single_bytes passed.\n");
 }
 
@@ -70,7 +70,7 @@ static void test_append_byte_array(void) {
     assert(b[i] == (uint8_t)(0x10 + i));
   }
 
-  cdsg_free(seg);
+  cdsg_free(&seg);
   printf("✅ append_byte_array passed.\n");
 }
 
@@ -96,7 +96,7 @@ static void test_append_opcode_reg_imm(void) {
   memcpy(&imm, b + 2, 4);
   assert(imm == 0x12345678);
 
-  cdsg_free(seg);
+  cdsg_free(&seg);
   printf("✅ append_opcode_reg_imm passed.\n");
 }
 
@@ -116,7 +116,7 @@ static void test_capacity_growth(void) {
   assert(seg->capacity >= initial_cap * CDSG_CAPACITY_MULT);
   assert(seg->size == initial_cap * 3);
 
-  cdsg_free(seg);
+  cdsg_free(&seg);
   printf("✅ capacity_growth passed.\n");
 }
 
@@ -138,7 +138,7 @@ static void test_advance_and_write(void) {
   assert(cdsg_app_b(seg, 0xFF));
   assert(cdsg_get_size(seg) == 16);
 
-  cdsg_free(seg);
+  cdsg_free(&seg);
   printf("✅ advance_and_write passed.\n");
 }
 

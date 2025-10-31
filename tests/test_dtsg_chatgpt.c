@@ -17,7 +17,7 @@ static void test_create_free(void) {
   assert(d != NULL);
   assert(d->size == 0);
   assert(d->capacity >= DTSG_INITIAL_CAPACITY);
-  dtsg_free(d);
+  dtsg_free(&d);
   printf("  PASSED\n");
 }
 
@@ -41,7 +41,7 @@ static void test_append_byte_and_bytes(void) {
   // previously 0xAA,0xBB then arr
   assert(p[2] == 0x01 && p[5] == 0x04);
 
-  dtsg_free(d);
+  dtsg_free(&d);
   printf("  PASSED\n");
 }
 
@@ -68,7 +68,7 @@ static void test_append_dword_and_dws(void) {
   // offset 8: dword -1 -> FF FF FF FF
   assert(p[8] == 0xFF && p[9] == 0xFF && p[10] == 0xFF && p[11] == 0xFF);
 
-  dtsg_free(d);
+  dtsg_free(&d);
   printf("  PASSED\n");
 }
 
@@ -95,7 +95,7 @@ static void test_append_string_and_zeroes(void) {
   // last 4 bytes should be zero
   assert(p[new_sz - 1] == 0 && p[new_sz - 4] == 0);
 
-  dtsg_free(d);
+  dtsg_free(&d);
   printf("  PASSED\n");
 }
 
@@ -118,7 +118,7 @@ static void test_capacity_growth_and_large_append(void) {
   assert(p[0] == pattern);
   assert(p[to_append - 1] == pattern);
 
-  dtsg_free(d);
+  dtsg_free(&d);
   printf("  PASSED\n");
 }
 
@@ -145,7 +145,7 @@ static void test_advance_behavior(void) {
   const uint8_t *p = bytes(d);
   assert(p[final_size - 1] == 0xAB);
 
-  dtsg_free(d);
+  dtsg_free(&d);
   printf("  PASSED\n");
 }
 
