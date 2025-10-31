@@ -4,6 +4,7 @@
 // Implementing RAII-like cleanup procedure.
 // If condition is not satisfied, go to label.
 // Label must be at the end of the same function, to work reliably.
+#include "parser_code.h"
 #define GOTO_IF_FAIL(cond, label)                                              \
   do {                                                                         \
     if (!(cond))                                                               \
@@ -39,5 +40,20 @@ struct Config {
   char *source;
   char *target;
 };
+
+// United verbose output to console.
+// Only print if condition is met, variadic arguments will be forwarded to
+// printf function from stdio.h, which require the first argument to be
+// *string*, the next anything 'mentioned' in the string.
+void print_verbose(int condition, const char *string, ...);
+
+// United instruction output to console.
+// Only print if condition is met.
+// Format:
+// L<line>: <is.name> [<is.operands>] at CS:<addr>
+// e.g.:
+// L50: DEC A at CS:123
+void print_instruction(int condition, size_t line,
+                       struct Instruction_Statement *is, size_t addr);
 
 #endif
