@@ -42,7 +42,7 @@ static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
 // Decide what to do in pass1 with given pstmt in pass one.
 static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
                                   struct Assembler_Processing *asp,
-                                  enum Assembler_Context *ctx, size_t nl);
+                                  enum Assembler_Context *ctx);
 
 // ===== HEADER DEFINITIONS =====
 
@@ -180,7 +180,7 @@ static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
   pstmt = parse_tokens(&ctokens, nl);
   ERR_IF_FAIL(pstmt && pstmt->err == PAR_NO_ERROR, ASM_CREATING_PSTMT);
 
-  REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx, nl));
+  REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx));
 
 cleanup:
   if (tokens) {
@@ -196,7 +196,7 @@ cleanup:
 
 static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
                                   struct Assembler_Processing *asp,
-                                  enum Assembler_Context *ctx, size_t nl) {
+                                  enum Assembler_Context *ctx) {
   size_t pos = SIZE_MAX, size = SIZE_MAX;
   RETURN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
 
@@ -220,9 +220,10 @@ static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
     RETURN_IF_FAIL(
         symtab_find(asp->symtab, pstmt->content.data_decl.identifier) == NULL,
         ASM_SYMTAB_ALREADY_EXIST);
-    RETURN_IF_FAIL(
-        symtab_add(asp->symtab, pstmt->content.data_decl.identifier, pos),
-        ASM_SYMTAB_CANNOT_ADD);
+    RETURN_IF_FAIL(pos <= UINT32_MAX, ASM_SYMTAB_DATA_TOO_LARGE);
+    RETURN_IF_FAIL(symtab_add(asp->symtab, pstmt->content.data_decl.identifier,
+                              (uint32_t)pos),
+                   ASM_SYMTAB_CANNOT_ADD);
     break;
   case STMT_INSTRUCTION:
     RETURN_IF_FAIL(*ctx == ASC_CODE, ASM_CODE_ABROAD);
@@ -238,9 +239,10 @@ static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
     RETURN_IF_FAIL(
         symtab_find(asp->symtab, pstmt->content.label_def.label_name) == NULL,
         ASM_SYMTAB_ALREADY_EXIST);
-    RETURN_IF_FAIL(
-        symtab_add(asp->symtab, pstmt->content.label_def.label_name, pos),
-        ASM_SYMTAB_CANNOT_ADD);
+    RETURN_IF_FAIL(pos <= UINT32_MAX, ASM_SYMTAB_DATA_TOO_LARGE);
+    RETURN_IF_FAIL(symtab_add(asp->symtab, pstmt->content.label_def.label_name,
+                              (uint32_t)pos),
+                   ASM_SYMTAB_CANNOT_ADD);
     break;
   case STMT_NONE:
     break;

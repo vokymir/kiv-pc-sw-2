@@ -36,6 +36,7 @@ enum Err_Asm {
   ASM_SYMTAB_CANNOT_ADD,
   ASM_SYMTAB_ALREADY_EXIST,
   ASM_INVALID_INSTUCTION,
+  ASM_SYMTAB_DATA_TOO_LARGE,
 };
 
 // Wrapper around 2-pass assembler to binary process.

@@ -33,10 +33,6 @@ static int _token_is_eof(const struct Token *token);
 static int _tokens_start_with(const struct Token *tokens[], size_t n,
                               const enum Token_Type types[]);
 
-// Check if token on idx exist and have type.
-static int _peek_type(const struct Token *tokens[], size_t idx,
-                      enum Token_Type type);
-
 // ===== STRING HELPER DECLARATIONS =====
 
 // copy token->value into dest and NULL-terminates
@@ -48,6 +44,8 @@ static int _token_value_eq(const struct Token *token, const char *s);
 // ===== NUMBER HELPER DECLARATIONS =====
 
 static int _parse_int32(const struct Token *token, int32_t *out);
+
+static int _parse_size_t(const struct Token *token, size_t *out);
 
 // ===== SEGMENT HELPER DECLARATIONS =====
 
@@ -114,6 +112,9 @@ static int _set_op_number(struct Instruction_Statement *is,
 // set is->op[idx] to offset, token must point to identifier
 static int _set_op_offset(struct Instruction_Statement *is,
                           const struct Token *token, size_t idx);
+
+// set is->op_count to idx+1 if possible.
+static int _set_op_count(struct Instruction_Statement *is, size_t idx);
 
 // ===== HEADER DEFINITIONS =====
 
@@ -343,9 +344,7 @@ enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
 
 enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
                                            const struct Token *tokens[]) {
-  struct Operand *operand = NULL;
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
-  operand = &pstmt->content.instruction.operands[1];
 
   if (_tokens_start_with(tokens, 2, TOK_ARR(TOKEN_REGISTER, TOKEN_EOF))) {
     RETURN_IF_FAIL(_set_op_register(&pstmt->content.instruction, TOK_CURR, 1),
@@ -395,28 +394,15 @@ static int _tokens_start_with(const struct Token *tokens[], size_t n,
   return 1;
 }
 
-static int _peek_type(const struct Token *tokens[], size_t idx,
-                      enum Token_Type type) {
-  size_t i = 0;
-  if (!tokens || !*tokens)
-    return 0;
-
-  for (i = 0; i < idx; i++) {
-    if (_token_is_eof(tokens[i]))
-      return 0;
-  }
-
-  return _token_is(tokens[idx], type);
-}
-
 // ===== STRING HELPER DEFINITIONS =====
 
 static int _copy_token_value(const struct Token *token, char *dest,
                              size_t len) {
-  RETURN_IF_FAIL(token && dest && len > 0, 0);
+  size_t copy_len = len - 1;
+  RETURN_IF_FAIL(token && dest && copy_len > 0, 0);
 
-  strncpy(dest, token->value, len - 1);
-  dest[len - 1] = '\0';
+  memcpy(dest, token->value, copy_len);
+  dest[copy_len] = '\0';
 
   return 1;
 }
@@ -444,6 +430,25 @@ static int _parse_int32(const struct Token *token, int32_t *out) {
     return 0;
 
   *out = (int32_t)res;
+  return 1;
+}
+
+static int _parse_size_t(const struct Token *token, size_t *out) {
+  unsigned long long res = 0;
+  char *end = NULL;
+  RETURN_IF_FAIL(token && out, 0);
+
+  errno = 0;
+  res =
+      strtoull(token->value, &end, 10); // unsigned long long is bigger > size_t
+  if (end == token->value)
+    return 0; // no digits
+  if (errno == ERANGE)
+    return 0; // overflow
+  if (res > SIZE_MAX)
+    return 0; // bigger > size_t
+
+  *out = (size_t)res;
   return 1;
 }
 
@@ -562,7 +567,7 @@ enum Err_Grm _grammar_identifier_dup(struct Parsed_Statement *pstmt,
                                      const struct Token *tokens[],
                                      size_t segment_idx, int is_dw) {
   int is_uninit = 0;
-  size_t dup_len = 5;
+  size_t dup_len = 5; // how many tokens it takes to have a DUP
   struct Init_Segment *segment = NULL;
 
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
@@ -591,7 +596,7 @@ enum Err_Grm _grammar_identifier_dup(struct Parsed_Statement *pstmt,
   segment->is_uninit = is_uninit;
 
   // DUP COUNT
-  NOMATCH_IF_FAIL(_parse_int32(TOK_CURR, &segment->data.dup.count));
+  NOMATCH_IF_FAIL(_parse_size_t(TOK_CURR, &segment->data.dup.count));
 
   // DUP VALUE
   if (!is_uninit) {
@@ -684,9 +689,7 @@ static int _set_op_label(struct Instruction_Statement *is,
   RETURN_IF_FAIL(_copy_token_value(token, is->operands[idx].value.label,
                                    sizeof(is->operands[idx].value.label)),
                  0);
-  if (idx + 1 > is->operand_count) {
-    is->operand_count = idx + 1;
-  }
+  RETURN_IF_FAIL(_set_op_count(is, idx), 0);
   is->operands[idx].type = OP_IMM32;
   is->operands[idx].specifier = OPS_LABEL;
 
@@ -702,9 +705,7 @@ static int _set_op_register(struct Instruction_Statement *is,
       _copy_token_value(token, is->operands[idx].value.register_name,
                         sizeof(is->operands[idx].value.register_name)),
       0);
-  if (idx + 1 > is->operand_count) {
-    is->operand_count = idx + 1;
-  }
+  RETURN_IF_FAIL(_set_op_count(is, idx), 0);
   is->operands[idx].type = OP_REG;
   is->operands[idx].specifier = OPS_NONE;
 
@@ -718,9 +719,7 @@ static int _set_op_number(struct Instruction_Statement *is,
       is && token && idx < sizeof(is->operands) / sizeof(struct Operand), 0);
   RETURN_IF_FAIL(_parse_int32(token, &is->operands[idx].value.immediate_value),
                  0);
-  if (idx + 1 > is->operand_count) {
-    is->operand_count = idx + 1;
-  }
+  RETURN_IF_FAIL(_set_op_count(is, idx), 0);
   is->operands[idx].type = OP_IMM32;
   is->operands[idx].specifier = OPS_NONE;
 
@@ -734,11 +733,18 @@ static int _set_op_offset(struct Instruction_Statement *is,
   RETURN_IF_FAIL(_copy_token_value(token, is->operands[idx].value.label,
                                    sizeof(is->operands[idx].value.label)),
                  0);
-  if (idx + 1 > is->operand_count) {
-    is->operand_count = idx + 1;
-  }
+  RETURN_IF_FAIL(_set_op_count(is, idx), 0);
   is->operands[idx].type = OP_IMM32;
   is->operands[idx].specifier = OPS_OFFSET;
 
+  return 1;
+}
+
+static int _set_op_count(struct Instruction_Statement *is, size_t idx) {
+  RETURN_IF_FAIL(is, 0);
+  RETURN_IF_FAIL(idx < INT_MAX, 0); // idx > sizeof(int)
+  if ((int)(idx + 1) > is->operand_count) {
+    is->operand_count = (int)(idx + 1);
+  }
   return 1;
 }
