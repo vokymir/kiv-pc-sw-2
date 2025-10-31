@@ -9,6 +9,7 @@
 #include "parser.h"
 #include "symbol.h"
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 
 // If condition fail, set variable 'err' to given er
@@ -161,7 +162,8 @@ void asp_free(struct Assembler_Processing **asp) {
     return;
   }
   asp_deinit(*asp);
-  jree(asp);
+  jree(*asp);
+  *asp = NULL;
 }
 
 // ===== STATIC HELPER DEFINITIONS =====
@@ -197,36 +199,50 @@ cleanup:
 static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
                                   struct Assembler_Processing *asp,
                                   enum Assembler_Context *ctx, size_t nl) {
-  size_t pos = 0;
+  size_t pos = SIZE_MAX, size = SIZE_MAX;
   RETURN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
 
   switch (pstmt->type) {
   case STMT_KMA:
-    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_IN_THE_MIDDLE);
+    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_DOUBLE);
     *ctx = ASC_AFTER_KMA;
     break;
   case STMT_SECTION_CODE:
-    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_MISSING_KMA);
+    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_EXPECTED);
     *ctx = ASC_CODE;
     break;
   case STMT_SECTION_DATA:
-    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_MISSING_KMA);
+    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_EXPECTED);
     *ctx = ASC_DATA;
     break;
   case STMT_DATA_DECL:
     RETURN_IF_FAIL(*ctx == ASC_DATA, ASM_DATA_ABROAD);
     pos = dtsg_advance(asp->dtsg, pstmt->content.data_decl.total_size);
-    symtab_add(asp->symtab, pstmt->content.data_decl.identifier, pos);
+    RETURN_IF_FAIL(pos != SIZE_MAX, ASM_DTSG_CANNOT_ADVANCE);
+    RETURN_IF_FAIL(
+        symtab_find(asp->symtab, pstmt->content.data_decl.identifier) == NULL,
+        ASM_SYMTAB_ALREADY_EXIST);
+    RETURN_IF_FAIL(
+        symtab_add(asp->symtab, pstmt->content.data_decl.identifier, pos),
+        ASM_SYMTAB_CANNOT_ADD);
     break;
   case STMT_INSTRUCTION:
     RETURN_IF_FAIL(*ctx == ASC_CODE, ASM_CODE_ABROAD);
-    pos = cdsg_advance(asp->cdsg, instruction_get_encoded_size(
-                                      pstmt->content.instruction.descriptor));
+    size = instruction_get_encoded_size(pstmt->content.instruction.descriptor);
+    RETURN_IF_FAIL(size > 0 && size != SIZE_MAX, ASM_INVALID_INSTUCTION);
+    pos = cdsg_advance(asp->cdsg, size);
+    RETURN_IF_FAIL(pos != SIZE_MAX, ASM_CDSG_CANNOT_ADVANCE);
     break;
   case STMT_LABEL_DEF:
     RETURN_IF_FAIL(*ctx == ASC_CODE, ASM_CODE_ABROAD);
     pos = cdsg_advance(asp->cdsg, 0);
-    symtab_add(asp->symtab, pstmt->content.label_def.label_name, pos);
+    RETURN_IF_FAIL(pos != SIZE_MAX, ASM_CDSG_CANNOT_ADVANCE);
+    RETURN_IF_FAIL(
+        symtab_find(asp->symtab, pstmt->content.label_def.label_name) == NULL,
+        ASM_SYMTAB_ALREADY_EXIST);
+    RETURN_IF_FAIL(
+        symtab_add(asp->symtab, pstmt->content.label_def.label_name, pos),
+        ASM_SYMTAB_CANNOT_ADD);
     break;
   case STMT_NONE:
     break;
