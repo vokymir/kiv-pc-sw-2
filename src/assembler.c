@@ -148,12 +148,10 @@ void asp_deinit(struct Assembler_Processing *asp) {
     symtab_free(&asp->symtab);
   }
   if (asp->dtsg) {
-    dtsg_free(asp->dtsg);
-    asp->dtsg = NULL;
+    dtsg_free(&asp->dtsg);
   }
   if (asp->cdsg) {
-    cdsg_free(asp->cdsg);
-    asp->cdsg = NULL;
+    cdsg_free(&asp->cdsg);
   }
 }
 
