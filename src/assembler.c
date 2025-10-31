@@ -3,6 +3,7 @@
 #include "common.h"
 #include "dataseg.h"
 #include "fileutil.h"
+#include "instruction.h"
 #include "lexer.h"
 #include "memory.h"
 #include "parser.h"
@@ -30,8 +31,6 @@
   } while (0)
 
 // ===== STATIC HELPER DECLARATIONS =====
-
-// ????? ARE HEADERS SUFFICIENT and MINIMALY SUFFICIENT ????? TODO:
 
 // Process one line in the first pass of the assembler code.
 // Return adequate error code, edit context if changed.
@@ -68,11 +67,19 @@ enum Err_Asm pass1(struct Assembler_Processing *asp) {
   RETURN_IF_FAIL(fu_open(asp->config->source, &f), ASM_CANNOT_OPEN_FILE);
 
   while (fu_getline(&line, &line_len, f)) {
-    REUSE_ERR_IF_FAIL(_pass1_line(line, nl, &ctx));
+    REUSE_ERR_IF_FAIL(_pass1_line(asp, &ctx, nl, line));
     nl++;
   }
 
 cleanup:
+  if (f) {
+    fclose(f);
+    f = NULL;
+  }
+  if (line) {
+    jree(line);
+    line = NULL;
+  }
   return err;
 }
 
@@ -89,7 +96,7 @@ struct Assembler_Processing *asp_create(const struct Config *config,
     return NULL;
   }
   if (!asp_init(asp, config, symtab, dtsg, cdsg)) {
-    jree(asp);
+    asp_free(&asp);
     return NULL;
   }
   return asp;
@@ -190,40 +197,43 @@ cleanup:
 static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
                                   struct Assembler_Processing *asp,
                                   enum Assembler_Context *ctx, size_t nl) {
+  size_t pos = 0;
   RETURN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
 
   switch (pstmt->type) {
   case STMT_KMA:
-    RETURN_IF_FAIL(nl == 1, ASM_KMA_IN_THE_MIDDLE);
-    break;
-  case STMT_NONE:
+    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_IN_THE_MIDDLE);
+    *ctx = ASC_AFTER_KMA;
     break;
   case STMT_SECTION_CODE:
+    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_MISSING_KMA);
     *ctx = ASC_CODE;
     break;
   case STMT_SECTION_DATA:
+    RETURN_IF_FAIL(*ctx != ASC_FILE_START, ASM_MISSING_KMA);
     *ctx = ASC_DATA;
     break;
   case STMT_DATA_DECL:
     RETURN_IF_FAIL(*ctx == ASC_DATA, ASM_DATA_ABROAD);
-    // dtsg advance
-    // symtab define
+    pos = dtsg_advance(asp->dtsg, pstmt->content.data_decl.total_size);
+    symtab_add(asp->symtab, pstmt->content.data_decl.identifier, pos);
     break;
   case STMT_INSTRUCTION:
     RETURN_IF_FAIL(*ctx == ASC_CODE, ASM_CODE_ABROAD);
-    // cdsg advance
+    pos = cdsg_advance(asp->cdsg, instruction_get_encoded_size(
+                                      pstmt->content.instruction.descriptor));
     break;
   case STMT_LABEL_DEF:
-    // symtab define
+    RETURN_IF_FAIL(*ctx == ASC_CODE, ASM_CODE_ABROAD);
+    pos = cdsg_advance(asp->cdsg, 0);
+    symtab_add(asp->symtab, pstmt->content.label_def.label_name, pos);
+    break;
+  case STMT_NONE:
     break;
   case STMT_ERROR:
   default:
     return ASM_UNKNOWN_PSTMT_TYPE;
     break;
-  }
-  // enforce .KMA on the start of file
-  if (nl == 1 && pstmt->type != STMT_KMA) {
-    return ASM_MISSING_KMA;
   }
 
   return ASM_NO_ERROR;

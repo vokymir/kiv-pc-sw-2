@@ -15,6 +15,7 @@ struct Assembler_Processing {
 
 enum Assembler_Context {
   ASC_FILE_START,
+  ASC_AFTER_KMA,
   ASC_DATA,
   ASC_CODE,
 };
