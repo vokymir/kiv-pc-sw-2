@@ -41,6 +41,22 @@
 
 // ===== STATIC HELPER DECLARATIONS =====
 
+// I accidentally created a continuous array of tokens in lexer but require
+// array of pointers to tokens in parser. This function is a bridge between
+// these differences. Caller must free this "convertor" after is used. Return
+// NULL on failure, pointer on success.
+static const struct Token **_convert_tokens(const struct Token *orig);
+
+// Free the array of pointers to tokens & set the pointer to null.
+// It frees only the array, not the tokens = can have const ptr.
+static void _free_tokens_convertor(const struct Token **tokens[]);
+
+// Convert the structure given from lexer (struct Token *) to that wanted in
+// parser (struct Token **). Free that structure on return. Otherwise only a
+// wrapper around parse_tokens in parser.
+static struct Parsed_Statement *_parse_tokens(const struct Token *tokens,
+                                              size_t nl);
+
 // Process one line in the first pass of the assembler code.
 // Return adequate error code, edit context if changed.
 static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
@@ -207,11 +223,56 @@ void asp_free(struct Assembler_Processing **asp) {
 
 // ===== STATIC HELPER DEFINITIONS =====
 
+static const struct Token **_convert_tokens(const struct Token *orig) {
+  size_t count = 0, i = 0;
+  const struct Token **res = NULL;
+  RETURN_IF_FAIL(orig, NULL);
+
+  while (orig[count].type != TOKEN_EOF) {
+    count++;
+  }
+  count++; // also count EOF
+
+  res = jalloc((count + 1) * sizeof(*res)); // +1 for NULL terminator
+  RETURN_IF_FAIL(res, NULL);
+
+  for (i = 0; i < count; i++) {
+    res[i] = &orig[i];
+  }
+  res[count] = NULL;
+
+  return res;
+}
+
+static void _free_tokens_convertor(const struct Token **tokens[]) {
+  if (!tokens || !*tokens) {
+    return;
+  }
+  jree((void *)*tokens);
+  *tokens = NULL;
+}
+
+static struct Parsed_Statement *_parse_tokens(const struct Token *tokens,
+                                              size_t nl) {
+  struct Parsed_Statement *pstmt = NULL;
+  const struct Token **converted_tokens = NULL;
+  RETURN_IF_FAIL(tokens, 0);
+  converted_tokens = _convert_tokens(tokens);
+  RETURN_IF_FAIL(converted_tokens, NULL);
+
+  pstmt = parse_tokens(converted_tokens, nl);
+
+  if (converted_tokens) {
+    // cast out const, because of free
+    _free_tokens_convertor(&converted_tokens);
+  }
+  return pstmt;
+}
+
 static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
                                 enum Assembler_Context *ctx, size_t nl,
                                 const char *line) {
   struct Token *tokens = NULL;
-  const struct Token *ctokens = NULL;
   struct Parsed_Statement *pstmt = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
 
@@ -221,9 +282,8 @@ static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
   if (DEBUG) {
     print_tokens(tokens);
   }
-  ctokens = tokens;
   PRINT_VERBOSE("Parsing tokens.\n");
-  pstmt = parse_tokens(&ctokens, nl);
+  pstmt = _parse_tokens(tokens, nl);
   PRINT_VERBOSE_DBG("PSTMT ptr %p\n", pstmt);
   ERR_IF_FAIL(pstmt && pstmt->err == PAR_NO_ERROR, ASM_CREATING_PSTMT);
 
@@ -234,7 +294,6 @@ cleanup:
   if (tokens) {
     lexer_free_tokens(tokens);
     tokens = NULL;
-    ctokens = NULL;
   }
   if (pstmt) {
     p_stmt_free(&pstmt);
@@ -274,7 +333,7 @@ static enum Err_Asm _pass1_kma(struct Assembler_Processing *asp,
     return ASM_INVALID_ARGS;
   }
   print_verbose(asp->config->flag_verbose, "Found KMA label on line %zu, ", nl);
-  if (!*ctx) {
+  if (!ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
@@ -301,7 +360,7 @@ static enum Err_Asm _pass1_code_section(struct Assembler_Processing *asp,
   }
   print_verbose(asp->config->flag_verbose,
                 "Found CODE SECTION label on line %zu, ", nl);
-  if (!*ctx) {
+  if (!ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
@@ -327,7 +386,7 @@ static enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
   }
   print_verbose(asp->config->flag_verbose,
                 "Found DATA SECTION label on line %zu, ", nl);
-  if (!*ctx) {
+  if (!ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
@@ -354,7 +413,7 @@ static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
   }
   print_verbose(asp->config->flag_verbose,
                 "Found DATA DECLARATION on line %zu, ", nl);
-  if (!pstmt || !*ctx) {
+  if (!pstmt || !ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went wrong.\n");
     return ASM_INVALID_ARGS;
@@ -413,7 +472,7 @@ static enum Err_Asm _pass1_instruction(struct Parsed_Statement *pstmt,
   }
   print_verbose(asp->config->flag_verbose, "Found INSTRUCTION on line %zu, ",
                 nl);
-  if (!*ctx) {
+  if (!ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
@@ -466,7 +525,7 @@ static enum Err_Asm _pass1_label_def(struct Parsed_Statement *pstmt,
   }
   print_verbose(asp->config->flag_verbose,
                 "Found LABEL definition on line %zu, ", nl);
-  if (!*ctx) {
+  if (!ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
