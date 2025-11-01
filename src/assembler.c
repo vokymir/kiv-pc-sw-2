@@ -465,7 +465,7 @@ static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
                           "but something went WRONG.\n");
   RET_VERBOSE_CLN_IF_FAIL(
       *ctx == ASC_DATA, ASM_DATA_ABROAD,
-      "but that IS NOT in the DATA section, resultion in ERROR.\n");
+      "but that IS NOT in the DATA section, resulting in ERROR.\n");
 
   size = pstmt->content.data_decl.total_size;
   identifier = pstmt->content.data_decl.identifier;
@@ -512,7 +512,7 @@ static enum Err_Asm _pass1_instruction(struct Parsed_Statement *pstmt,
                           "but something went WRONG.\n");
   RET_VERBOSE_CLN_IF_FAIL(
       *ctx == ASC_CODE, ASM_CODE_ABROAD,
-      "but that IS NOT in the CODE section, resultion in ERROR.\n");
+      "but that IS NOT in the CODE section, resulting in ERROR.\n");
 
   size = instruction_get_encoded_size(pstmt->content.instruction.descriptor);
 
@@ -550,7 +550,7 @@ static enum Err_Asm _pass1_label_def(struct Parsed_Statement *pstmt,
   PRINT_VERBOSE_CLN("the label name is (%s), ", label_name);
   RET_VERBOSE_CLN_IF_FAIL(
       *ctx == ASC_CODE, ASM_CODE_ABROAD,
-      "but that IS NOT in the CODE section, resultion in ERROR.\n");
+      "but that IS NOT in the CODE section, resulting in ERROR.\n");
 
   PRINT_VERBOSE_CLN("retrieving label position in code segment, ");
   position = cdsg_advance(asp->cdsg, 0);
@@ -640,12 +640,16 @@ static enum Err_Asm _pass2_data_decl(struct Parsed_Statement *pstmt,
     switch (is->type) {
     case INIT_SEG_UNINIT:
       REUSE_ERR_IF_FAIL(_pass2_data_decl_uninit(asp, is));
+      break;
     case INIT_SEG_VALUE:
       REUSE_ERR_IF_FAIL(_pass2_data_decl_value(asp, is, dd->type));
+      break;
     case INIT_SEG_STRING:
       REUSE_ERR_IF_FAIL(_pass2_data_decl_string(asp, is));
+      break;
     case INIT_SEG_DUP:
       REUSE_ERR_IF_FAIL(_pass2_data_decl_dup(asp, is, dd->type));
+      break;
     default:
       PRINT_VERBOSE_CLN("but the segment is of UNKNOWN type!\n");
       return ASM_UNKNOWN_INIT_SEG;
