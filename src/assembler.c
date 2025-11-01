@@ -39,6 +39,15 @@
                       __VA_ARGS__)
 #define PRINT_VERBOSE_DBG(...) print_verbose(DEBUG, __VA_ARGS__)
 
+// If condition fail, print verbose clean & return err.
+#define RET_VERBOSE_CLN_IF_FAIL(cond, err, ...)                                \
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      PRINT_VERBOSE_CLN(__VA_ARGS__);                                          \
+      return err;                                                              \
+    }                                                                          \
+  } while (0)
+
 // ===== STATIC HELPER DECLARATIONS =====
 
 // I accidentally created a continuous array of tokens in lexer but require
@@ -95,15 +104,18 @@ static enum Err_Asm _pass1_none(struct Assembler_Processing *asp, size_t nl);
 
 static enum Err_Asm _pass1_error(struct Assembler_Processing *asp, size_t nl);
 
+// Given any ASM error, convert it to corresponding MAIN error.
+static enum Err_Main _err_convert(enum Err_Asm err); // TODO:
+
 // ===== HEADER DEFINITIONS =====
 
 enum Err_Main process_assembler(struct Assembler_Processing *asp) {
   enum Err_Asm res = ASM_NO_ERROR;
   if ((res = pass1(asp)) != ASM_NO_ERROR) {
-    return ERR_SYNTAX_ERROR; // what else
+    return _err_convert(res);
   }
   if ((res = pass2(asp)) != ASM_NO_ERROR) {
-    return ERR_SYNTAX_ERROR; // what else
+    return _err_convert(res);
   }
 
   return ERR_NO_ERROR;
@@ -328,78 +340,48 @@ static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
 
 static enum Err_Asm _pass1_kma(struct Assembler_Processing *asp,
                                enum Assembler_Context *ctx, size_t nl) {
-  if (!asp || !asp->config) {
-    return ASM_INVALID_ARGS;
-  }
-  print_verbose(asp->config->flag_verbose, "Found KMA label on line %zu, ", nl);
-  if (!ctx) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "but something went WRONG.\n");
-    return ASM_INVALID_ARGS;
-  }
+  PRINT_VERBOSE("Found KMA label on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
+                          "but something went WRONG.\n");
 
-  if (*ctx != ASC_FILE_START) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "resulting in error, because it IS NOT at the start of file.\n");
-    return ASM_KMA_DOUBLE;
-  }
+  RET_VERBOSE_CLN_IF_FAIL(
+      *ctx == ASC_FILE_START, ASM_KMA_DOUBLE,
+      "resulting in error, because it IS NOT at the start of file.\n");
 
   *ctx = ASC_AFTER_KMA;
-  print_verbose_clean(asp->config->flag_verbose,
-                      "which is OK, because its start of file.\n");
+  PRINT_VERBOSE_CLN("which is OK, because its start of file.\n");
   return ASM_NO_ERROR;
 }
 
 static enum Err_Asm _pass1_code_section(struct Assembler_Processing *asp,
                                         enum Assembler_Context *ctx,
                                         size_t nl) {
-  if (!asp || !asp->config) {
-    return ASM_INVALID_ARGS;
-  }
-  print_verbose(asp->config->flag_verbose,
-                "Found CODE SECTION label on line %zu, ", nl);
-  if (!ctx) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "but something went WRONG.\n");
-    return ASM_INVALID_ARGS;
-  }
+  PRINT_VERBOSE("Found CODE SECTION label on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
+                          "but something went WRONG.\n");
 
-  if (*ctx == ASC_FILE_START) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "resulting in error, because it IS at the start of "
-                        "file and KMA was expected.\n");
-    return ASM_KMA_EXPECTED;
-  }
+  RET_VERBOSE_CLN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_EXPECTED,
+                          "resulting in error, because it IS at the start of "
+                          "file and KMA was expected.\n");
 
   *ctx = ASC_CODE;
-  print_verbose_clean(asp->config->flag_verbose, "which is OK.\n");
+  PRINT_VERBOSE_CLN("which is OK.\n");
   return ASM_NO_ERROR;
 }
 
 static enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
                                         enum Assembler_Context *ctx,
                                         size_t nl) {
-  if (!asp || !asp->config) {
-    return ASM_INVALID_ARGS;
-  }
-  print_verbose(asp->config->flag_verbose,
-                "Found DATA SECTION label on line %zu, ", nl);
-  if (!ctx) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "but something went WRONG.\n");
-    return ASM_INVALID_ARGS;
-  }
+  PRINT_VERBOSE("Found DATA SECTION label on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
+                          "but something went WRONG.\n");
 
-  if (*ctx == ASC_FILE_START) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "resulting in error, because it IS at the start of "
-                        "file and KMA was expected.\n");
-    return ASM_KMA_EXPECTED;
-  }
+  RET_VERBOSE_CLN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_EXPECTED,
+                          "resulting in error, because it IS at the start of "
+                          "file and KMA was expected.\n");
 
-  *ctx = ASC_DATA;
-  print_verbose_clean(asp->config->flag_verbose, "which is OK.\n");
+  *ctx = ASC_CODE;
+  PRINT_VERBOSE_CLN("which is OK.\n");
   return ASM_NO_ERROR;
 }
 
@@ -407,62 +389,39 @@ static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
                                      struct Assembler_Processing *asp,
                                      enum Assembler_Context *ctx, size_t nl) {
   size_t position = SIZE_MAX, size = SIZE_MAX;
-  if (!asp || !asp->config) {
-    return ASM_INVALID_ARGS;
-  }
-  print_verbose(asp->config->flag_verbose,
-                "Found DATA DECLARATION on line %zu, ", nl);
-  if (!pstmt || !ctx) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "but something went wrong.\n");
-    return ASM_INVALID_ARGS;
-  }
+  char *identifier = NULL;
+  PRINT_VERBOSE("Found DATA DECLARATION on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && asp->config && ctx, ASM_INVALID_ARGS,
+                          "but something went WRONG.\n");
+  RET_VERBOSE_CLN_IF_FAIL(
+      *ctx == ASC_DATA, ASM_DATA_ABROAD,
+      "but that IS NOT in the DATA section, resultion in ERROR.\n");
+
   size = pstmt->content.data_decl.total_size;
+  identifier = pstmt->content.data_decl.identifier;
 
-  if (*ctx != ASC_DATA) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "but that IS NOT in the data section, resultion in ERROR.\n");
-    return ASM_DATA_ABROAD;
-  }
-  print_verbose_clean(asp->config->flag_verbose,
-                      "ADVANCING DATASEGMENT of TOTALSIZE=%zu, ", size);
-
+  PRINT_VERBOSE_CLN("ADVANCING DATASEGMENT of TOTALSIZE=%zu, ", size);
   position = dtsg_advance(asp->dtsg, size);
 
-  if (position == SIZE_MAX) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "but when trying to 'reserve' the space in data "
-                        "segment, ERROR happened.\n");
-    return ASM_DTSG_CANNOT_ADVANCE;
-  }
+  RET_VERBOSE_CLN_IF_FAIL(position != SIZE_MAX, ASM_DTSG_CANNOT_ADVANCE,
+                          "but when trying to 'reserve' the space in data "
+                          "segment, ERROR happened.\n");
+  RET_VERBOSE_CLN_IF_FAIL(
+      position < UINT32_MAX && position + size <= KMA_DTSG_BYTES,
+      ASM_DTSG_TOO_LARGE,
+      "but data segment is too large for KMA computer (%zu).\n", position);
 
-  if (position > UINT32_MAX || position >= KMA_DTSG_BYTES ||
-      position + size >= KMA_DTSG_BYTES) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "but data segment is too large for KMA computer (%zu).\n", position);
-    return ASM_DTSG_TOO_LARGE;
-  }
+  RET_VERBOSE_CLN_IF_FAIL(
+      symtab_find(asp->symtab, identifier) == NULL, ASM_SYMTAB_ALREADY_EXIST,
+      "but identifier %s was already used = illegal redeclaration.\n",
+      identifier);
 
-  if (symtab_find(asp->symtab, pstmt->content.data_decl.identifier) != NULL) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "but identifier %s was already used = illegal redeclaration.\n",
-        pstmt->content.data_decl.identifier);
-    return ASM_SYMTAB_ALREADY_EXIST;
-  }
+  RET_VERBOSE_CLN_IF_FAIL(
+      symtab_add(asp->symtab, identifier, (uint32_t)position),
+      ASM_SYMTAB_CANNOT_ADD,
+      "but identifier %s couldn't be added to the symbol table.\n", identifier);
 
-  if (!symtab_add(asp->symtab, pstmt->content.data_decl.identifier,
-                  (uint32_t)position)) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "but identifier %s couldn't be added to the symbol table.\n",
-        pstmt->content.data_decl.identifier);
-    return ASM_SYMTAB_CANNOT_ADD;
-  }
-
-  print_verbose_clean(asp->config->flag_verbose, "everything is OK.\n");
+  PRINT_VERBOSE_CLN("everything is OK.\n");
   return ASM_NO_ERROR;
 }
 
@@ -470,51 +429,32 @@ static enum Err_Asm _pass1_instruction(struct Parsed_Statement *pstmt,
                                        struct Assembler_Processing *asp,
                                        enum Assembler_Context *ctx, size_t nl) {
   size_t size = SIZE_MAX, position = SIZE_MAX;
-  if (!asp || !asp->config) {
-    return ASM_INVALID_ARGS;
-  }
-  print_verbose(asp->config->flag_verbose, "Found INSTRUCTION on line %zu, ",
-                nl);
-  if (!ctx) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "but something went WRONG.\n");
-    return ASM_INVALID_ARGS;
-  }
-
-  if (*ctx != ASC_CODE) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "but that IS NOT in the code section, resultion in ERROR.\n");
-    return ASM_CODE_ABROAD;
-  }
+  PRINT_VERBOSE("Found INSTRUCTION on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && asp->config && ctx, ASM_INVALID_ARGS,
+                          "but something went WRONG.\n");
+  RET_VERBOSE_CLN_IF_FAIL(
+      *ctx == ASC_CODE, ASM_CODE_ABROAD,
+      "but that IS NOT in the CODE section, resultion in ERROR.\n");
 
   size = instruction_get_encoded_size(pstmt->content.instruction.descriptor);
-  if (size == 0 || size == SIZE_MAX) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "but either the instructions size is 0 or some other error occured.\n");
-    return ASM_INVALID_INSTUCTION;
-  }
-  print_verbose_clean(asp->config->flag_verbose,
-                      "retrieved the size of instruction (%zu), ", size);
 
+  RET_VERBOSE_CLN_IF_FAIL(
+      size > 0 && size != SIZE_MAX, ASM_INVALID_INSTUCTION,
+      "but either the instructions size is 0 or some other error occured.\n");
+  PRINT_VERBOSE_CLN("retrieved the size of instruction (%zu), ", size);
+
+  PRINT_VERBOSE_CLN("ADVANCING CODESEGMENT of TOTALSIZE=%zu, ", size);
   position = cdsg_advance(asp->cdsg, size);
-  if (position == SIZE_MAX) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "but cannot advance in code segment, ERROR.\n");
-    return ASM_CDSG_CANNOT_ADVANCE;
-  }
 
-  if (position > UINT32_MAX || position >= KMA_CDSG_BYTES ||
-      position + size >= KMA_CDSG_BYTES) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "but code segment is too large for KMA computer (%zu).\n", position);
-    return ASM_CDSG_TOO_LARGE;
-  }
+  RET_VERBOSE_CLN_IF_FAIL(
+      position != SIZE_MAX, ASM_CDSG_CANNOT_ADVANCE,
+      "but cannot advance in code segment, ERROR happened.\n");
+  RET_VERBOSE_CLN_IF_FAIL(
+      position < UINT32_MAX && position + size <= KMA_CDSG_BYTES,
+      ASM_CDSG_TOO_LARGE,
+      "but code segment is too large for KMA computer (%zu).\n", position);
 
-  print_verbose_clean(
-      asp->config->flag_verbose,
+  PRINT_VERBOSE_CLN(
       "and reserved the place in code segment for it, on position %zu\n",
       position);
   return ASM_NO_ERROR; // here no print_instruction, that is in 2nd pass
