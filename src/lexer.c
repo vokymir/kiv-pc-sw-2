@@ -340,7 +340,7 @@ static int _lexer_set_next_token(struct Token *token, const char *line,
   // Label (starts with @)
   if (*current == '@') {
     CLEANUP_IF_FAIL(_lexer_set_token_label(token, current, nl));
-    (*pos) += strlen(token->value);
+    (*pos) += strlen(token->value) + 1; // +1 for ':'
     return 1;
   }
 
