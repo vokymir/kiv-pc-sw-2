@@ -47,6 +47,12 @@ struct Config {
 // *string*, the next anything 'mentioned' in the string.
 void print_verbose(int condition, const char *string, ...);
 
+// Don't print the [VERBOSE] in the beginning.
+// Only print if condition is met, variadic arguments will be forwarded to
+// printf function from stdio.h, which require the first argument to be
+// *string*, the next anything 'mentioned' in the string.
+void print_verbose_clean(int condition, const char *string, ...);
+
 // United instruction output to console.
 // Only print if condition is met.
 // Format:

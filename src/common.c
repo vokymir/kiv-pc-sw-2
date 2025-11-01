@@ -7,7 +7,6 @@
 #include "instruction.h"
 
 void print_verbose(int condition, const char *string, ...) {
-  size_t len = 0;
   if (!condition) {
     return;
   }
@@ -17,11 +16,17 @@ void print_verbose(int condition, const char *string, ...) {
   va_start(args, string);
   vprintf(string, args);
   va_end(args);
+}
 
-  len = strlen(string); // ensure ENTER at the end of line
-  if (len == 0 || string[len - 1] != '\n') {
-    putchar('\n');
+void print_verbose_clean(int condition, const char *string, ...) {
+  if (!condition) {
+    return;
   }
+
+  va_list args;
+  va_start(args, string);
+  vprintf(string, args);
+  va_end(args);
 }
 
 void print_instruction(int condition, size_t line,

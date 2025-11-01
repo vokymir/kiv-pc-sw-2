@@ -271,128 +271,125 @@ static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
 
 static enum Err_Asm _pass1_kma(struct Assembler_Processing *asp,
                                enum Assembler_Context *ctx, size_t nl) {
+  print_verbose(asp->config->flag_verbose, "Found KMA label on line %zu, ", nl);
   if (!asp || !asp->config || !*ctx) {
-    print_verbose(asp->config->flag_verbose,
-                  "Found KMA label on line %zu, but something went WRONG.", nl);
+    print_verbose_clean(asp->config->flag_verbose,
+                        "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
   }
 
   if (*ctx != ASC_FILE_START) {
-    print_verbose(asp->config->flag_verbose,
-                  "Found KMA label on line %zu, resulting in error, because it "
-                  "IS NOT at the start of file.",
-                  nl);
+    print_verbose_clean(
+        asp->config->flag_verbose,
+        "resulting in error, because it IS NOT at the start of file.\n");
     return ASM_KMA_DOUBLE;
   }
 
   *ctx = ASC_AFTER_KMA;
-  print_verbose(asp->config->flag_verbose,
-                "Found KMA label on line %zu, which is OK, because its "
-                "start of file.",
-                nl);
+  print_verbose_clean(asp->config->flag_verbose,
+                      "which is OK, because its start of file.\n");
   return ASM_NO_ERROR;
 }
 
 static enum Err_Asm _pass1_code_section(struct Assembler_Processing *asp,
                                         enum Assembler_Context *ctx,
                                         size_t nl) {
+  print_verbose(asp->config->flag_verbose,
+                "Found CODE SECTION label on line %zu, ", nl);
   if (!asp || !asp->config || !*ctx) {
-    print_verbose(
-        asp->config->flag_verbose,
-        "Found CODE SECTION label on line %zu, but something went WRONG.", nl);
+    print_verbose_clean(asp->config->flag_verbose,
+                        "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
   }
 
   if (*ctx == ASC_FILE_START) {
-    print_verbose(asp->config->flag_verbose,
-                  "Found CODE SECTION label on line %zu, resulting in error, "
-                  "because it IS at the start of file and KMA was expected.",
-                  nl);
+    print_verbose_clean(asp->config->flag_verbose,
+                        "resulting in error, because it IS at the start of "
+                        "file and KMA was expected.\n");
     return ASM_KMA_EXPECTED;
   }
 
   *ctx = ASC_CODE;
-  print_verbose(asp->config->flag_verbose,
-                "Found CODE SECTION label on line %zu, which is OK.", nl);
+  print_verbose_clean(asp->config->flag_verbose, "which is OK.\n");
   return ASM_NO_ERROR;
 }
 
 static enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
                                         enum Assembler_Context *ctx,
                                         size_t nl) {
+  print_verbose(asp->config->flag_verbose,
+                "Found DATA SECTION label on line %zu, ", nl);
   if (!asp || !asp->config || !*ctx) {
-    print_verbose(
-        asp->config->flag_verbose,
-        "Found DATA SECTION label on line %zu, but something went WRONG.", nl);
+    print_verbose_clean(asp->config->flag_verbose,
+                        "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
   }
 
   if (*ctx == ASC_FILE_START) {
-    print_verbose(asp->config->flag_verbose,
-                  "Found DATA SECTION label on line %zu, resulting in error, "
-                  "because it IS at the start of file and KMA was expected.",
-                  nl);
+    print_verbose_clean(asp->config->flag_verbose,
+                        "resulting in error, because it IS at the start of "
+                        "file and KMA was expected.\n");
     return ASM_KMA_EXPECTED;
   }
 
   *ctx = ASC_DATA;
-  print_verbose(asp->config->flag_verbose,
-                "Found DATA SECTION label on line %zu, which is OK.", nl);
+  print_verbose_clean(asp->config->flag_verbose, "which is OK.\n");
   return ASM_NO_ERROR;
 }
 
 static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
                                      struct Assembler_Processing *asp,
                                      enum Assembler_Context *ctx, size_t nl) {
+  print_verbose(asp->config->flag_verbose,
+                "Found DATA DECLARATION on line %zu, ", nl);
   size_t position = SIZE_MAX;
   if (!pstmt || !asp || !asp->config || !*ctx) {
-    print_verbose(
-        asp->config->flag_verbose,
-        "Found DATA DECLARATION on line %zu, but something went WRONG.", nl);
+    print_verbose_clean(asp->config->flag_verbose,
+                        "but something went wrong.\n");
     return ASM_INVALID_ARGS;
   }
 
   if (*ctx != ASC_DATA) {
-    print_verbose(asp->config->flag_verbose,
-                  "Found DATA DECLARATION on line %zu, but that IS NOT in the "
-                  "data section, resultion in ERROR.");
+    print_verbose_clean(
+        asp->config->flag_verbose,
+        "but that IS NOT in the data section, resultion in ERROR.\n");
     return ASM_DATA_ABROAD;
   }
 
   position = dtsg_advance(asp->dtsg, pstmt->content.data_decl.total_size);
 
   if (position == SIZE_MAX) {
-    print_verbose(asp->config->flag_verbose,
-                  "Found DATA DECLARATION on line %zu, but when trying to "
-                  "'reserve' the space in data segment, ERROR happened.",
-                  nl);
+    print_verbose_clean(asp->config->flag_verbose,
+                        "but when trying to 'reserve' the space in data "
+                        "segment, ERROR happened.\n");
     return ASM_DTSG_CANNOT_ADVANCE;
   }
 
   if (position > UINT32_MAX) {
-    print_verbose(asp->config->flag_verbose,
-                  "Found DATA DECLARATION on line %zu, but data segment is "
-                  "definitely too large for KMA computer (%zu). ",
-                  nl, position);
+    print_verbose_clean(
+        asp->config->flag_verbose,
+        "but data segment is definitely too large for KMA computer (%zu).\n",
+        position);
     return ASM_SYMTAB_DATA_TOO_LARGE;
   }
 
   if (symtab_find(asp->symtab, pstmt->content.data_decl.identifier) != NULL) {
-    print_verbose(asp->config->flag_verbose,
-                  "Found DATA DECLARATION on line %zu, but identifier %s was "
-                  "already used = illegal redeclaration.",
-                  nl, pstmt->content.data_decl.identifier);
+    print_verbose_clean(
+        asp->config->flag_verbose,
+        "but identifier %s was already used = illegal redeclaration.\n",
+        pstmt->content.data_decl.identifier);
     return ASM_SYMTAB_ALREADY_EXIST;
   }
 
   if (!symtab_add(asp->symtab, pstmt->content.data_decl.identifier,
                   (uint32_t)position)) {
-    print_verbose(asp->config->flag_verbose,
-                  "Found DATA DECLARATION on line %zu, but identifier %s "
-                  "couldn't be added to the symbol table.",
-                  nl, pstmt->content.data_decl.identifier);
+    print_verbose_clean(
+        asp->config->flag_verbose,
+        "but identifier %s couldn't be added to the symbol table.\n",
+        pstmt->content.data_decl.identifier);
     return ASM_SYMTAB_CANNOT_ADD;
   }
 
+  print_verbose_clean(asp->config->flag_verbose, "everything is OK.\n");
   return ASM_NO_ERROR;
 }
