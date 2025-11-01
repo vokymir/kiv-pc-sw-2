@@ -167,6 +167,15 @@ cleanup:
   return SIZE_MAX;
 }
 
+int dtsg_begin(struct Data_Segment *dtsg) {
+  if (!dtsg) {
+    return 0;
+  }
+
+  dtsg->size = 0;
+  return 1;
+}
+
 static int _dtsg_ensure_capacity(struct Data_Segment *dtsg,
                                  size_t additional_b) {
   size_t req = 0, new_c = 0;

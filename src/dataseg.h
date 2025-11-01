@@ -55,4 +55,9 @@ const uint8_t *dtsg_get_bytes(const struct Data_Segment *dtsg);
 // WARN: Only use in 1st pass!
 size_t dtsg_advance(struct Data_Segment *dtsg, size_t num_bytes);
 
+// Data Segment: Go to the beginning of the segment.
+// Useful for reseting after 1st pass.
+// WARN: Only use after 1st pass!
+int dtsg_begin(struct Data_Segment *dtsg);
+
 #endif
