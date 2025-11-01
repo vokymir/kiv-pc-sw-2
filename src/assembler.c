@@ -282,7 +282,9 @@ static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
   }
   PRINT_VERBOSE("Parsing tokens.\n");
   pstmt = _parse_tokens(tokens, nl);
-  ERR_IF_FAIL(pstmt && pstmt->err == PAR_NO_ERROR, ASM_CREATING_PSTMT);
+  ERR_IF_FAIL(pstmt &&
+                  (pstmt->err == PAR_NO_ERROR || pstmt->err == PAR_EMPTY_LINE),
+              ASM_CREATING_PSTMT);
 
   PRINT_VERBOSE("Evaluating parsed statement.\n");
   REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx, nl));
