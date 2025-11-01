@@ -105,7 +105,7 @@ static enum Err_Asm _pass1_none(struct Assembler_Processing *asp, size_t nl);
 static enum Err_Asm _pass1_error(struct Assembler_Processing *asp, size_t nl);
 
 // Given any ASM error, convert it to corresponding MAIN error.
-static enum Err_Main _err_convert(enum Err_Asm err); // TODO:
+static enum Err_Main _err_convert(enum Err_Asm err);
 
 // ===== HEADER DEFINITIONS =====
 
@@ -380,7 +380,7 @@ static enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
                           "resulting in error, because it IS at the start of "
                           "file and KMA was expected.\n");
 
-  *ctx = ASC_CODE;
+  *ctx = ASC_DATA;
   PRINT_VERBOSE_CLN("which is OK.\n");
   return ASM_NO_ERROR;
 }
@@ -407,9 +407,17 @@ static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
                           "but when trying to 'reserve' the space in data "
                           "segment, ERROR happened.\n");
   RET_VERBOSE_CLN_IF_FAIL(
-      position < UINT32_MAX && position + size <= KMA_DTSG_BYTES,
-      ASM_DTSG_TOO_LARGE,
-      "but data segment is too large for KMA computer (%zu).\n", position);
+      size <= KMA_DTSG_BYTES, ASM_DTSG_TOO_LARGE,
+      "but requested size %zu is larger than whole data segment (%zu).\n", size,
+      (size_t)KMA_DTSG_BYTES);
+  RET_VERBOSE_CLN_IF_FAIL(
+      position <= KMA_DTSG_BYTES - size, ASM_DTSG_TOO_LARGE,
+      "but data segment overflow: position=%zu size=%zu capacity=%zu.\n",
+      position, size, (size_t)KMA_DTSG_BYTES);
+  RET_VERBOSE_CLN_IF_FAIL(
+      position <= (size_t)UINT32_MAX, ASM_DTSG_TOO_LARGE,
+      "but data segment position %zu does not fit into 32-bit address.\n",
+      position);
 
   RET_VERBOSE_CLN_IF_FAIL(
       symtab_find(asp->symtab, identifier) == NULL, ASM_SYMTAB_ALREADY_EXIST,
@@ -445,14 +453,14 @@ static enum Err_Asm _pass1_instruction(struct Parsed_Statement *pstmt,
 
   PRINT_VERBOSE_CLN("ADVANCING CODESEGMENT of TOTALSIZE=%zu, ", size);
   position = cdsg_advance(asp->cdsg, size);
-
   RET_VERBOSE_CLN_IF_FAIL(
-      position != SIZE_MAX, ASM_CDSG_CANNOT_ADVANCE,
-      "but cannot advance in code segment, ERROR happened.\n");
+      position <= KMA_CDSG_BYTES - size, ASM_CDSG_TOO_LARGE,
+      "but code segment overflow: position=%zu size=%zu capacity=%zu.\n",
+      position, size, (size_t)KMA_CDSG_BYTES);
   RET_VERBOSE_CLN_IF_FAIL(
-      position < UINT32_MAX && position + size <= KMA_CDSG_BYTES,
-      ASM_CDSG_TOO_LARGE,
-      "but code segment is too large for KMA computer (%zu).\n", position);
+      position <= (size_t)UINT32_MAX, ASM_CDSG_TOO_LARGE,
+      "but code segment position %zu does not fit into 32-bit address.\n",
+      position);
 
   PRINT_VERBOSE_CLN(
       "and reserved the place in code segment for it, on position %zu\n",
@@ -463,77 +471,54 @@ static enum Err_Asm _pass1_instruction(struct Parsed_Statement *pstmt,
 static enum Err_Asm _pass1_label_def(struct Parsed_Statement *pstmt,
                                      struct Assembler_Processing *asp,
                                      enum Assembler_Context *ctx, size_t nl) {
+  char *label_name = NULL;
   size_t position = SIZE_MAX;
-  if (!asp || !asp->config) {
-    return ASM_INVALID_ARGS;
-  }
-  print_verbose(asp->config->flag_verbose,
-                "Found LABEL definition on line %zu, ", nl);
-  if (!ctx) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "but something went WRONG.\n");
-    return ASM_INVALID_ARGS;
-  }
-  print_verbose_clean(asp->config->flag_verbose, "the label name is (%s), ",
-                      pstmt->content.label_def.label_name);
+  PRINT_VERBOSE("Found LABEL definition on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && asp->config && ctx, ASM_INVALID_ARGS,
+                          "but something went WRONG.\n");
+  label_name = pstmt->content.label_def.label_name;
+  PRINT_VERBOSE_CLN("the label name is (%s), ", label_name);
+  RET_VERBOSE_CLN_IF_FAIL(
+      *ctx == ASC_CODE, ASM_CODE_ABROAD,
+      "but that IS NOT in the CODE section, resultion in ERROR.\n");
 
-  if (*ctx != ASC_CODE) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "but that IS NOT in the code section, resultion in ERROR.\n");
-    return ASM_CODE_ABROAD;
-  }
-
+  PRINT_VERBOSE_CLN("retrieving label position in code segment, ");
   position = cdsg_advance(asp->cdsg, 0);
-  if (position == SIZE_MAX) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "but cannot advance in code segment, ERROR.\n");
-    return ASM_CDSG_CANNOT_ADVANCE;
-  }
+  RET_VERBOSE_CLN_IF_FAIL(
+      position <= KMA_CDSG_BYTES, ASM_CDSG_TOO_LARGE,
+      "but code segment overflow: position=%zu capacity=%zu.\n", position,
+      (size_t)KMA_CDSG_BYTES);
+  RET_VERBOSE_CLN_IF_FAIL(
+      position <= (size_t)UINT32_MAX, ASM_CDSG_TOO_LARGE,
+      "but code segment position %zu does not fit into 32-bit address.\n",
+      position);
 
-  if (position > UINT32_MAX || position >= KMA_CDSG_BYTES) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "but code segment is too large for KMA computer (%zu).\n", position);
-    return ASM_CDSG_TOO_LARGE;
-  }
+  RET_VERBOSE_CLN_IF_FAIL(
+      symtab_find(asp->symtab, label_name) == NULL, ASM_SYMTAB_ALREADY_EXIST,
+      "but label name %s was already used = illegal redeclaration.\n",
+      label_name);
+  RET_VERBOSE_CLN_IF_FAIL(
+      symtab_add(asp->symtab, label_name, (uint32_t)position),
+      ASM_SYMTAB_CANNOT_ADD,
+      "but identifier %s couldn't be added to the symbol table.\n", label_name);
 
-  if (symtab_find(asp->symtab, pstmt->content.label_def.label_name) != NULL) {
-    print_verbose_clean(asp->config->flag_verbose,
-                        "but the label already exist.\n");
-    return ASM_SYMTAB_ALREADY_EXIST;
-  }
-
-  if (!symtab_add(asp->symtab, pstmt->content.label_def.label_name,
-                  (uint32_t)position)) {
-    print_verbose_clean(
-        asp->config->flag_verbose,
-        "but the label couldn't be added to the symbol table.\n");
-    return ASM_SYMTAB_CANNOT_ADD;
-  }
-
-  print_verbose_clean(asp->config->flag_verbose,
-                      "and saved its position (%zu) in the symbol table.",
-                      position);
+  PRINT_VERBOSE_CLN("and saved its position (%zu) in the symbol table.\n",
+                    position);
   return ASM_NO_ERROR;
 }
 
 static enum Err_Asm _pass1_none(struct Assembler_Processing *asp, size_t nl) {
-  if (!asp || !asp->config) {
-    return ASM_INVALID_ARGS;
-  }
-  print_verbose(
-      asp->config->flag_verbose,
+  PRINT_VERBOSE(
       "Found NOTHIMG on line %zu, might be an empty line, or only comment.\n",
       nl);
   return ASM_NO_ERROR;
 }
 
 static enum Err_Asm _pass1_error(struct Assembler_Processing *asp, size_t nl) {
-  if (!asp || !asp->config) {
-    return ASM_INVALID_ARGS;
-  }
-  print_verbose(asp->config->flag_verbose,
-                "Weird line %zu, cannot find known statement.\n", nl);
+  PRINT_VERBOSE("Weird line %zu, cannot find known statement.\n", nl);
   return ASM_UNKNOWN_PSTMT_TYPE;
+}
+
+static enum Err_Main _err_convert(enum Err_Asm err) { // TODO:
+  return ERR_NO_ERROR;
 }
