@@ -32,7 +32,12 @@
     }                                                                          \
   } while (0)
 
-#define PRINT_VERBOSE(...) print_verbose(asp->config->flag_verbose, __VA_ARGS__)
+#define PRINT_VERBOSE(...)                                                     \
+  print_verbose(asp && asp->config && asp->config->flag_verbose, __VA_ARGS__)
+#define PRINT_VERBOSE_CLN(...)                                                 \
+  print_verbose_clean(asp && asp->config && asp->config->flag_verbose,         \
+                      __VA_ARGS__)
+#define PRINT_VERBOSE_DBG(...) print_verbose(DEBUG, __VA_ARGS__)
 
 // ===== STATIC HELPER DECLARATIONS =====
 
@@ -94,12 +99,16 @@ enum Err_Asm pass1(struct Assembler_Processing *asp) {
   size_t line_len = 0, nl = 1;
   FILE *f = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
-  print_verbose(1, "Pass1 before any checks.\n");
-  RETURN_IF_FAIL(asp, ASM_INVALID_ARGS);
-  PRINT_VERBOSE("Starting pass1...\n");
-  RETURN_IF_FAIL(fu_open(asp->config->source, &f), ASM_CANNOT_OPEN_FILE);
+  PRINT_VERBOSE_DBG("Pass1 before any checks, ptr to asp: %p\n", asp);
+  RETURN_IF_FAIL(asp != NULL, ASM_INVALID_ARGS);
+  PRINT_VERBOSE("Starting pass1.\n");
+  if (!fu_open(asp->config->source, &f)) {
+    PRINT_VERBOSE("Couldn't open file: %s\n", asp->config->source);
+    return ASM_CANNOT_OPEN_FILE;
+  }
 
   while (fu_getline(&line, &line_len, f)) {
+    PRINT_VERBOSE_DBG("Line %zu: '%s' -> ctx=%d\n", nl, line, ctx);
     REUSE_ERR_IF_FAIL(_pass1_line(asp, &ctx, nl, line));
     nl++;
   }
@@ -206,12 +215,19 @@ static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
   struct Parsed_Statement *pstmt = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
 
+  PRINT_VERBOSE("Tokenizing line.\n");
   tokens = lexer_tokenize_line(line, nl);
   ERR_IF_FAIL(tokens, ASM_CREATING_TOKENS);
+  if (DEBUG) {
+    print_tokens(tokens);
+  }
   ctokens = tokens;
+  PRINT_VERBOSE("Parsing tokens.\n");
   pstmt = parse_tokens(&ctokens, nl);
+  PRINT_VERBOSE_DBG("PSTMT ptr %p\n", pstmt);
   ERR_IF_FAIL(pstmt && pstmt->err == PAR_NO_ERROR, ASM_CREATING_PSTMT);
 
+  PRINT_VERBOSE("Evaluating parsed statement.\n");
   REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx, nl));
 
 cleanup:

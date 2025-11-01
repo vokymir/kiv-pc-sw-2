@@ -20,6 +20,8 @@
       return retval;                                                           \
   } while (0)
 
+#define DEBUG 1
+
 // Errors specific to main, which the program outputs.
 enum Err_Main {
   ERR_NO_ERROR = 0,
