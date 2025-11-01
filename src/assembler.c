@@ -277,7 +277,7 @@ static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
   PRINT_VERBOSE("Tokenizing line.\n");
   tokens = lexer_tokenize_line(line, nl);
   ERR_IF_FAIL(tokens, ASM_CREATING_TOKENS);
-  if (DEBUG) {
+  if (asp->config->flag_verbose) {
     print_tokens(tokens);
   }
   PRINT_VERBOSE("Parsing tokens.\n");
