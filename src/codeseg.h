@@ -51,4 +51,8 @@ const uint8_t *cdsg_get_bytes(const struct Code_Segment *cdsg);
 // WARN: Only use in 1st pass!
 size_t cdsg_advance(struct Code_Segment *cdsg, size_t num_bytes);
 
+// Code Segment: Go to the beginning of the segment.
+// Useful for reseting after 1st pass.
+// WARN: Only use after 1st pass!
+int cdsg_begin(struct Code_Segment *cdsg);
 #endif

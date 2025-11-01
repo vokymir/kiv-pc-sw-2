@@ -142,6 +142,15 @@ cleanup:
   return SIZE_MAX;
 }
 
+int cdsg_begin(struct Code_Segment *cdsg) {
+  if (!cdsg) {
+    return 0;
+  }
+
+  cdsg->size = 0;
+  return 1;
+}
+
 static int _cdsg_ensure_capacity(struct Code_Segment *cdsg,
                                  size_t additional_b) {
   size_t req = 0, new_c = 0;
