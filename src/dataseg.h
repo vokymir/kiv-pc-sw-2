@@ -24,17 +24,27 @@ void dtsg_free(struct Data_Segment **dtsg);
 // Return 1 on success, 0 on failure.
 int dtsg_app_b(struct Data_Segment *dtsg, uint8_t b);
 
-// Data Segment Append Bytes.
+// Data Segment Append Byte array.
+// count specifies the length of that array
 // Return 1 on success, 0 on failure.
 int dtsg_app_bs(struct Data_Segment *dtsg, const uint8_t *bs, size_t count);
+
+// Data Segment Append one byte N-times.
+// Return 1 on success, 0 on failure.
+int dtsg_app_b_n(struct Data_Segment *dtsg, uint8_t b, size_t n);
 
 // Data Segment Append DWord - little endian.
 // Return 1 on success, 0 on failure.
 int dtsg_app_dw(struct Data_Segment *dtsg, int32_t dw);
 
 // Data Segment Append DWord Array.
+// count specifies the length of that array
 // Return 1 on success, 0 on failure.
 int dtsg_app_dws(struct Data_Segment *dtsg, const int32_t *dws, size_t count);
+
+// Data Segment Append one DWord N-times.
+// Return 1 on success, 0 on failure.
+int dtsg_app_dw_n(struct Data_Segment *dtsg, int32_t dw, size_t n);
 
 // Data Segment Append String ended by NULL.
 // Return 1 on success, 0 on failure.

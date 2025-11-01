@@ -58,6 +58,28 @@ cleanup:
   return 0;
 }
 
+int dtsg_app_dw_n(struct Data_Segment *dtsg, int32_t dw, size_t n) {
+  CLEANUP_IF_FAIL(dtsg && dtsg->bytes);
+
+  if (n == 0) {
+    return 1; // nothing to do
+  }
+
+  // DWORD = 4 bytes
+  CLEANUP_IF_FAIL(_dtsg_ensure_capacity(dtsg, n * 4));
+
+  for (size_t i = 0; i < n; i++) {
+    if (!dtsg_app_dw(dtsg, dw)) {
+      return 0;
+    }
+  }
+
+  return 1;
+
+cleanup:
+  return 0;
+}
+
 int dtsg_app_bs(struct Data_Segment *dtsg, const uint8_t *bs, size_t count) {
   CLEANUP_IF_FAIL(dtsg && dtsg->bytes && bs);
 
@@ -69,6 +91,23 @@ int dtsg_app_bs(struct Data_Segment *dtsg, const uint8_t *bs, size_t count) {
 
   memcpy(dtsg->bytes + dtsg->size, bs, count);
   dtsg->size += count;
+  return 1;
+
+cleanup:
+  return 0;
+}
+
+int dtsg_app_b_n(struct Data_Segment *dtsg, uint8_t b, size_t n) {
+  CLEANUP_IF_FAIL(dtsg && dtsg->bytes && b);
+
+  if (n == 0) {
+    return 1; // nothing to do
+  }
+
+  CLEANUP_IF_FAIL(_dtsg_ensure_capacity(dtsg, n));
+
+  memset(dtsg->bytes + dtsg->size, b, n);
+  dtsg->size += n;
   return 1;
 
 cleanup:
