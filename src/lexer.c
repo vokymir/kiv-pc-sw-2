@@ -209,6 +209,7 @@ static const char *token_type_to_str(enum Token_Type type) {
     return "RPAREN";
   case TOKEN_EOF:
     return "EOF";
+  case TOKEN_UNKNOWN:
   default:
     return "UNKNOWN";
   }
