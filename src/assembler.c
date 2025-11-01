@@ -50,6 +50,11 @@
 
 // ===== STATIC HELPER DECLARATIONS =====
 
+// === CONVERTING ===
+
+// Given any ASM error, convert it to corresponding MAIN error.
+static enum Err_Main _err_convert(enum Err_Asm err);
+
 // I accidentally created a continuous array of tokens in lexer but require
 // array of pointers to tokens in parser. This function is a bridge between
 // these differences. Caller must free this "convertor" after is used. Return
@@ -65,6 +70,21 @@ static void _free_tokens_convertor(const struct Token **tokens[]);
 // wrapper around parse_tokens in parser.
 static struct Parsed_Statement *_parse_tokens(const struct Token *tokens,
                                               size_t nl);
+
+// === SHARED LOGIC ===
+
+// Pass 1 & 2 holds many similarities, therefore this function to have the
+// shared logic. Calls different functions based on the pass.
+static enum Err_Asm _pass(struct Assembler_Processing *asp, int is_second);
+
+// Pass 1 & 2 have very similiar behaviour on one line.
+// This function have the common logic & calls adequate functions based on
+// is_second.
+static enum Err_Asm _pass_line(struct Assembler_Processing *asp,
+                               enum Assembler_Context *ctx, size_t nl,
+                               const char *line, int is_second);
+
+// === PASS 1 ===
 
 // Process one line in the first pass of the assembler code.
 // Return adequate error code, edit context if changed.
@@ -104,8 +124,23 @@ static enum Err_Asm _pass1_none(struct Assembler_Processing *asp, size_t nl);
 
 static enum Err_Asm _pass1_error(struct Assembler_Processing *asp, size_t nl);
 
-// Given any ASM error, convert it to corresponding MAIN error.
-static enum Err_Main _err_convert(enum Err_Asm err);
+static enum Err_Asm _pass2_line(struct Assembler_Processing *asp,
+                                enum Assembler_Context *ctx, size_t nl,
+                                const char *line);
+
+// === PASS 2 ===
+
+static enum Err_Asm _pass2_decide(struct Parsed_Statement *pstmt,
+                                  struct Assembler_Processing *asp,
+                                  enum Assembler_Context *ctx, size_t nl);
+
+static enum Err_Asm _pass2_data_decl(struct Parsed_Statement *pstmt,
+                                     struct Assembler_Processing *asp,
+                                     enum Assembler_Context *ctx, size_t nl);
+
+static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
+                                       struct Assembler_Processing *asp,
+                                       enum Assembler_Context *ctx, size_t nl);
 
 // ===== HEADER DEFINITIONS =====
 
@@ -114,6 +149,8 @@ enum Err_Main process_assembler(struct Assembler_Processing *asp) {
   if ((res = pass1(asp)) != ASM_NO_ERROR) {
     return _err_convert(res);
   }
+  cdsg_begin(asp->cdsg); // reuse segments
+  dtsg_begin(asp->dtsg); // goto start
   if ((res = pass2(asp)) != ASM_NO_ERROR) {
     return _err_convert(res);
   }
@@ -121,38 +158,9 @@ enum Err_Main process_assembler(struct Assembler_Processing *asp) {
   return ERR_NO_ERROR;
 }
 
-enum Err_Asm pass1(struct Assembler_Processing *asp) {
-  enum Assembler_Context ctx = ASC_FILE_START;
-  char *line = NULL;
-  size_t line_len = 0, nl = 1;
-  FILE *f = NULL;
-  enum Err_Asm err = ASM_NO_ERROR;
-  RETURN_IF_FAIL(asp != NULL, ASM_INVALID_ARGS);
-  PRINT_VERBOSE("STARTING PASS 1\n");
-  if (!fu_open(asp->config->source, &f)) {
-    PRINT_VERBOSE("Couldn't open file: %s\n", asp->config->source);
-    return ASM_CANNOT_OPEN_FILE;
-  }
+enum Err_Asm pass1(struct Assembler_Processing *asp) { return _pass(asp, 0); }
 
-  while (fu_getline(&line, &line_len, f) != -1) {
-    REUSE_ERR_IF_FAIL(_pass1_line(asp, &ctx, nl, line));
-    nl++;
-  }
-
-cleanup:
-  if (f) {
-    fclose(f);
-    f = NULL;
-  }
-  if (line) {
-    jree(line);
-    line = NULL;
-  }
-  return err;
-}
-
-// TODO:
-enum Err_Asm pass2(struct Assembler_Processing *asp) { return asp == 1; }
+enum Err_Asm pass2(struct Assembler_Processing *asp) { return _pass(asp, 1); }
 
 struct Assembler_Processing *asp_create(const struct Config *config,
                                         struct Symbol_Table *symtab,
@@ -233,6 +241,10 @@ void asp_free(struct Assembler_Processing **asp) {
 
 // ===== STATIC HELPER DEFINITIONS =====
 
+static enum Err_Main _err_convert(enum Err_Asm err) { // TODO:
+  return err == ASM_NO_ERROR ? ERR_NO_ERROR : ERR_SYNTAX_ERROR;
+}
+
 static const struct Token **_convert_tokens(const struct Token *orig) {
   size_t count = 0, i = 0;
   const struct Token **res = NULL;
@@ -279,9 +291,42 @@ static struct Parsed_Statement *_parse_tokens(const struct Token *tokens,
   return pstmt;
 }
 
-static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
-                                enum Assembler_Context *ctx, size_t nl,
-                                const char *line) {
+static enum Err_Asm _pass(struct Assembler_Processing *asp, int is_second) {
+  enum Assembler_Context ctx = ASC_FILE_START;
+  char *line = NULL;
+  size_t line_len = 0, nl = 1;
+  FILE *f = NULL;
+  enum Err_Asm err = ASM_NO_ERROR;
+  RETURN_IF_FAIL(asp != NULL, ASM_INVALID_ARGS);
+  PRINT_VERBOSE("STARTING PASS %i\n", is_second ? 2 : 1);
+  RET_VERBOSE_CLN_IF_FAIL(fu_open(asp->config->source, &f),
+                          ASM_CANNOT_OPEN_FILE, "Couldn't open file: %s\n",
+                          asp->config->source);
+
+  while (fu_getline(&line, &line_len, f) != -1) {
+    if (is_second) {
+      REUSE_ERR_IF_FAIL(_pass2_line(asp, &ctx, nl, line));
+    } else {
+      REUSE_ERR_IF_FAIL(_pass1_line(asp, &ctx, nl, line));
+    }
+    nl++;
+  }
+
+cleanup:
+  if (f) {
+    fclose(f);
+    f = NULL;
+  }
+  if (line) {
+    jree(line);
+    line = NULL;
+  }
+  return err;
+}
+
+static enum Err_Asm _pass_line(struct Assembler_Processing *asp,
+                               enum Assembler_Context *ctx, size_t nl,
+                               const char *line, int is_second) {
   struct Token *tokens = NULL;
   struct Parsed_Statement *pstmt = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
@@ -299,7 +344,11 @@ static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
               ASM_CREATING_PSTMT);
 
   PRINT_VERBOSE("Evaluating parsed statement.\n");
-  REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx, nl));
+  if (is_second) {
+    REUSE_ERR_IF_FAIL(_pass2_decide(pstmt, asp, ctx, nl));
+  } else {
+    REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx, nl));
+  }
 
 cleanup:
   if (tokens) {
@@ -310,6 +359,12 @@ cleanup:
     p_stmt_free(&pstmt);
   }
   return err;
+}
+
+static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
+                                enum Assembler_Context *ctx, size_t nl,
+                                const char *line) {
+  return _pass_line(asp, ctx, nl, line, 0);
 }
 
 static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
@@ -519,6 +574,46 @@ static enum Err_Asm _pass1_error(struct Assembler_Processing *asp, size_t nl) {
   return ASM_UNKNOWN_PSTMT_TYPE;
 }
 
-static enum Err_Main _err_convert(enum Err_Asm err) { // TODO:
-  return ERR_NO_ERROR;
+static enum Err_Asm _pass2_line(struct Assembler_Processing *asp,
+                                enum Assembler_Context *ctx, size_t nl,
+                                const char *line) {
+  return _pass_line(asp, ctx, nl, line, 1);
+}
+
+static enum Err_Asm _pass2_decide(struct Parsed_Statement *pstmt,
+                                  struct Assembler_Processing *asp,
+                                  enum Assembler_Context *ctx, size_t nl) {
+  RETURN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
+
+  switch (pstmt->type) {
+  case STMT_KMA:
+    return _pass1_kma(asp, ctx, nl); // intentional
+  case STMT_SECTION_CODE:
+    return _pass1_code_section(asp, ctx, nl); // intentional
+  case STMT_SECTION_DATA:
+    return _pass1_data_section(asp, ctx, nl); // intentional
+  case STMT_DATA_DECL:
+    return _pass2_data_decl(pstmt, asp, ctx, nl);
+  case STMT_INSTRUCTION:
+    return _pass2_instruction(pstmt, asp, ctx, nl);
+  case STMT_LABEL_DEF:
+    return ASM_NO_ERROR; // label definition belongs to 1st pass
+  case STMT_NONE:
+    return _pass1_none(asp, nl); // intentional
+  case STMT_ERROR:
+  default:
+    return _pass1_error(asp, nl); // intentional
+  }
+}
+
+static enum Err_Asm _pass2_data_decl(struct Parsed_Statement *pstmt,
+                                     struct Assembler_Processing *asp,
+                                     enum Assembler_Context *ctx, size_t nl) {
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
+                                       struct Assembler_Processing *asp,
+                                       enum Assembler_Context *ctx, size_t nl) {
+  return ASM_NO_ERROR;
 }
