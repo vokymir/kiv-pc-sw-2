@@ -149,8 +149,16 @@ int dtsg_app_str(struct Data_Segment *dtsg, const char *string) {
   size_t len = 0;
   CLEANUP_IF_FAIL(dtsg && dtsg->bytes && string);
 
-  len = strlen(string) + 1;
-  return dtsg_app_bs(dtsg, (const uint8_t *)string, len);
+  len = strlen(string);
+  if (len == 0) {
+    return 1; // nothing to append
+  }
+
+  CLEANUP_IF_FAIL(_dtsg_ensure_capacity(dtsg, len));
+
+  memmove(dtsg->bytes + dtsg->size, string, len);
+  dtsg->size += len;
+  return 1;
 
 cleanup:
   return 0;

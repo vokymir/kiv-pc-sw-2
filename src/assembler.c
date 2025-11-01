@@ -702,8 +702,6 @@ static enum Err_Asm _pass2_data_decl_string(struct Assembler_Processing *asp,
                                             const struct Init_Segment *is) {
   RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
 
-  // TODO: maybe here is error, if dtsg copies also the \0 on the end, that
-  // wouldn't be intentional
   RET_VERBOSE_CLN_IF_FAIL(
       dtsg_app_str(asp->dtsg, is->data.string), ASM_DTSG_CANNOT_APPEND,
       "but couldn't append string '%s' to data segment.\n", is->data.string);

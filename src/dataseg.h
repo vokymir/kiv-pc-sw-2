@@ -46,7 +46,9 @@ int dtsg_app_dws(struct Data_Segment *dtsg, const int32_t *dws, size_t count);
 // Return 1 on success, 0 on failure.
 int dtsg_app_dw_n(struct Data_Segment *dtsg, int32_t dw, size_t n);
 
-// Data Segment Append String ended by NULL.
+// Data Segment Append String.
+// The source string MUST be NULL-terminated.
+// HOWEVER, the \0 byte WON'T be appended!
 // Return 1 on success, 0 on failure.
 int dtsg_app_str(struct Data_Segment *dtsg, const char *string);
 
