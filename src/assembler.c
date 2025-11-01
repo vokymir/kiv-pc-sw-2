@@ -123,7 +123,7 @@ enum Err_Asm pass1(struct Assembler_Processing *asp) {
     return ASM_CANNOT_OPEN_FILE;
   }
 
-  while (fu_getline(&line, &line_len, f)) {
+  while (fu_getline(&line, &line_len, f) != -1) {
     PRINT_VERBOSE_DBG("Line %zu: '%s' -> ctx=%d\n", nl, line, ctx);
     REUSE_ERR_IF_FAIL(_pass1_line(asp, &ctx, nl, line));
     nl++;
