@@ -6,6 +6,9 @@
 #include "dataseg.h"
 #include "symbol.h"
 
+#define KMA_CDSG_BYTES (256 * 1024)
+#define KMA_DTSG_BYTES (256 * 1024)
+
 struct Assembler_Processing {
   const struct Config *config;
   struct Symbol_Table *symtab;
@@ -36,7 +39,8 @@ enum Err_Asm {
   ASM_SYMTAB_CANNOT_ADD,
   ASM_SYMTAB_ALREADY_EXIST,
   ASM_INVALID_INSTUCTION,
-  ASM_SYMTAB_DATA_TOO_LARGE,
+  ASM_DTSG_TOO_LARGE,
+  ASM_CDSG_TOO_LARGE,
 };
 
 // Wrapper around 2-pass assembler to binary process.
