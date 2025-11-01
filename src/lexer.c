@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "common.h"
@@ -27,16 +28,19 @@ struct Token_Arr {
 
 // ===== PRIVATE FUNCTION DECLARATIONS  =====
 
+static const char *token_type_to_str(enum Token_Type type);
+
 // Initialize the insides of token array.
 // Return 1 on success, 0 on failure.
-int _tkar_init(struct Token_Arr *arr);
+static int _tkar_init(struct Token_Arr *arr);
 
 // Free all insides of token array.
-void _tkar_deinit(struct Token_Arr *arr);
+static void _tkar_deinit(struct Token_Arr *arr);
 
 // Ensure that in the token array is enough space for additional tokens.
 // Return 1 on success, 0 on failure.
-int _tkar_ensure_capacity(struct Token_Arr *arr, size_t additional_tokens);
+static int _tkar_ensure_capacity(struct Token_Arr *arr,
+                                 size_t additional_tokens);
 
 // Skip all whitespaces or comments in line by INCREMENTING the pos value.
 // Return 1 if there is a token waiting to be parsed on pos.
@@ -142,9 +146,75 @@ void lexer_free_tokens(struct Token *tokens) {
   return;
 }
 
+void print_token(const struct Token *token) {
+  if (!token) {
+    printf("(null token)\n");
+    return;
+  }
+
+  printf("Token{ type=%s, value=\"%s\", line=%zu }\n",
+         token_type_to_str(token->type), token->value, token->line_number);
+}
+
+void print_tokens(const struct Token *tokens) {
+  if (!tokens) {
+    printf("(null token array)\n");
+    return;
+  }
+
+  size_t i = 0;
+  while (tokens[i].type != TOKEN_EOF) {
+    printf("[%zu] ", i);
+    print_token(&tokens[i]);
+    i++;
+  }
+  printf("[%zu] Token{ type=EOF }\n", i);
+}
+
 // ===== PRIVATE FUNCTIONS =====
 
-int _tkar_init(struct Token_Arr *arr) {
+static const char *token_type_to_str(enum Token_Type type) {
+  switch (type) {
+  case TOKEN_INSTRUCTION:
+    return "INSTRUCTION";
+  case TOKEN_REGISTER:
+    return "REGISTER";
+  case TOKEN_NUMBER:
+    return "NUMBER";
+  case TOKEN_IDENTIFIER:
+    return "IDENTIFIER";
+  case TOKEN_LABEL:
+    return "LABEL";
+  case TOKEN_COMMA:
+    return "COMMA";
+  case TOKEN_SECTION_DATA:
+    return "SECTION_DATA";
+  case TOKEN_SECTION_CODE:
+    return "SECTION_CODE";
+  case TOKEN_KMA:
+    return "KMA";
+  case TOKEN_OFFSET:
+    return "OFFSET";
+  case TOKEN_QUESTION:
+    return "QUESTION";
+  case TOKEN_STRING:
+    return "STRING";
+  case TOKEN_DATA_TYPE:
+    return "DATA_TYPE";
+  case TOKEN_DUP:
+    return "DUP";
+  case TOKEN_LPAREN:
+    return "LPAREN";
+  case TOKEN_RPAREN:
+    return "RPAREN";
+  case TOKEN_EOF:
+    return "EOF";
+  default:
+    return "UNKNOWN";
+  }
+}
+
+static int _tkar_init(struct Token_Arr *arr) {
   CLEANUP_IF_FAIL(arr);
 
   arr->tokens = jalloc(TOKENS_INITIAL_CAPACITY * sizeof(struct Token));
@@ -159,7 +229,7 @@ cleanup:
   return 0;
 }
 
-void _tkar_deinit(struct Token_Arr *arr) {
+static void _tkar_deinit(struct Token_Arr *arr) {
   CLEANUP_IF_FAIL(arr);
 
   if (arr->tokens) {
@@ -172,7 +242,8 @@ cleanup:
   return;
 }
 
-int _tkar_ensure_capacity(struct Token_Arr *arr, size_t additional_tokens) {
+static int _tkar_ensure_capacity(struct Token_Arr *arr,
+                                 size_t additional_tokens) {
   size_t req = 0, new_cap = 0;
   struct Token *new_tokens = NULL;
   CLEANUP_IF_FAIL(arr);

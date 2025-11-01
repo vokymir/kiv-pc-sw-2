@@ -16,6 +16,8 @@ void print_verbose(int condition, const char *string, ...) {
   va_start(args, string);
   vprintf(string, args);
   va_end(args);
+
+  fflush(stdout); // TODO: remove after debug
 }
 
 void print_verbose_clean(int condition, const char *string, ...) {
@@ -27,6 +29,8 @@ void print_verbose_clean(int condition, const char *string, ...) {
   va_start(args, string);
   vprintf(string, args);
   va_end(args);
+
+  fflush(stdout); // TODO: remove after debug
 }
 
 void print_instruction(int condition, size_t line,

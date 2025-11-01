@@ -32,6 +32,8 @@
     }                                                                          \
   } while (0)
 
+#define PRINT_VERBOSE(...) print_verbose(asp->config->flag_verbose, __VA_ARGS__)
+
 // ===== STATIC HELPER DECLARATIONS =====
 
 // Process one line in the first pass of the assembler code.
@@ -92,7 +94,9 @@ enum Err_Asm pass1(struct Assembler_Processing *asp) {
   size_t line_len = 0, nl = 1;
   FILE *f = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
+  print_verbose(1, "Pass1 before any checks.\n");
   RETURN_IF_FAIL(asp, ASM_INVALID_ARGS);
+  PRINT_VERBOSE("Starting pass1...\n");
   RETURN_IF_FAIL(fu_open(asp->config->source, &f), ASM_CANNOT_OPEN_FILE);
 
   while (fu_getline(&line, &line_len, f)) {

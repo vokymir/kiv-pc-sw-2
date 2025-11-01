@@ -42,4 +42,11 @@ struct Token *lexer_tokenize_line(const char *line, const size_t nl);
 // Free token array created by tokenizing one line.
 void lexer_free_tokens(struct Token *tokens);
 
+// Print one given token
+void print_token(const struct Token *token);
+
+// Print array of tokens, until TOKEN_EOF is found.
+// If EOF is not found, may result in segfault.
+void print_tokens(const struct Token *tokens);
+
 #endif
