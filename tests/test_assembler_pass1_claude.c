@@ -53,13 +53,11 @@ TEST(valid_minimal_program) {
 
   assert(create_test_file(test_file, content));
 
-  struct Config *config = create_test_config(test_file, 1);
+  struct Config *config = create_test_config(test_file, 0);
   struct Assembler_Processing *asp = asp_create(config, NULL, NULL, NULL);
   assert(asp != NULL);
 
   enum Err_Asm result = pass1(asp);
-  printf("RET CODE: %i\n", result);
-  fflush(stdout);
 
   /* Should succeed with no errors */
   assert(result == ASM_NO_ERROR);
@@ -620,20 +618,14 @@ TEST(data_segment_size_limit) {
    * Attempting to allocate more should fail with appropriate error */
   const char *test_file = "asm_data_too_large.asm";
 
-  FILE *f = fopen(test_file, "w");
-  assert(f != NULL);
+  /* Use DUP to allocate a large array that exceeds the 256KB limit
+   * With DWORD being 4 bytes, allocating 70000 words = 280000 bytes = ~273 KB
+   * This single line replaces the need for 70000 separate declarations */
+  const char *content = ".KMA\n"
+                        ".DATA\n"
+                        "bigarray DWORD 70000 DUP(?)\n";
 
-  fprintf(f, ".KMA\n");
-  fprintf(f, ".DATA\n");
-
-  /* Allocate arrays to exceed 256KB limit
-   * With DWORD being 4 bytes, we need more than 65536 words
-   * Let's create 70000 words = 280000 bytes = ~273 KB */
-  for (int i = 0; i < 70000; i++) {
-    fprintf(f, "var%d DW 0\n", i);
-  }
-
-  fclose(f);
+  assert(create_test_file(test_file, content));
 
   struct Config *config = create_test_config(test_file, 0);
   struct Assembler_Processing *asp = asp_create(config, NULL, NULL, NULL);
