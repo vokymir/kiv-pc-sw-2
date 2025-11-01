@@ -4,59 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// Forward decl
-const char *lexer_token_type_to_str(enum Token_Type type);
-
-// Helper to print a single token (optional)
-static void print_token(const struct Token *t) {
-  printf("[%s:%zu] \"%s\"\n", lexer_token_type_to_str(t->type), t->line_number,
-         t->value);
-}
-
-// Convert enum TokenType to string (for debug output)
-const char *lexer_token_type_to_str(enum Token_Type type) {
-  switch (type) {
-  case TOKEN_SECTION_DATA:
-    return "SECTION_DATA";
-  case TOKEN_SECTION_CODE:
-    return "SECTION_CODE";
-  case TOKEN_REGISTER:
-    return "REGISTER";
-  case TOKEN_INSTRUCTION:
-    return "INSTRUCTION";
-  case TOKEN_LABEL:
-    return "LABEL";
-  case TOKEN_NUMBER:
-    return "NUMBER";
-  case TOKEN_STRING:
-    return "STRING";
-  case TOKEN_COMMA:
-    return "COMMA";
-  case TOKEN_LPAREN:
-    return "LPAREN";
-  case TOKEN_RPAREN:
-    return "RPAREN";
-  case TOKEN_IDENTIFIER:
-    return "IDENTIFIER";
-  case TOKEN_EOF:
-    return "EOF";
-  case TOKEN_KMA:
-    return "KMA";
-  case TOKEN_OFFSET:
-    return "OFFSET";
-  case TOKEN_QUESTION:
-    return "?";
-  case TOKEN_DATA_TYPE:
-    return "DATA_TYPE";
-  case TOKEN_DUP:
-    return "DUP";
-  case TOKEN_UNKNOWN:
-    return "UNKNOWN";
-  default:
-    return "ERROR";
-  }
-}
-
 // Count tokens in the returned array (includes the terminating TOKEN_EOF)
 static size_t token_count(const struct Token *tokens) {
   size_t i = 0;
