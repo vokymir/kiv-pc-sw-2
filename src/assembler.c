@@ -678,17 +678,18 @@ static enum Err_Asm _pass2_data_decl_uninit(struct Assembler_Processing *asp,
 static enum Err_Asm _pass2_data_decl_value(struct Assembler_Processing *asp,
                                            const struct Init_Segment *is,
                                            enum Data_Type dt) {
+  uint8_t byte = 0;
   RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
 
   if (dt == DATA_BYTE) {
+    byte = (uint8_t)(is->data.value & 0xFF);
     RET_VERBOSE_CLN_IF_FAIL(
-        dtsg_app_b(asp->dtsg, (uint8_t)(is->data.value & 0xFF)),
-        ASM_DTSG_CANNOT_APPEND, "but couldn't append  to data segment.\n",
-        is->data.value);
-    PRINT_VERBOSE_CLN("appended byte 0x%02X to data segment, ", is->data.value);
+        dtsg_app_b(asp->dtsg, byte), ASM_DTSG_CANNOT_APPEND,
+        "but couldn't append byte 0x%02X to data segment.\n", byte);
+    PRINT_VERBOSE_CLN("appended byte 0x%02X to data segment, ", byte);
   } else if (dt == DATA_DWORD) {
     RET_VERBOSE_CLN_IF_FAIL(
-        dtsg_app_dw(asp->dtsg, is->data.value & 0xFF), ASM_DTSG_CANNOT_APPEND,
+        dtsg_app_dw(asp->dtsg, is->data.value), ASM_DTSG_CANNOT_APPEND,
         "but couldn't append  to data segment.\n", is->data.value);
     PRINT_VERBOSE_CLN("appended DOUBLE WORD %i to data segment, ",
                       is->data.value);
@@ -707,6 +708,34 @@ static enum Err_Asm _pass2_data_decl_string(struct Assembler_Processing *asp,
       dtsg_app_str(asp->dtsg, is->data.string), ASM_DTSG_CANNOT_APPEND,
       "but couldn't append string '%s' to data segment.\n", is->data.string);
   PRINT_VERBOSE_CLN("appended string '%s' to data segment, ", is->data.string);
+
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
+                                         const struct Init_Segment *is,
+                                         enum Data_Type dt) {
+  uint8_t byte = 0;
+  RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
+
+  if (dt == DATA_BYTE) {
+    byte = (uint8_t)(is->data.dup.value & 0xFF);
+    RET_VERBOSE_CLN_IF_FAIL(
+        dtsg_app_b_n(asp->dtsg, byte, is->data.dup.count),
+        ASM_DTSG_CANNOT_APPEND,
+        "but couldn't append %zu times byte 0x%02X to data segment.\n",
+        is->data.dup.count, byte);
+    PRINT_VERBOSE_CLN("appended %zu timesbyte 0x%02X to data segment, ",
+                      is->data.dup.count, byte);
+  } else if (dt == DATA_DWORD) {
+    RET_VERBOSE_CLN_IF_FAIL(
+        dtsg_app_dw_n(asp->dtsg, is->data.dup.value, is->data.dup.count),
+        ASM_DTSG_CANNOT_APPEND,
+        "but couldn't append %zu times DWord %i to data segment.\n",
+        is->data.dup.count, is->data.dup.value);
+    PRINT_VERBOSE_CLN("appended %zu times DWord %i to data segment, ",
+                      is->data.dup.count, is->data.dup.value);
+  }
 
   return ASM_NO_ERROR;
 }
