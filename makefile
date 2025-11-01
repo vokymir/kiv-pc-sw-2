@@ -29,8 +29,6 @@ $(BUILD_DIR):
 
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET)
-	rm vgcore.*
-	rm */vgcore.*
 	@echo "🧹 Clean complete"
 
 rebuild: clean all
