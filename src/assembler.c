@@ -406,7 +406,7 @@ static enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
 static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
                                      struct Assembler_Processing *asp,
                                      enum Assembler_Context *ctx, size_t nl) {
-  size_t position = SIZE_MAX;
+  size_t position = SIZE_MAX, size = SIZE_MAX;
   if (!asp || !asp->config) {
     return ASM_INVALID_ARGS;
   }
@@ -417,6 +417,7 @@ static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
                         "but something went wrong.\n");
     return ASM_INVALID_ARGS;
   }
+  size = pstmt->content.data_decl.total_size;
 
   if (*ctx != ASC_DATA) {
     print_verbose_clean(
@@ -425,10 +426,9 @@ static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
     return ASM_DATA_ABROAD;
   }
   print_verbose_clean(asp->config->flag_verbose,
-                      "ADVANCING DATASEGMENT of TOTALSIZE=%zu, ",
-                      pstmt->content.data_decl.total_size);
+                      "ADVANCING DATASEGMENT of TOTALSIZE=%zu, ", size);
 
-  position = dtsg_advance(asp->dtsg, pstmt->content.data_decl.total_size);
+  position = dtsg_advance(asp->dtsg, size);
 
   if (position == SIZE_MAX) {
     print_verbose_clean(asp->config->flag_verbose,
@@ -437,7 +437,8 @@ static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
     return ASM_DTSG_CANNOT_ADVANCE;
   }
 
-  if (position > UINT32_MAX || position >= KMA_DTSG_BYTES) {
+  if (position > UINT32_MAX || position >= KMA_DTSG_BYTES ||
+      position + size >= KMA_DTSG_BYTES) {
     print_verbose_clean(
         asp->config->flag_verbose,
         "but data segment is too large for KMA computer (%zu).\n", position);
@@ -504,7 +505,8 @@ static enum Err_Asm _pass1_instruction(struct Parsed_Statement *pstmt,
     return ASM_CDSG_CANNOT_ADVANCE;
   }
 
-  if (position > UINT32_MAX || position >= KMA_CDSG_BYTES) {
+  if (position > UINT32_MAX || position >= KMA_CDSG_BYTES ||
+      position + size >= KMA_CDSG_BYTES) {
     print_verbose_clean(
         asp->config->flag_verbose,
         "but code segment is too large for KMA computer (%zu).\n", position);
