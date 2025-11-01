@@ -115,16 +115,14 @@ enum Err_Asm pass1(struct Assembler_Processing *asp) {
   size_t line_len = 0, nl = 1;
   FILE *f = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
-  PRINT_VERBOSE_DBG("Pass1 before any checks, ptr to asp: %p\n", asp);
   RETURN_IF_FAIL(asp != NULL, ASM_INVALID_ARGS);
-  PRINT_VERBOSE("Starting pass1.\n");
+  PRINT_VERBOSE("STARTING PASS 1\n");
   if (!fu_open(asp->config->source, &f)) {
     PRINT_VERBOSE("Couldn't open file: %s\n", asp->config->source);
     return ASM_CANNOT_OPEN_FILE;
   }
 
   while (fu_getline(&line, &line_len, f) != -1) {
-    PRINT_VERBOSE_DBG("Line %zu: '%s' -> ctx=%d\n", nl, line, ctx);
     REUSE_ERR_IF_FAIL(_pass1_line(asp, &ctx, nl, line));
     nl++;
   }
@@ -284,7 +282,6 @@ static enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
   }
   PRINT_VERBOSE("Parsing tokens.\n");
   pstmt = _parse_tokens(tokens, nl);
-  PRINT_VERBOSE_DBG("PSTMT ptr %p\n", pstmt);
   ERR_IF_FAIL(pstmt && pstmt->err == PAR_NO_ERROR, ASM_CREATING_PSTMT);
 
   PRINT_VERBOSE("Evaluating parsed statement.\n");
@@ -425,6 +422,9 @@ static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
         "but that IS NOT in the data section, resultion in ERROR.\n");
     return ASM_DATA_ABROAD;
   }
+  print_verbose_clean(asp->config->flag_verbose,
+                      "ADVANCING DATASEGMENT of TOTALSIZE=%zu, ",
+                      pstmt->content.data_decl.total_size);
 
   position = dtsg_advance(asp->dtsg, pstmt->content.data_decl.total_size);
 

@@ -56,6 +56,10 @@ static size_t _append_segment(struct Parsed_Statement *pstmt);
 // Allocate space for segments
 static int _finalize_segments(struct Parsed_Statement *pstmt);
 
+// Set total size of data declaration based on defined segments
+// Return 1 on success, 0 on failure.
+static int _set_total_size(struct Data_Declaration *dd);
+
 // Decrement pstmt segment count on failure
 static void _remove_last_segment(struct Parsed_Statement *pstmt);
 
@@ -210,6 +214,7 @@ enum Err_Grm grammar_line_identifier(struct Parsed_Statement *pstmt,
   pstmt->type = STMT_DATA_DECL;
   pstmt->err = PAR_NO_ERROR;
 
+  RETURN_IF_FAIL(_set_total_size(&pstmt->content.data_decl), GRM_GENERIC_ERROR);
   RETURN_IF_FAIL(_copy_token_value(TOK_CURR,
                                    pstmt->content.data_decl.identifier,
                                    sizeof(pstmt->content.data_decl.identifier)),
@@ -476,6 +481,21 @@ static int _finalize_segments(struct Parsed_Statement *pstmt) {
 
   dd->is_fully_uninit = 1; // set this assumption, if in any segment is not
                            // true, will be rewritten
+
+  return 1;
+}
+
+static int _set_total_size(struct Data_Declaration *dd) {
+  size_t i = 0, elem_size = 0;
+  struct Init_Segment *is = NULL;
+  RETURN_IF_FAIL(dd && dd->segments, 0);
+  elem_size = (dd->type == DATA_DWORD) ? 4 : 1;
+  dd->total_size = 0;
+
+  for (i = 0; i < dd->segment_count; i++) {
+    is = &dd->segments[i];
+    dd->total_size += is->element_count * elem_size;
+  }
 
   return 1;
 }
