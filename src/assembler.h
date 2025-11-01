@@ -41,6 +41,8 @@ enum Err_Asm {
   ASM_INVALID_INSTUCTION,
   ASM_DTSG_TOO_LARGE,
   ASM_CDSG_TOO_LARGE,
+  ASM_UNKNOWN_INIT_SEG,
+  ASM_DTSG_CANNOT_APPEND,
 };
 
 // Wrapper around 2-pass assembler to binary process.
@@ -55,6 +57,7 @@ enum Err_Asm pass1(struct Assembler_Processing *asp);
 // Second pass of assembler code = evaluates the whole file, using a symbol
 // table it writes into code segment with actual values. Return adequate error
 // code.
+// WARN: Doesn't check for syntax/etc. that's the role of 1st pass.
 enum Err_Asm pass2(struct Assembler_Processing *asp);
 
 // Create new ASsembler Processing struct. Call asp_init to initialize from

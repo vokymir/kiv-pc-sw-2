@@ -11,6 +11,7 @@
 #include "lexer.h"
 #include "memory.h"
 #include "parser.h"
+#include "parser_data.h"
 #include "symbol.h"
 
 // If condition fail, set variable 'err' to given er
@@ -141,6 +142,20 @@ static enum Err_Asm _pass2_data_decl(struct Parsed_Statement *pstmt,
 static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
                                        struct Assembler_Processing *asp,
                                        enum Assembler_Context *ctx, size_t nl);
+
+static enum Err_Asm _pass2_data_decl_uninit(struct Assembler_Processing *asp,
+                                            const struct Init_Segment *is);
+
+static enum Err_Asm _pass2_data_decl_value(struct Assembler_Processing *asp,
+                                           const struct Init_Segment *is,
+                                           enum Data_Type dt);
+
+static enum Err_Asm _pass2_data_decl_string(struct Assembler_Processing *asp,
+                                            const struct Init_Segment *is);
+
+static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
+                                         const struct Init_Segment *is,
+                                         enum Data_Type dt);
 
 // ===== HEADER DEFINITIONS =====
 
@@ -609,11 +624,89 @@ static enum Err_Asm _pass2_decide(struct Parsed_Statement *pstmt,
 static enum Err_Asm _pass2_data_decl(struct Parsed_Statement *pstmt,
                                      struct Assembler_Processing *asp,
                                      enum Assembler_Context *ctx, size_t nl) {
-  return ASM_NO_ERROR;
+  // checks
+  // for all segments save them into datasegment
+  size_t i = 0;
+  const struct Data_Declaration *dd = NULL;
+  const struct Init_Segment *is = NULL;
+  enum Err_Asm err = ASM_NO_ERROR;
+  PRINT_VERBOSE("Found DATA DECLARATION on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(pstmt && (dd = &pstmt->content.data_decl) &&
+                              dd->segments && asp && asp->config && ctx,
+                          ASM_INVALID_ARGS, "but something went WRONG.\n");
+
+  for (i = 0; i < dd->segment_count; i++) {
+    is = &dd->segments[i];
+    switch (is->type) {
+    case INIT_SEG_UNINIT:
+      REUSE_ERR_IF_FAIL(_pass2_data_decl_uninit(asp, is));
+    case INIT_SEG_VALUE:
+      REUSE_ERR_IF_FAIL(_pass2_data_decl_value(asp, is, dd->type));
+    case INIT_SEG_STRING:
+      REUSE_ERR_IF_FAIL(_pass2_data_decl_string(asp, is));
+    case INIT_SEG_DUP:
+      REUSE_ERR_IF_FAIL(_pass2_data_decl_dup(asp, is, dd->type));
+    default:
+      PRINT_VERBOSE_CLN("but the segment is of UNKNOWN type!\n");
+      return ASM_UNKNOWN_INIT_SEG;
+    }
+  }
+
+cleanup:
+  return err;
 }
 
 static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
                                        struct Assembler_Processing *asp,
                                        enum Assembler_Context *ctx, size_t nl) {
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm _pass2_data_decl_uninit(struct Assembler_Processing *asp,
+                                            const struct Init_Segment *is) {
+  RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
+
+  RET_VERBOSE_CLN_IF_FAIL(
+      dtsg_app_zs(asp->dtsg, is->element_count), ASM_DTSG_CANNOT_APPEND,
+      "but couldn't append %zu UNINITIALIZED bytes to data segment.\n",
+      is->element_count);
+
+  PRINT_VERBOSE_CLN("appended %zu UNINITIALIZED bytes to data segment, ");
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm _pass2_data_decl_value(struct Assembler_Processing *asp,
+                                           const struct Init_Segment *is,
+                                           enum Data_Type dt) {
+  RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
+
+  if (dt == DATA_BYTE) {
+    RET_VERBOSE_CLN_IF_FAIL(
+        dtsg_app_b(asp->dtsg, (uint8_t)(is->data.value & 0xFF)),
+        ASM_DTSG_CANNOT_APPEND, "but couldn't append  to data segment.\n",
+        is->data.value);
+    PRINT_VERBOSE_CLN("appended byte 0x%02X to data segment, ", is->data.value);
+  } else if (dt == DATA_DWORD) {
+    RET_VERBOSE_CLN_IF_FAIL(
+        dtsg_app_dw(asp->dtsg, is->data.value & 0xFF), ASM_DTSG_CANNOT_APPEND,
+        "but couldn't append  to data segment.\n", is->data.value);
+    PRINT_VERBOSE_CLN("appended DOUBLE WORD %i to data segment, ",
+                      is->data.value);
+  }
+
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm _pass2_data_decl_string(struct Assembler_Processing *asp,
+                                            const struct Init_Segment *is) {
+  RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
+
+  // TODO: maybe here is error, if dtsg copies also the \0 on the end, that
+  // wouldn't be intentional
+  RET_VERBOSE_CLN_IF_FAIL(
+      dtsg_app_str(asp->dtsg, is->data.string), ASM_DTSG_CANNOT_APPEND,
+      "but couldn't append string '%s' to data segment.\n", is->data.string);
+  PRINT_VERBOSE_CLN("appended string '%s' to data segment, ", is->data.string);
+
   return ASM_NO_ERROR;
 }
