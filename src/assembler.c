@@ -68,11 +68,9 @@ static enum Err_Asm _pass1_label_def(struct Parsed_Statement *pstmt,
                                      struct Assembler_Processing *asp,
                                      enum Assembler_Context *ctx, size_t nl);
 
-static enum Err_Asm _pass1_none(struct Assembler_Processing *asp,
-                                enum Assembler_Context *ctx, size_t nl);
+static enum Err_Asm _pass1_none(struct Assembler_Processing *asp, size_t nl);
 
-static enum Err_Asm _pass1_error(struct Assembler_Processing *asp,
-                                 enum Assembler_Context *ctx, size_t nl);
+static enum Err_Asm _pass1_error(struct Assembler_Processing *asp, size_t nl);
 
 // ===== HEADER DEFINITIONS =====
 
@@ -243,20 +241,20 @@ static enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
   case STMT_LABEL_DEF:
     return _pass1_label_def(pstmt, asp, ctx, nl);
   case STMT_NONE:
-    break;
+    return _pass1_none(asp, nl);
   case STMT_ERROR:
   default:
-    return ASM_UNKNOWN_PSTMT_TYPE;
-    break;
+    return _pass1_error(asp, nl);
   }
-
-  return ASM_NO_ERROR;
 }
 
 static enum Err_Asm _pass1_kma(struct Assembler_Processing *asp,
                                enum Assembler_Context *ctx, size_t nl) {
+  if (!asp || !asp->config) {
+    return ASM_INVALID_ARGS;
+  }
   print_verbose(asp->config->flag_verbose, "Found KMA label on line %zu, ", nl);
-  if (!asp || !asp->config || !*ctx) {
+  if (!*ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
@@ -278,9 +276,12 @@ static enum Err_Asm _pass1_kma(struct Assembler_Processing *asp,
 static enum Err_Asm _pass1_code_section(struct Assembler_Processing *asp,
                                         enum Assembler_Context *ctx,
                                         size_t nl) {
+  if (!asp || !asp->config) {
+    return ASM_INVALID_ARGS;
+  }
   print_verbose(asp->config->flag_verbose,
                 "Found CODE SECTION label on line %zu, ", nl);
-  if (!asp || !asp->config || !*ctx) {
+  if (!*ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
@@ -301,9 +302,12 @@ static enum Err_Asm _pass1_code_section(struct Assembler_Processing *asp,
 static enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
                                         enum Assembler_Context *ctx,
                                         size_t nl) {
+  if (!asp || !asp->config) {
+    return ASM_INVALID_ARGS;
+  }
   print_verbose(asp->config->flag_verbose,
                 "Found DATA SECTION label on line %zu, ", nl);
-  if (!asp || !asp->config || !*ctx) {
+  if (!*ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
@@ -324,10 +328,13 @@ static enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
 static enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
                                      struct Assembler_Processing *asp,
                                      enum Assembler_Context *ctx, size_t nl) {
+  size_t position = SIZE_MAX;
+  if (!asp || !asp->config) {
+    return ASM_INVALID_ARGS;
+  }
   print_verbose(asp->config->flag_verbose,
                 "Found DATA DECLARATION on line %zu, ", nl);
-  size_t position = SIZE_MAX;
-  if (!pstmt || !asp || !asp->config || !*ctx) {
+  if (!pstmt || !*ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went wrong.\n");
     return ASM_INVALID_ARGS;
@@ -381,9 +388,12 @@ static enum Err_Asm _pass1_instruction(struct Parsed_Statement *pstmt,
                                        struct Assembler_Processing *asp,
                                        enum Assembler_Context *ctx, size_t nl) {
   size_t size = SIZE_MAX, position = SIZE_MAX;
+  if (!asp || !asp->config) {
+    return ASM_INVALID_ARGS;
+  }
   print_verbose(asp->config->flag_verbose, "Found INSTRUCTION on line %zu, ",
                 nl);
-  if (!asp || !asp->config || !*ctx) {
+  if (!*ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
@@ -431,9 +441,12 @@ static enum Err_Asm _pass1_label_def(struct Parsed_Statement *pstmt,
                                      struct Assembler_Processing *asp,
                                      enum Assembler_Context *ctx, size_t nl) {
   size_t position = SIZE_MAX;
+  if (!asp || !asp->config) {
+    return ASM_INVALID_ARGS;
+  }
   print_verbose(asp->config->flag_verbose,
                 "Found LABEL definition on line %zu, ", nl);
-  if (!asp || !asp->config || !*ctx) {
+  if (!*ctx) {
     print_verbose_clean(asp->config->flag_verbose,
                         "but something went WRONG.\n");
     return ASM_INVALID_ARGS;
@@ -482,8 +495,22 @@ static enum Err_Asm _pass1_label_def(struct Parsed_Statement *pstmt,
   return ASM_NO_ERROR;
 }
 
-static enum Err_Asm _pass1_none(struct Assembler_Processing *asp,
-                                enum Assembler_Context *ctx, size_t nl);
+static enum Err_Asm _pass1_none(struct Assembler_Processing *asp, size_t nl) {
+  if (!asp || !asp->config) {
+    return ASM_INVALID_ARGS;
+  }
+  print_verbose(
+      asp->config->flag_verbose,
+      "Found NOTHIMG on line %zu, might be an empty line, or only comment.\n",
+      nl);
+  return ASM_NO_ERROR;
+}
 
-static enum Err_Asm _pass1_error(struct Assembler_Processing *asp,
-                                 enum Assembler_Context *ctx, size_t nl);
+static enum Err_Asm _pass1_error(struct Assembler_Processing *asp, size_t nl) {
+  if (!asp || !asp->config) {
+    return ASM_INVALID_ARGS;
+  }
+  print_verbose(asp->config->flag_verbose,
+                "Weird line %zu, cannot find known statement.\n", nl);
+  return ASM_UNKNOWN_PSTMT_TYPE;
+}
