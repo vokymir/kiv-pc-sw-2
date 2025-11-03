@@ -169,7 +169,7 @@ static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
 // Get operand valued from instruction statement. Set enum array op_values.
 // Return adequate ASM error.
 static enum Err_Asm
-_pass2_instruction_get_ops(struct Assembler_Processing *asp,
+_pass2_instruction_ops_get(struct Assembler_Processing *asp,
                            const struct Instruction_Statement *is,
                            union op_value *op_values[2]);
 
@@ -179,6 +179,21 @@ static enum Err_Asm
 _pass2_intstruction_get_op(struct Assembler_Processing *asp,
                            const struct Instruction_Statement *is,
                            union op_value *op_value, int idx);
+
+// Get the value when operand is Register.
+static enum Err_Asm
+_pass2_instruction_get_op_reg(struct Assembler_Processing *asp,
+                              const char *reg_name, uint8_t *value);
+
+static enum Err_Asm
+_pass2_instruction_get_op_label(struct Assembler_Processing *asp,
+                                const char *lab_name, int32_t *value);
+
+// Append (set) instruction in codesegment based on op_values.
+static enum Err_Asm
+_pass_instruction_ops_set(struct Assembler_Processing *asp,
+                          const struct Instruction_Statement *is,
+                          union op_value *op_values[2]);
 
 // On success change value adequately & return 1.
 // On failure only return 0.
@@ -690,25 +705,23 @@ cleanup:
 static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
                                        struct Assembler_Processing *asp,
                                        enum Assembler_Context *ctx, size_t nl) {
-  size_t i = 0;
+  size_t i = 0, addr = SIZE_MAX;
   union op_value op_values[2] = {0};
   enum Err_Asm err = ASM_NO_ERROR;
-  struct Symbol *s = NULL;
 
   PRINT_VERBOSE("Found INSTRUCTION on line %zu, ", nl);
   RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS,
                           "but something went wrong.");
-  REUSE_ERR_IF_FAIL(_pass2_instruction_get_ops(asp, &pstmt->content.instruction,
-                                               &op_values) == ASM_NO_ERROR);
+  REUSE_ERR_IF_FAIL(
+      _pass2_instruction_ops_get(asp, &pstmt->content.instruction, &op_values));
 
-  cdsg_app_op(asp->cdsg, pstmt->content.instruction.descriptor->opcode);
-  for (i = 0; i < is->operand_count; i++) {
-    if (pstmt->content.instruction.operands[i].type == OP_REG) {
-      cdsg_app_reg(asp->cdsg, op_values[i].ui8);
-    } else {
-      cdsg_app_imm(asp->cdsg, op_values[i].i32);
-    }
-  }
+  addr = cdsg_get_size(asp->cdsg);
+  REUSE_ERR_IF_FAIL(
+      _pass_instruction_ops_set(asp, &pstmt->content.instruction, &op_values));
+
+  PRINT_VERBOSE_CLN("and everything went OK.\n"); // TODO: better verbose output
+  print_instruction(asp->config->flag_instruction, nl,
+                    &pstmt->content.instruction, addr);
 
 cleanup:
   return err;
@@ -791,16 +804,19 @@ static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
 }
 
 static enum Err_Asm
-_pass2_instruction_get_ops(struct Assembler_Processing *asp,
+_pass2_instruction_ops_get(struct Assembler_Processing *asp,
                            const struct Instruction_Statement *is,
                            union op_value *op_values[2]) {
   size_t i = 0;
+  enum Err_Asm err = ASM_NO_ERROR;
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
                           "but something went wrong.");
 
   for (i = 0; i < is->operand_count; i++) {
-    _pass2_intstruction_get_op(asp, is, op_values[i], i); // TODO:returnval
+    REUSE_ERR_IF_FAIL(_pass2_intstruction_get_op(asp, is, op_values[i], i));
   }
+
+cleanup:
   return ASM_NO_ERROR;
 }
 
@@ -814,32 +830,16 @@ _pass2_intstruction_get_op(struct Assembler_Processing *asp,
 
   switch (is->operands[idx].type) {
   case OP_REG:
-    RET_VERBOSE_CLN_IF_FAIL(
-        _register_name_to_value(is->operands[idx].value.register_name,
-                                &op_value->ui8),
-        ASM_INVALID_OPERAND_REGISTER,
-        "but the register name '%s' is not a valid register name.\n",
-        is->operands[idx].value.register_name);
+    return _pass2_instruction_get_op_reg(
+        asp, is->operands[idx].value.register_name, &op_value->ui8);
   case OP_IMM32:
     switch (is->operands[idx].specifier) {
     case OPS_LABEL:
-      RET_VERBOSE_CLN_IF_FAIL(
-          (s = symtab_find(asp->symtab, is->operands[idx].value.label)),
-          ASM_INVALID_OPERAND_LABEL,
-          "but the label named '%s' was not defined.\n",
-          is->operands[idx].value.label);
-      op_value->i32 = s->address; // TODO: conversion safe wrapper.
-      break;
-    case OPS_OFFSET:
-      RET_VERBOSE_CLN_IF_FAIL(
-          (s = symtab_find(
-               asp->symtab,
-               is->operands[idx].value.label)), // see parser_grammar
-                                                // -> _set_op_offset
-          ASM_INVALID_OPERAND_OFFSET,
-          "but cannot find the OFFSETed variable '%s'.\n",
-          is->operands[idx].value.label);
-      op_value->i32 = s->address; // TODO: the same conversion as in LABEL
+      return _pass2_instruction_get_op_label(asp, is->operands[idx].value.label,
+                                             &op_value->i32);
+    case OPS_OFFSET: // label & variables are saved in the same table
+      return _pass2_instruction_get_op_label(asp, is->operands[idx].value.label,
+                                             &op_value->i32);
     case OPS_NONE:
       op_value->i32 = is->operands->value.immediate_value;
       break;
@@ -848,4 +848,56 @@ _pass2_intstruction_get_op(struct Assembler_Processing *asp,
   case OPS_NONE:
     break;
   }
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm
+_pass2_instruction_get_op_reg(struct Assembler_Processing *asp,
+                              const char *reg_name, uint8_t *value) {
+  RET_VERBOSE_CLN_IF_FAIL(asp && reg_name && value, ASM_INVALID_ARGS,
+                          "but something went wrong.");
+
+  RET_VERBOSE_CLN_IF_FAIL(
+      _register_name_to_value(reg_name, value), ASM_INVALID_OPERAND_REGISTER,
+      "but the register name '%s' is not a valid register name.\n", reg_name);
+
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm
+_pass2_instruction_get_op_label(struct Assembler_Processing *asp,
+                                const char *lab_name, int32_t *value) {
+  struct Symbol *s = NULL;
+  RET_VERBOSE_CLN_IF_FAIL(asp && lab_name && value, ASM_INVALID_ARGS,
+                          "but something went wrong.");
+
+  s = symtab_find(asp->symtab, lab_name);
+  RET_VERBOSE_CLN_IF_FAIL(s, ASM_INVALID_OPERAND_LABEL,
+                          "but the label named '%s' was not defined.\n",
+                          lab_name);
+
+  *value = s->address; // TODO: conversion safe wrapper
+
+  return ASM_NO_ERROR;
+}
+
+static enum Err_Asm
+_pass_instruction_ops_set(struct Assembler_Processing *asp,
+                          const struct Instruction_Statement *is,
+                          union op_value *op_values[2]) {
+  size_t i = 0;
+  RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
+                          "but something went wrong.");
+
+  cdsg_app_op(asp->cdsg, is->descriptor->opcode); // TODO: also here
+
+  for (i = 0; i < is->operand_count; i++) {
+    if (is->operands[i].type == OP_REG) {
+      cdsg_app_reg(asp->cdsg, op_values[i]->ui8); // TODO: return values
+    } else {
+      cdsg_app_imm(asp->cdsg, op_values[i]->i32);
+    }
+  }
+
+  return ASM_NO_ERROR;
 }
