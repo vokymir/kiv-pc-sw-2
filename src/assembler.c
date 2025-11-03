@@ -64,7 +64,7 @@ union op_value {
 // === CONVERTING ===
 
 // safe wrapper of convertor from uint32_t to int32_t
-static int32_t _lose_sign_int32(uint32_t u);
+static int32_t _clamp_uint32(uint32_t u);
 
 // Given any ASM error, convert it to corresponding MAIN error.
 static enum Err_Main _err_convert(enum Err_Asm err);
@@ -302,7 +302,7 @@ void asp_free(struct Assembler_Processing **asp) {
 
 // ===== STATIC HELPER DEFINITIONS =====
 
-static int32_t _lose_sign_int32(uint32_t u) {
+static int32_t _clamp_uint32(uint32_t u) {
   return u > INT32_MAX ? INT32_MAX : (int32_t)u;
 }
 
@@ -857,7 +857,7 @@ _pass2_instruction_ops_get(struct Assembler_Processing *asp,
   }
 
 cleanup:
-  return ASM_NO_ERROR;
+  return err;
 }
 
 static enum Err_Asm
@@ -881,12 +881,12 @@ _pass2_intstruction_get_op(struct Assembler_Processing *asp,
       return _pass2_instruction_get_op_label(asp, is->operands[idx].value.label,
                                              &op_value->i32);
     case OPS_NONE:
-      op_value->i32 = is->operands->value.immediate_value;
+      op_value->i32 = is->operands[idx].value.immediate_value;
       break;
     }
     break;
-  case OPS_NONE:
-    break;
+  case OP_NONE:
+    break; // WARN: what else to do? this should run anyway
   }
   return ASM_NO_ERROR;
 }
@@ -916,7 +916,7 @@ _pass2_instruction_get_op_label(struct Assembler_Processing *asp,
                           "but the label named '%s' was not defined.\n",
                           lab_name);
 
-  *value = _lose_sign_int32(s->address);
+  *value = _clamp_uint32(s->address);
 
   return ASM_NO_ERROR;
 }
@@ -937,12 +937,12 @@ _pass_instruction_ops_set(struct Assembler_Processing *asp,
   for (i = 0; i < is->operand_count; i++) {
     if (is->operands[i].type == OP_REG) {
       RET_VERBOSE_CLN_IF_FAIL(
-          cdsg_app_reg(asp->cdsg, op_values[i]->ui8), ASM_CDSG_CANNOT_APPEND,
+          cdsg_app_reg(asp->cdsg, (*op_values)[i].ui8), ASM_CDSG_CANNOT_APPEND,
           "but couldn't append register code '%02x' to code segment.\n",
           op_values[i]->ui8);
     } else {
       RET_VERBOSE_CLN_IF_FAIL(
-          cdsg_app_imm(asp->cdsg, op_values[i]->i32), ASM_CDSG_CANNOT_APPEND,
+          cdsg_app_imm(asp->cdsg, (*op_values)[i].i32), ASM_CDSG_CANNOT_APPEND,
           "but couldn't append immediate 32-bit value '%d' to code segment.\n",
           op_values[i]->i32);
     }
