@@ -395,7 +395,7 @@ static enum Err_Asm _pass(struct Assembler_Processing *asp, int is_second) {
   enum Err_Asm err = ASM_NO_ERROR;
   RETURN_IF_FAIL(asp != NULL, ASM_INVALID_ARGS);
   PRINT_VERBOSE("STARTING PASS %i\n", is_second ? 2 : 1);
-  RET_VERBOSE_CLN_IF_FAIL(fu_open(asp->config->source, &f),
+  RET_VERBOSE_CLN_IF_FAIL(fu_open(asp->config->source, &f, NULL),
                           ASM_CANNOT_OPEN_FILE, "Couldn't open file: %s\n",
                           asp->config->source);
 
