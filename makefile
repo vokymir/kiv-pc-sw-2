@@ -36,6 +36,6 @@ rebuild: clean all
 valgrind: $(TARGET)
 	valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all \
 	         --track-origins=yes --error-exitcode=1 --track-fds=yes \
-	         --trace-children=yes --num-callers=50 ./$(TARGET)
+	         --trace-children=yes --num-callers=50 ./$(TARGET) source.kas -i -v
 
 .PHONY: all clean rebuild valgrind
