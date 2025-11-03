@@ -38,6 +38,7 @@ int main(const int argc, const char **argv) {
 // Free all main-related memory, check for leaks and end
 finalize:
   args_config_deinit(&config);
+  asp_free(&asp);
   assert(jemory() == 0);
   return err;
 }
