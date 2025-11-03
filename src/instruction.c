@@ -155,3 +155,11 @@ size_t instruction_get_encoded_size(const struct Instruction_Descriptor *desc) {
 
   return size;
 }
+
+int instruction_is_relative_jump(const struct Instruction_Descriptor *desc) {
+  if (!desc) {
+    return 0;
+  }
+
+  return 0x72 <= desc->opcode && desc->opcode < 0x80;
+}

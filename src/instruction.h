@@ -35,4 +35,7 @@ const struct Instruction_Descriptor *instruction_find(const char *mnemonic,
 // Calculate the size of an encoded instruction in bytes,
 size_t instruction_get_encoded_size(const struct Instruction_Descriptor *desc);
 
+// If instruction is a jump with relative offset, return 1. Otherwise 0.
+int instruction_is_relative_jump(const struct Instruction_Descriptor *desc);
+
 #endif
