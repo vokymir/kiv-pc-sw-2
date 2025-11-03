@@ -736,6 +736,7 @@ static enum Err_Asm _pass2_data_decl(struct Parsed_Statement *pstmt,
     }
   }
 
+  PRINT_VERBOSE_CLN("the declaration was a success.\n");
 cleanup:
   return err;
 }
@@ -802,7 +803,7 @@ static enum Err_Asm _pass2_data_decl_value(struct Assembler_Processing *asp,
   } else if (dt == DATA_DWORD) {
     RET_VERBOSE_CLN_IF_FAIL(
         dtsg_app_dw(asp->dtsg, is->data.value), ASM_DTSG_CANNOT_APPEND,
-        "but couldn't append  to data segment.\n", is->data.value);
+        "but couldn't append %d to data segment.\n", is->data.value);
     PRINT_VERBOSE_CLN("appended DOUBLE WORD %i to data segment, ",
                       is->data.value);
   }
@@ -947,12 +948,12 @@ _pass_instruction_ops_set(struct Assembler_Processing *asp,
       RET_VERBOSE_CLN_IF_FAIL(
           cdsg_app_reg(asp->cdsg, (*op_values)[i].ui8), ASM_CDSG_CANNOT_APPEND,
           "but couldn't append register code '%02x' to code segment.\n",
-          op_values[i]->ui8);
+          (*op_values)[i].ui8);
     } else {
       RET_VERBOSE_CLN_IF_FAIL(
           cdsg_app_imm(asp->cdsg, (*op_values)[i].i32), ASM_CDSG_CANNOT_APPEND,
           "but couldn't append immediate 32-bit value '%d' to code segment.\n",
-          op_values[i]->i32);
+          (*op_values[i]).i32);
     }
   }
 
