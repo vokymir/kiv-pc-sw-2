@@ -175,7 +175,7 @@ static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
 static enum Err_Asm
 _pass2_instruction_ops_get(struct Assembler_Processing *asp,
                            const struct Instruction_Statement *is,
-                           union op_value *op_values[2]);
+                           union op_value (*op_values)[2]);
 
 // Get operand from instruction statement, on index. Set enum op_value on
 // success.
@@ -197,7 +197,7 @@ _pass2_instruction_get_op_label(struct Assembler_Processing *asp,
 static enum Err_Asm
 _pass_instruction_ops_set(struct Assembler_Processing *asp,
                           const struct Instruction_Statement *is,
-                          union op_value *op_values[2]);
+                          union op_value (*op_values)[2]);
 
 // On success change value adequately & return 1.
 // On failure only return 0.
@@ -846,7 +846,7 @@ static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
 static enum Err_Asm
 _pass2_instruction_ops_get(struct Assembler_Processing *asp,
                            const struct Instruction_Statement *is,
-                           union op_value *op_values[2]) {
+                           union op_value (*op_values)[2]) {
   size_t i = 0;
   enum Err_Asm err = ASM_NO_ERROR;
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
@@ -924,7 +924,7 @@ _pass2_instruction_get_op_label(struct Assembler_Processing *asp,
 static enum Err_Asm
 _pass_instruction_ops_set(struct Assembler_Processing *asp,
                           const struct Instruction_Statement *is,
-                          union op_value *op_values[2]) {
+                          union op_value (*op_values)[2]) {
   size_t i = 0;
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
                           "but something went wrong.");
