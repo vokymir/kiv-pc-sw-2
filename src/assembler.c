@@ -11,6 +11,7 @@
 #include "lexer.h"
 #include "memory.h"
 #include "parser.h"
+#include "parser_code.h"
 #include "parser_data.h"
 #include "symbol.h"
 
@@ -156,6 +157,10 @@ static enum Err_Asm _pass2_data_decl_string(struct Assembler_Processing *asp,
 static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
                                          const struct Init_Segment *is,
                                          enum Data_Type dt);
+
+// On success change value adequately & return 1.
+// On failure only return 0.
+static int _register_name_to_value(const char *name, int8_t *value);
 
 // ===== HEADER DEFINITIONS =====
 
@@ -663,6 +668,55 @@ cleanup:
 static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
                                        struct Assembler_Processing *asp,
                                        enum Assembler_Context *ctx, size_t nl) {
+  size_t i = 0;
+  int32_t op_val32[2] = {0};
+  int8_t op_val8[2] = {0};
+  struct Instruction_Statement *is = NULL;
+  struct Symbol *s = NULL;
+  PRINT_VERBOSE("Found INSTRUCTION on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS,
+                          "but something went wrong.");
+  is = &pstmt->content.instruction;
+  for (i = 0; i < is->operand_count; i++) { // retrieve value for all operands
+    switch (is->operands[i].type) {
+    case OP_REG:
+      _register_name_to_value(is->operands[i].value.register_name,
+                              &op_val8[i]); // TODO: ret value use!
+      break;
+    case OP_IMM32:
+      switch (is->operands[i].specifier) {
+      case OPS_LABEL:
+        s = symtab_find(asp->symtab, is->operands[i].value.label);
+        if (!s) { /* do smth*/
+        }
+        op_val32[i] = s->address; // TODO: conversion???
+        break;
+      case OPS_OFFSET:
+        s = symtab_find(
+            asp->symtab,
+            is->operands[i].value.label); // if offset, the name of var is saved
+                                          // in label (see parser_grammar ->
+                                          // _set_op_offset) check
+        op_val32[i] = s->address;         // TODO: conversion (the same)
+        break;
+      case OPS_NONE:
+        op_val32[i] = is->operands[i].value.immediate_value;
+        break;
+      }
+      break;
+    case OP_NONE:
+      break;
+    }
+  }
+  cdsg_app_op(asp->cdsg, pstmt->content.instruction.descriptor->opcode);
+  for (i = 0; i < is->operand_count; i++) {
+    if (pstmt->content.instruction.operands[i].type == OP_REG) {
+      cdsg_app_reg(asp->cdsg, op_val8[i]);
+    } else {
+      cdsg_app_imm(asp->cdsg, op_val32[i]);
+    }
+  }
+
   return ASM_NO_ERROR;
 }
 
