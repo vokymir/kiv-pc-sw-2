@@ -141,12 +141,12 @@ int fu_can_write_parent_dir(const char *path) {
   return res;
 }
 
-int fu_open(const char *path, FILE **f) {
+int fu_open(const char *path, FILE **f, const char *modifiers) {
   if (!path || !f || !fu_is_file(path) || !fu_can_read(path)) {
     return 0;
   }
 
-  *f = fopen(path, "r");
+  *f = fopen(path, modifiers ? modifiers : "r");
   if (!*f) {
     return 0;
   }
@@ -202,4 +202,11 @@ long fu_getline(char **lineptr, size_t *n, FILE *stream) {
   // NULL terminate & return
   (*lineptr)[pos] = '\0';
   return (long)pos;
+}
+
+int fu_write_bytes(FILE *f, const void *buf, size_t count) {
+  if (fwrite(buf, 1, count, f) != count) {
+    return 0;
+  }
+  return 1;
 }
