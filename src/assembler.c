@@ -954,27 +954,19 @@ _pass_instruction_ops_set(struct Assembler_Processing *asp,
 static int _register_name_to_value(const char *name, uint8_t *value) {
   RETURN_IF_FAIL(name && value, 0);
 
-  switch (name[0]) {
-  case 'A':
+  if (strcmp(name, "A") == 0) {
     *value = 1;
-    break;
-  case 'B':
+  } else if (strcmp(name, "B") == 0) {
     *value = 2;
-    break;
-  case 'C':
+  } else if (strcmp(name, "C") == 0) {
     *value = 3;
-    break;
-  case 'D':
+  } else if (strcmp(name, "D") == 0) {
     *value = 4;
-    break;
-  case 'S':
-    if (strlen(name) > 1 && name[1] == 'P') {
-      *value = 6;
-    } else {
-      *value = 5;
-    }
-    break;
-  default:
+  } else if (strcmp(name, "S") == 0) {
+    *value = 5;
+  } else if (strcmp(name, "SP") == 0) {
+    *value = 6;
+  } else {
     return 0;
   }
 
