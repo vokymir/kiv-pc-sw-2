@@ -743,7 +743,7 @@ cleanup:
 static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
                                        struct Assembler_Processing *asp,
                                        enum Assembler_Context *ctx, size_t nl) {
-  size_t i = 0, addr = SIZE_MAX;
+  size_t addr = SIZE_MAX;
   union op_value op_values[2] = {0};
   enum Err_Asm err = ASM_NO_ERROR;
 
@@ -754,6 +754,13 @@ static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
       _pass2_instruction_ops_get(asp, &pstmt->content.instruction, &op_values));
 
   addr = cdsg_get_size(asp->cdsg);
+
+  if (instruction_is_relative_jump(pstmt->content.instruction.descriptor)) {
+    op_values[0].i32 = op_values[0].i32 - (addr + 5);
+    // Relative offset = label address - (instruction address +
+    // size of (instruction))
+  }
+
   REUSE_ERR_IF_FAIL(
       _pass_instruction_ops_set(asp, &pstmt->content.instruction, &op_values));
 
@@ -846,7 +853,7 @@ static enum Err_Asm
 _pass2_instruction_ops_get(struct Assembler_Processing *asp,
                            const struct Instruction_Statement *is,
                            union op_value (*op_values)[2]) {
-  size_t i = 0;
+  int i = 0;
   enum Err_Asm err = ASM_NO_ERROR;
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
                           "but something went wrong.");
@@ -863,7 +870,6 @@ static enum Err_Asm
 _pass2_intstruction_get_op(struct Assembler_Processing *asp,
                            const struct Instruction_Statement *is,
                            union op_value *op_value, int idx) {
-  struct Symbol *s = NULL;
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_value, ASM_INVALID_ARGS,
                           "but something went wrong.");
 
@@ -880,11 +886,13 @@ _pass2_intstruction_get_op(struct Assembler_Processing *asp,
       return _pass2_instruction_get_op_label(asp, is->operands[idx].value.label,
                                              &op_value->i32);
     case OPS_NONE:
+    default:
       op_value->i32 = is->operands[idx].value.immediate_value;
       break;
     }
     break;
   case OP_NONE:
+  default:
     break; // WARN: what else to do? this should run anyway
   }
   return ASM_NO_ERROR;
@@ -924,7 +932,7 @@ static enum Err_Asm
 _pass_instruction_ops_set(struct Assembler_Processing *asp,
                           const struct Instruction_Statement *is,
                           union op_value (*op_values)[2]) {
-  size_t i = 0;
+  int i = 0;
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
                           "but something went wrong.");
 
