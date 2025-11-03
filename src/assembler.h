@@ -43,6 +43,9 @@ enum Err_Asm {
   ASM_CDSG_TOO_LARGE,
   ASM_UNKNOWN_INIT_SEG,
   ASM_DTSG_CANNOT_APPEND,
+  ASM_INVALID_OPERAND_REGISTER,
+  ASM_INVALID_OPERAND_LABEL,
+  ASM_INVALID_OPERAND_OFFSET,
 };
 
 // Wrapper around 2-pass assembler to binary process.

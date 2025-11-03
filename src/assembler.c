@@ -50,6 +50,14 @@
     }                                                                          \
   } while (0)
 
+// ===== HELPER UNION =====
+
+// Possible operand values - can be either uint8 or int32.
+union op_value {
+  uint8_t ui8;
+  int32_t i32;
+};
+
 // ===== STATIC HELPER DECLARATIONS =====
 
 // === CONVERTING ===
@@ -158,9 +166,15 @@ static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
                                          const struct Init_Segment *is,
                                          enum Data_Type dt);
 
+// Set op_values. Return adequate ASM error.
+static enum Err_Asm
+_pass2_instruction_get_ops(struct Assembler_Processing *asp,
+                           const struct Instruction_Statement *is,
+                           union op_value *op_values[2]);
+
 // On success change value adequately & return 1.
 // On failure only return 0.
-static int _register_name_to_value(const char *name, int8_t *value);
+static int _register_name_to_value(const char *name, uint8_t *value);
 
 // ===== HEADER DEFINITIONS =====
 
@@ -669,45 +683,18 @@ static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
                                        struct Assembler_Processing *asp,
                                        enum Assembler_Context *ctx, size_t nl) {
   size_t i = 0;
-  int32_t op_val32[2] = {0};
-  int8_t op_val8[2] = {0};
+  union op_value op_values[2] = {0};
   struct Instruction_Statement *is = NULL;
+
   struct Symbol *s = NULL;
   PRINT_VERBOSE("Found INSTRUCTION on line %zu, ", nl);
   RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS,
                           "but something went wrong.");
   is = &pstmt->content.instruction;
-  for (i = 0; i < is->operand_count; i++) { // retrieve value for all operands
-    switch (is->operands[i].type) {
-    case OP_REG:
-      _register_name_to_value(is->operands[i].value.register_name,
-                              &op_val8[i]); // TODO: ret value use!
-      break;
-    case OP_IMM32:
-      switch (is->operands[i].specifier) {
-      case OPS_LABEL:
-        s = symtab_find(asp->symtab, is->operands[i].value.label);
-        if (!s) { /* do smth*/
-        }
-        op_val32[i] = s->address; // TODO: conversion???
-        break;
-      case OPS_OFFSET:
-        s = symtab_find(
-            asp->symtab,
-            is->operands[i].value.label); // if offset, the name of var is saved
-                                          // in label (see parser_grammar ->
-                                          // _set_op_offset) check
-        op_val32[i] = s->address;         // TODO: conversion (the same)
-        break;
-      case OPS_NONE:
-        op_val32[i] = is->operands[i].value.immediate_value;
-        break;
-      }
-      break;
-    case OP_NONE:
-      break;
-    }
-  }
+  RET_VERBOSE_CLN_IF_FAIL(
+      (enum Err_Asm err = _pass2_instruction_get_ops(asp, is, op_values)), err,
+      "LOL!\n");
+
   cdsg_app_op(asp->cdsg, pstmt->content.instruction.descriptor->opcode);
   for (i = 0; i < is->operand_count; i++) {
     if (pstmt->content.instruction.operands[i].type == OP_REG) {
@@ -794,4 +781,51 @@ static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
   }
 
   return ASM_NO_ERROR;
+}
+
+enum Err_Asm _pass2_instruction_get_ops(struct Assembler_Processing *asp,
+                                        const struct Instruction_Statement *is,
+                                        union op_value *op_values[2]) {
+  size_t i = 0;
+  struct Symbol *s = NULL;
+  RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
+                          "but something went wrong.");
+
+  for (i = 0; i < is->operand_count; i++) {
+    switch (is->operands[i].type) {
+    case OP_REG:
+      RET_VERBOSE_CLN_IF_FAIL(
+          _register_name_to_value(is->operands[i].value.register_name,
+                                  &op_values[i]->ui8),
+          ASM_INVALID_OPERAND_REGISTER,
+          "but the register name '%s' is not a valid register name.\n",
+          is->operands[i].value.register_name);
+    case OP_IMM32:
+      switch (is->operands[i].specifier) {
+      case OPS_LABEL:
+        RET_VERBOSE_CLN_IF_FAIL(
+            (s = symtab_find(asp->symtab, is->operands[i].value.label)),
+            ASM_INVALID_OPERAND_LABEL,
+            "but the label named '%s' was not defined.\n",
+            is->operands[i].value.label);
+        op_values[i]->i32 = s->address; // TODO: conversion safe wrapper.
+        break;
+      case OPS_OFFSET:
+        RET_VERBOSE_CLN_IF_FAIL(
+            (s = symtab_find(
+                 asp->symtab,
+                 is->operands[i]
+                     .value.label)), // see parser_grammar -> _set_op_offset
+            ASM_INVALID_OPERAND_OFFSET,
+            "but cannot find the OFFSETed variable '%s'.\n",
+            is->operands[i].value.label);
+        op_values[i]->i32 = s->address; // TODO: the same conversion as in LABEL
+      case OPS_NONE:
+        op_values[i]->i32 = is->operands->value.immediate_value;
+        break;
+      }
+      break;
+    }
+    return ASM_NO_ERROR;
+  }
 }
