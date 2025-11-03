@@ -705,8 +705,6 @@ static enum Err_Asm _pass2_decide(struct Parsed_Statement *pstmt,
 static enum Err_Asm _pass2_data_decl(struct Parsed_Statement *pstmt,
                                      struct Assembler_Processing *asp,
                                      enum Assembler_Context *ctx, size_t nl) {
-  // checks
-  // for all segments save them into datasegment
   size_t i = 0;
   const struct Data_Declaration *dd = NULL;
   const struct Init_Segment *is = NULL;
@@ -716,6 +714,7 @@ static enum Err_Asm _pass2_data_decl(struct Parsed_Statement *pstmt,
                               dd->segments && asp && asp->config && ctx,
                           ASM_INVALID_ARGS, "but something went WRONG.\n");
 
+  // for all segments save them into datasegment
   for (i = 0; i < dd->segment_count; i++) {
     is = &dd->segments[i];
     switch (is->type) {
