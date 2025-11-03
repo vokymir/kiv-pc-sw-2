@@ -337,7 +337,7 @@ static enum Err_Main _err_convert(enum Err_Asm err) {
   case ASM_CANNOT_OPEN_FILE:
     return ERR_FILE_ACCESS_FAILURE;
   default:
-    return ERR_SYNTAX_ERROR;
+    return ERR_MY_CODE_FAILURE;
   }
 }
 
@@ -351,7 +351,8 @@ static const struct Token **_convert_tokens(const struct Token *orig) {
   }
   count++; // also count EOF
 
-  res = jalloc((count + 1) * sizeof(*res)); // +1 for NULL terminator
+  res = jalloc((count + 1) *
+               sizeof(*res)); // +1 for NULL terminator (for better sleep)
   RETURN_IF_FAIL(res, NULL);
 
   for (i = 0; i < count; i++) {
@@ -381,7 +382,6 @@ static struct Parsed_Statement *_parse_tokens(const struct Token *tokens,
   pstmt = parse_tokens(converted_tokens, nl);
 
   if (converted_tokens) {
-    // cast out const, because of free
     _free_tokens_convertor(&converted_tokens);
   }
   return pstmt;
@@ -660,7 +660,7 @@ static enum Err_Asm _pass1_label_def(struct Parsed_Statement *pstmt,
 
 static enum Err_Asm _pass1_none(struct Assembler_Processing *asp, size_t nl) {
   PRINT_VERBOSE(
-      "Found NOTHIMG on line %zu, might be an empty line, or only comment.\n",
+      "Found NOTHING on line %zu, might be an empty line, or only comment.\n",
       nl);
   return ASM_NO_ERROR;
 }
@@ -835,7 +835,7 @@ static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
         ASM_DTSG_CANNOT_APPEND,
         "but couldn't append %zu times byte 0x%02X to data segment.\n",
         is->data.dup.count, byte);
-    PRINT_VERBOSE_CLN("appended %zu timesbyte 0x%02X to data segment, ",
+    PRINT_VERBOSE_CLN("appended %zu times byte 0x%02X to data segment, ",
                       is->data.dup.count, byte);
   } else if (dt == DATA_DWORD) {
     RET_VERBOSE_CLN_IF_FAIL(
