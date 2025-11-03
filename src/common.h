@@ -33,6 +33,7 @@ enum Err_Main {
   ERR_UNRESOLVED_REFERENCE = 6,
   ERR_CODE_SEGMENT_TOO_LARGE = 7,
   ERR_DATA_SEGMENT_TOO_LARGE = 8,
+  ERR_MY_CODE_FAILURE = 42,
 };
 
 // Holds information needed throughout the whole program.

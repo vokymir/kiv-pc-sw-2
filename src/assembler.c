@@ -305,8 +305,39 @@ static int32_t _lose_sign_int32(uint32_t u) {
   return u > INT32_MAX ? INT32_MAX : (int32_t)u;
 }
 
-static enum Err_Main _err_convert(enum Err_Asm err) { // TODO:
-  return err == ASM_NO_ERROR ? ERR_NO_ERROR : ERR_SYNTAX_ERROR;
+static enum Err_Main _err_convert(enum Err_Asm err) {
+  switch (err) {
+  case ASM_NO_ERROR:
+    return ERR_NO_ERROR;
+  case ASM_KMA_EXPECTED:
+  case ASM_KMA_DOUBLE:
+  case ASM_DATA_ABROAD:
+  case ASM_CODE_ABROAD:
+  case ASM_SYMTAB_ALREADY_EXIST:
+  case ASM_INVALID_INSTUCTION:
+  case ASM_INVALID_OPERAND_REGISTER:
+  case ASM_INVALID_OPERAND_LABEL:
+  case ASM_INVALID_OPERAND_OFFSET:
+    return ERR_SYNTAX_ERROR;
+  case ASM_INVALID_ARGS:
+  case ASM_CREATING_TOKENS:
+  case ASM_CREATING_PSTMT:
+  case ASM_UNKNOWN_PSTMT_TYPE:
+  case ASM_SYMTAB_CANNOT_ADD:
+  case ASM_UNKNOWN_INIT_SEG:
+    return ERR_MY_CODE_FAILURE;
+  case ASM_DTSG_CANNOT_ADVANCE:
+  case ASM_CDSG_CANNOT_ADVANCE:
+  case ASM_DTSG_TOO_LARGE:
+  case ASM_CDSG_TOO_LARGE:
+  case ASM_DTSG_CANNOT_APPEND:
+  case ASM_CDSG_CANNOT_APPEND:
+    return ERR_OUT_OF_MEMORY;
+  case ASM_CANNOT_OPEN_FILE:
+    return ERR_FILE_ACCESS_FAILURE;
+  default:
+    return ERR_SYNTAX_ERROR;
+  }
 }
 
 static const struct Token **_convert_tokens(const struct Token *orig) {
