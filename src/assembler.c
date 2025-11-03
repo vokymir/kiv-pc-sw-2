@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "assembler.h"
 #include "codeseg.h"
@@ -757,7 +758,8 @@ static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
   REUSE_ERR_IF_FAIL(
       _pass_instruction_ops_set(asp, &pstmt->content.instruction, &op_values));
 
-  PRINT_VERBOSE_CLN("and everything went OK.\n"); // TODO: better verbose output
+  PRINT_VERBOSE_CLN(
+      "and everything went great (see line below if -i is set).\n");
   print_instruction(asp->config->flag_instruction, nl,
                     &pstmt->content.instruction, addr);
 
@@ -947,4 +949,34 @@ _pass_instruction_ops_set(struct Assembler_Processing *asp,
   }
 
   return ASM_NO_ERROR;
+}
+
+static int _register_name_to_value(const char *name, uint8_t *value) {
+  RETURN_IF_FAIL(name && value, 0);
+
+  switch (name[0]) {
+  case 'A':
+    *value = 1;
+    break;
+  case 'B':
+    *value = 2;
+    break;
+  case 'C':
+    *value = 3;
+    break;
+  case 'D':
+    *value = 4;
+    break;
+  case 'S':
+    if (strlen(name) > 1 && name[1] == 'P') {
+      *value = 6;
+    } else {
+      *value = 5;
+    }
+    break;
+  default:
+    return 0;
+  }
+
+  return 1;
 }
