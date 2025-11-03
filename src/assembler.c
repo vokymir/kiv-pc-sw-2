@@ -861,7 +861,7 @@ _pass2_instruction_ops_get(struct Assembler_Processing *asp,
                           "but something went wrong.");
 
   for (i = 0; i < is->operand_count; i++) {
-    REUSE_ERR_IF_FAIL(_pass2_intstruction_get_op(asp, is, op_values[i], i));
+    REUSE_ERR_IF_FAIL(_pass2_intstruction_get_op(asp, is, &(*op_values)[i], i));
   }
 
 cleanup:
