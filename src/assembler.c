@@ -62,6 +62,9 @@ union op_value {
 
 // === CONVERTING ===
 
+// safe wrapper of convertor from uint32_t to int32_t
+static int32_t _lose_sign_int32(uint32_t u);
+
 // Given any ASM error, convert it to corresponding MAIN error.
 static enum Err_Main _err_convert(enum Err_Asm err);
 
@@ -297,6 +300,10 @@ void asp_free(struct Assembler_Processing **asp) {
 }
 
 // ===== STATIC HELPER DEFINITIONS =====
+
+static int32_t _lose_sign_int32(uint32_t u) {
+  return u > INT32_MAX ? INT32_MAX : (int32_t)u;
+}
 
 static enum Err_Main _err_convert(enum Err_Asm err) { // TODO:
   return err == ASM_NO_ERROR ? ERR_NO_ERROR : ERR_SYNTAX_ERROR;
@@ -876,7 +883,7 @@ _pass2_instruction_get_op_label(struct Assembler_Processing *asp,
                           "but the label named '%s' was not defined.\n",
                           lab_name);
 
-  *value = s->address; // TODO: conversion safe wrapper
+  *value = _lose_sign_int32(s->address);
 
   return ASM_NO_ERROR;
 }
@@ -889,13 +896,22 @@ _pass_instruction_ops_set(struct Assembler_Processing *asp,
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
                           "but something went wrong.");
 
-  cdsg_app_op(asp->cdsg, is->descriptor->opcode); // TODO: also here
+  RET_VERBOSE_CLN_IF_FAIL(
+      cdsg_app_op(asp->cdsg, is->descriptor->opcode), ASM_CDSG_CANNOT_APPEND,
+      "but couldn't append OP-code '%02x' to code segment.\n",
+      is->descriptor->opcode);
 
   for (i = 0; i < is->operand_count; i++) {
     if (is->operands[i].type == OP_REG) {
-      cdsg_app_reg(asp->cdsg, op_values[i]->ui8); // TODO: return values
+      RET_VERBOSE_CLN_IF_FAIL(
+          cdsg_app_reg(asp->cdsg, op_values[i]->ui8), ASM_CDSG_CANNOT_APPEND,
+          "but couldn't append register code '%02x' to code segment.\n",
+          op_values[i]->ui8);
     } else {
-      cdsg_app_imm(asp->cdsg, op_values[i]->i32);
+      RET_VERBOSE_CLN_IF_FAIL(
+          cdsg_app_imm(asp->cdsg, op_values[i]->i32), ASM_CDSG_CANNOT_APPEND,
+          "but couldn't append immediate 32-bit value '%d' to code segment.\n",
+          op_values[i]->i32);
     }
   }
 

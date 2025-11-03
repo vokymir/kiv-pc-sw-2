@@ -46,6 +46,7 @@ enum Err_Asm {
   ASM_INVALID_OPERAND_REGISTER,
   ASM_INVALID_OPERAND_LABEL,
   ASM_INVALID_OPERAND_OFFSET,
+  ASM_CDSG_CANNOT_APPEND,
 };
 
 // Wrapper around 2-pass assembler to binary process.
