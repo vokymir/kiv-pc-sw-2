@@ -234,7 +234,8 @@ static void _tkar_deinit(struct Token_Arr *arr) {
   CLEANUP_IF_FAIL(arr);
 
   if (arr->tokens) {
-    jree_clear((void **)&arr->tokens);
+    jree(arr->tokens);
+    arr->tokens = NULL;
   }
   arr->count = 0;
   arr->capacity = 0;

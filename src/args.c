@@ -172,8 +172,10 @@ void args_config_deinit(struct Config *config) {
   config->flag_verbose = 0;
   config->flag_instruction = 0;
 
-  jree_clear((void **)&config->source);
-  jree_clear((void **)&config->target);
+  jree(config->source);
+  config->source = NULL;
+  jree(config->target);
+  config->target = NULL;
 
 cleanup:
   return;
