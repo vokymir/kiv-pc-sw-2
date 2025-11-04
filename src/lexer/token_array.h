@@ -3,8 +3,6 @@
 
 #include <stddef.h>
 
-// ===== STRUCTS =====
-
 struct Token_Arr {
   struct Token *tokens;
   size_t count;

@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "instruction.h"
+
 #include "set_token.h"
 
 // shortcut for identifying word with token types

@@ -6,8 +6,8 @@
 #include "common.h"
 #include "lexer.h"
 #include "memory.h"
-#include "set_token.h"
 
+#include "set_token.h"
 #include "token_array.h"
 
 // ===== PRIVATE FUNCTION DECLARATIONS  =====

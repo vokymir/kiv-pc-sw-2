@@ -1,7 +1,8 @@
-#include "token_array.h"
 #include "common.h"
 #include "lexer.h"
 #include "memory.h"
+
+#include "token_array.h"
 
 int tok_arr_init(struct Token_Arr *arr) {
   CLEANUP_IF_FAIL(arr);
