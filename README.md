@@ -6,3 +6,4 @@ TODO:
  - parser
  - assembler
  3) testy
+ 4) update makefiles
