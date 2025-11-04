@@ -758,7 +758,8 @@ static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
 
   if (instruction_is_relative_jump(pstmt->content.instruction.descriptor)) {
     op_values[0].i32 =
-        op_values[0].i32 - ((addr > INT32_MAX ? INT32_MAX : (int32_t)addr) + 5);
+        op_values[0].i32 - ((addr > INT32_MAX ? INT32_MAX : (int32_t)addr) +
+                            5); // TODO: 5??? really???
     // Relative offset = label address - (instruction address +
     // size of (instruction))
   }

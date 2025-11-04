@@ -56,7 +56,7 @@ void print_instruction(int condition, size_t line,
 
 static const char *get_op_text(const struct Instruction_Statement *is,
                                size_t idx, char *buf, size_t bufsize) {
-  if (!is || idx >= 2)
+  if (!is || idx >= 2) // TODO: magic number
     return "";
 
   const struct Operand *op = &is->operands[idx];
