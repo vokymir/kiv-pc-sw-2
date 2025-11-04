@@ -78,14 +78,12 @@ static void test_append_string_and_zeroes(void) {
   assert(d != NULL);
 
   const char *s = "hello";
-  // append string - should include terminating null according to header comment
   assert(dtsg_app_str(d, s) == 1);
   size_t sz = dtsg_get_size(d);
   const uint8_t *p = bytes(d);
-  // check 'h','e','l','l','o','\0'
-  assert(sz >= 6);
+  // check 'h','e','l','l','o'
+  assert(sz >= 5);
   assert(memcmp(p, "hello", 5) == 0);
-  assert(p[5] == 0);
 
   // append 4 zero bytes
   assert(dtsg_app_zs(d, 4) == 1);

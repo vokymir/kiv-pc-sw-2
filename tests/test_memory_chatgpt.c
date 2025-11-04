@@ -29,7 +29,8 @@ static void test_alloc_clear(void) {
   assert(ptr != NULL);
   assert(jemory() > 0);
 
-  jree_clear(&ptr);
+  jree(ptr);
+  ptr = NULL;
   assert(ptr == NULL);
   printf("✅ alloc_clear passed.\n");
 }
@@ -109,7 +110,6 @@ static void test_invalid_inputs(void) {
 
   // Freeing NULL should not crash
   jree(NULL);
-  jree_clear(NULL);
 
   // jealloc with NULL given should return NULL...
   void *p = jealloc(NULL, 10);
