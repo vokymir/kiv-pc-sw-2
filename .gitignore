@@ -1,6 +1,8 @@
 kmas.exe
 source.kas
+source.kmx
 *.o
 /build/
 /bin/
 vgcore.*
+assembler.zip
