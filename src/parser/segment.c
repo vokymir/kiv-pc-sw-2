@@ -3,8 +3,8 @@
 #include "memory.h"
 #include "parser.h"
 
-#include "segment.h"
-#include "token.h"
+#include "parser_segment.h"
+#include "parser_token.h"
 
 size_t segment_append(struct Parsed_Statement *pstmt) {
   RETURN_IF_FAIL(pstmt, SIZE_MAX);

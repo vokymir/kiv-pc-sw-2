@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "parser.h"
 
-#include "grammar.h"
+#include "parser_grammar.h"
 
 struct Parsed_Statement *parse_tokens(const struct Token *tokens[], size_t nl) {
   struct Parsed_Statement *stmt = NULL;

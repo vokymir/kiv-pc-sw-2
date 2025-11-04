@@ -1,7 +1,7 @@
-#include "identifier.h"
 #include "memory.h"
-#include "segment.h"
-#include "token.h"
+#include "parser_identifier.h"
+#include "parser_segment.h"
+#include "parser_token.h"
 
 // ===== GRAMMAR HELPER DECLARATIONS =====
 

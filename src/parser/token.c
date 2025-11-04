@@ -2,7 +2,7 @@
 #include <inttypes.h>
 #include <string.h>
 
-#include "token.h"
+#include "parser_token.h"
 
 int token_is(const struct Token *tok, enum Token_Type type) {
   return (tok && tok->type == type);

@@ -1,7 +1,7 @@
 #ifndef GRAMMAR_IDENTIFIER_H
 #define GRAMMAR_IDENTIFIER_H
 
-#include "grammar.h"
+#include "parser_grammar.h"
 
 // Evaluates whether the next token(s) is valid data type and when is, calls
 // other functions to get what the insides are. On success set the pstmt
