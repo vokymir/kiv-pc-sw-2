@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -pedantic -ansi -std=c99
+CFLAGS = -Wall -pedantic -std=c99
 SRC_DIR = src
 TARGET = kmas.exe
 
