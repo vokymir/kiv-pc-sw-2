@@ -42,6 +42,9 @@ struct Token *lexer_tokenize_line(const char *line, const size_t nl);
 // Free token array created by tokenizing one line.
 void lexer_free_tokens(struct Token *tokens);
 
+// Return string representation of a given token type
+const char *token_type_to_str(enum Token_Type type);
+
 // Print one given token
 void print_token(const struct Token *token);
 

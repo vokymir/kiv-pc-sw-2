@@ -12,8 +12,6 @@
 
 // ===== PRIVATE FUNCTION DECLARATIONS  =====
 
-static const char *token_type_to_str(enum Token_Type type);
-
 // Skip all whitespaces or comments in line by INCREMENTING the pos value.
 // Return 1 if there is a token waiting to be parsed on pos.
 // Return 0 if end of line was reached.
@@ -68,34 +66,7 @@ void lexer_free_tokens(struct Token *tokens) {
   return;
 }
 
-void print_token(const struct Token *token) {
-  if (!token) {
-    printf("(null token)\n");
-    return;
-  }
-
-  printf("Token{ type=%s, value=\"%s\", line=%zu }\n",
-         token_type_to_str(token->type), token->value, token->line_number);
-}
-
-void print_tokens(const struct Token *tokens) {
-  if (!tokens) {
-    printf("(null token array)\n");
-    return;
-  }
-
-  size_t i = 0;
-  while (tokens[i].type != TOKEN_EOF) {
-    printf("[%zu] ", i);
-    print_token(&tokens[i]);
-    i++;
-  }
-  printf("[%zu] Token{ type=EOF }\n", i);
-}
-
-// ===== PRIVATE FUNCTIONS =====
-
-static const char *token_type_to_str(enum Token_Type type) {
+const char *token_type_to_str(enum Token_Type type) {
   switch (type) {
   case TOKEN_INSTRUCTION:
     return "INSTRUCTION";
@@ -136,6 +107,33 @@ static const char *token_type_to_str(enum Token_Type type) {
     return "UNKNOWN";
   }
 }
+
+void print_token(const struct Token *token) {
+  if (!token) {
+    printf("(null token)\n");
+    return;
+  }
+
+  printf("Token{ type=%s, value=\"%s\", line=%zu }\n",
+         token_type_to_str(token->type), token->value, token->line_number);
+}
+
+void print_tokens(const struct Token *tokens) {
+  if (!tokens) {
+    printf("(null token array)\n");
+    return;
+  }
+
+  size_t i = 0;
+  while (tokens[i].type != TOKEN_EOF) {
+    printf("[%zu] ", i);
+    print_token(&tokens[i]);
+    i++;
+  }
+  printf("[%zu] Token{ type=EOF }\n", i);
+}
+
+// ===== PRIVATE FUNCTIONS =====
 
 static int _lexer_skip_to_next_token(const char *line, const size_t len,
                                      size_t *pos) {

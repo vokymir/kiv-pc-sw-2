@@ -4,6 +4,12 @@
 #include "instruction.h"
 #include "set_token.h"
 
+// shortcut for identifying word with token types
+#define IDENTIFY(ch, type)                                                     \
+  if (num == sizeof(ch) - 1 && strncmp(word, (ch), num) == 0) {                \
+    return (type);                                                             \
+  }
+
 int set_next_token(struct Token *token, const char *line, const size_t len,
                    size_t *pos, const size_t nl) {
   const char *current = NULL;
@@ -68,7 +74,7 @@ int set_next_token(struct Token *token, const char *line, const size_t len,
   return 1;
 
 cleanup:
-  (*pos)++; // not to endup in infinity loop...
+  (*pos)++; // not to endup in an infinite loop...
   return 0;
 }
 

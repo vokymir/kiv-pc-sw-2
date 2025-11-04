@@ -5,13 +5,6 @@
 
 #include "lexer.h"
 
-// ===== MACROS =====
-
-#define IDENTIFY(ch, type)                                                     \
-  if (num == sizeof(ch) - 1 && strncmp(word, (ch), num) == 0) {                \
-    return (type);                                                             \
-  }
-
 // Based on current position in the line, update the given token.
 // Update pos to one char after token characters.
 // Return 1 on success, 0 on failure.
