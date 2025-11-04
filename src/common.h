@@ -1,6 +1,10 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+// =========================
+// ===== MACRO HELPERS =====
+// =========================
+
 // Implementing RAII-like cleanup procedure.
 // If condition is not satisfied, go to label.
 // Label must be at the end of the same function, to work reliably.
@@ -22,6 +26,10 @@
 
 #define DEBUG 1
 
+// =======================
+// ===== ERROR CODES =====
+// =======================
+
 // Errors specific to main, which the program outputs.
 enum Err_Main {
   ERR_NO_ERROR = 0,
@@ -36,6 +44,10 @@ enum Err_Main {
   ERR_MY_CODE_FAILURE = 42,
 };
 
+// ==================
+// ===== CONFIG =====
+// ==================
+
 // Holds information needed throughout the whole program.
 struct Config {
   int flag_verbose;
@@ -43,6 +55,10 @@ struct Config {
   char *source;
   char *target;
 };
+
+// ==================
+// ===== PRINTS =====
+// ==================
 
 // United verbose output to console.
 // Only print if condition is met, variadic arguments will be forwarded to
@@ -64,5 +80,74 @@ void print_verbose_clean(int condition, const char *string, ...);
 // L50: DEC A at CS:123
 void print_instruction(int condition, size_t line,
                        const struct Instruction_Statement *is, size_t addr);
+
+// =====================================
+// ===== KM MACHINE SPECIFICATIONS =====
+// =====================================
+
+// Memory segment sizes
+#define KMA_CDSG_BYTES (256 * 1024) // 256 kB
+#define KMA_DTSG_BYTES (256 * 1024) // 256 kB
+#define KMA_STSG_BYTES (16 * 1024)  // 16 kB
+
+// KMX binary
+#define KMX_SIGNATURE_LEN 3
+#define KMX_SIGNATURE "KMX" // File format signature
+
+// instruction limits
+#define KMA_MAX_OPERANDS 2 // Max operands per instruction
+
+// Register values (specified in assignment)
+enum Reg_Code {
+  REG_CODE_A = 0x01,
+  REG_CODE_B = 0x02,
+  REG_CODE_C = 0x03,
+  REG_CODE_D = 0x04,
+  REG_CODE_S = 0x05,
+  REG_CODE_SP = 0x06,
+};
+
+// Data type sizes
+#define KMA_DWORD_SIZE 4 // DWORD is 4 bytes (32-bit)
+#define KMA_BYTE_SIZE 1  // BYTE is 1 byte (8-bit)
+
+// ==========================
+// ===== LEXER & PARSER =====
+// ==========================
+
+#define MAX_IDENTIFIER_LEN 256  // Variable/label names in assembly
+#define MAX_REGISTER_NAME_LEN 4 // Register names like "SP"
+#define MAX_LABEL_NAME_LEN 256  // Jump target labels with @ prefix
+#define TOKEN_MAX_VALUE_LEN 256 // Token string content
+
+#define MAX_INIT_SEGMENT_STRING_LEN 256 // String literals in .DATA
+
+#define MAX_ERROR_MSG_LEN 512
+
+// ==========================
+// ===== DYNAMIC ARRAYS =====
+// ==========================
+
+#define DYNAMIC_ARRAY_INITIAL_CAPACITY 16
+#define DYNAMIC_ARRAY_GROWTH_MULTIPLIER 2
+
+// === SPECIFIC ARRAYS ===
+#define CDSG_INITIAL_CAPACITY DYNAMIC_ARRAY_INITIAL_CAPACITY
+#define CDSG_CAPACITY_MULT DYNAMIC_ARRAY_GROWTH_MULTIPLIER
+
+#define DTSG_INITIAL_CAPACITY DYNAMIC_ARRAY_INITIAL_CAPACITY
+#define DTSG_CAPACITY_MULT DYNAMIC_ARRAY_GROWTH_MULTIPLIER
+
+#define SYMTAB_INITIAL_CAPACITY DYNAMIC_ARRAY_INITIAL_CAPACITY
+#define SYMTAB_CAPACITY_MULT DYNAMIC_ARRAY_GROWTH_MULTIPLIER
+
+#define TOKENS_INITIAL_CAPACITY DYNAMIC_ARRAY_INITIAL_CAPACITY
+#define TOKENS_CAPACITY_MULT DYNAMIC_ARRAY_GROWTH_MULTIPLIER
+
+// ====================
+// ===== FILE I/O =====
+// ====================
+
+#define FU_GETLINE_INIT_LEN 128
 
 #endif
