@@ -4,7 +4,8 @@
 #include "lexer.h"
 #include "memory.h"
 #include "parser.h"
-#include "parser_grammar.h"
+
+#include "grammar.h"
 
 struct Parsed_Statement *parse_tokens(const struct Token *tokens[], size_t nl) {
   struct Parsed_Statement *stmt = NULL;
