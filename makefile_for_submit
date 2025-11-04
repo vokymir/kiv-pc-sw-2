@@ -1,0 +1,29 @@
+ZIPNAME = assembler.zip
+PDF = $(wildcard doc/*.pdf)
+SRC_DIR = src
+MAKEFILE_SRC = makefile_for_kekstein
+TMPDIR = tmp_submit
+
+.PHONY: submit clean
+
+submit: clean
+	@echo "📦 Creating submission archive..."
+	# create temp directory
+	mkdir -p $(TMPDIR)
+	# copy PDF to root
+	cp $(PDF) $(TMPDIR)/
+	# copy src folder
+	cp -r $(SRC_DIR) $(TMPDIR)/
+	# copy makefile_for_kekstein as Makefile
+	cp $(MAKEFILE_SRC) $(TMPDIR)/Makefile
+	# create Windows Makefile variant
+	sed 's/rm -rf/del \/Q \/F/' $(MAKEFILE_SRC) > $(TMPDIR)/Makefile.win
+	# create zip
+	cd $(TMPDIR) && zip -r ../$(ZIPNAME) *
+	@echo "✅ Created $(ZIPNAME)"
+	# clean temp directory
+	rm -rf $(TMPDIR)
+
+clean:
+	@rm -f $(ZIPNAME)
+	@rm -rf $(TMPDIR)

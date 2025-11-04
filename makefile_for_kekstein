@@ -1,0 +1,12 @@
+CC = gcc
+CFLAGS = -Wall -pedantic -ansi -std=c99
+SRC_DIR = src
+TARGET = kmas.exe
+
+all: clean $(TARGET)
+
+$(TARGET): $(SRC_DIR)/*.c
+	$(CC) $(CFLAGS) $(SRC_DIR)/*.c -o $@
+
+clean:
+	rm -f $(TARGET)
