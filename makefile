@@ -1,11 +1,12 @@
 # ===== Compiler and Directories =====
 CC        := gcc
 SRC_DIR   := src
+INCLUDE_DIR := include
 BUILD_DIR := build
 TARGET    := kmas.exe
 
 # ===== Common Flags =====
-CFLAGS_COMMON := -std=c99 -O2 -I./src \
+CFLAGS_COMMON := -std=c99 -O2 -I./$(INCLUDE_DIR) \
   -Wall -Wextra -Wpedantic -Wconversion \
   -Wshadow -Wshadow=compatible-local -Wcast-qual -Wcast-align \
   -Wpointer-arith -Wstrict-overflow=5 -Wundef -Wwrite-strings -Wlogical-op \
@@ -13,10 +14,17 @@ CFLAGS_COMMON := -std=c99 -O2 -I./src \
   -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wold-style-definition \
   -Wbad-function-cast -Wjump-misses-init -Wuninitialized -Wmaybe-uninitialized \
   -Wmissing-include-dirs -Wswitch-enum -Wswitch-default -Wformat=2 -Wdouble-promotion \
-  -Wvla -Walloc-zero -Walloca -Wstringop-overflow=4 -fanalyzer \
+  -Wvla -Walloc-zero -Walloca -Wstringop-overflow=4  \
   -fstack-protector-all -Wformat-security -Wfatal-errors \
   -Wstrict-aliasing=2 -Wimplicit-fallthrough -Wnonnull \
   -Wduplicated-cond -Wduplicated-branches -Wunreachable-code -Wno-nonnull
+
+# Only add -fanalyzer when compiling normally with GCC (not when BEAR_MODE is set)
+ifeq ($(CC),gcc)
+  ifneq ($(BEAR_MODE),1)
+    CFLAGS_COMMON += -fanalyzer
+  endif
+endif
 
 # ===== Sanitizer Flags =====
 SANFLAGS := -fsanitize=address,undefined,float-divide-by-zero,null \
@@ -33,8 +41,8 @@ UBSAN_OPTIONS := print_stacktrace=1:halt_on_error=1:print_type_mismatch=1:print_
 CFLAGS   := $(CFLAGS_COMMON)
 LDFLAGS  :=
 
-# ===== Sources and Objects =====
-SOURCES  := $(wildcard $(SRC_DIR)/*.c)
+# ===== Sources and Objects (recursive) =====
+SOURCES  := $(shell find $(SRC_DIR) -name "*.c")
 OBJECTS  := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SOURCES))
 
 # ===== Default target =====
@@ -45,7 +53,8 @@ $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
 	@echo "✔ Build complete: $@"
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
@@ -76,11 +85,17 @@ valgrind: clean
 	         --track-origins=yes --error-exitcode=1 --track-fds=yes \
 	         --trace-children=yes --num-callers=50 ./$(TARGET) source.kas -i -v
 
+# ===== Bear (Clangd) Support =====
+bear:
+	@echo "🐻 Capturing compile_commands.json with Bear..."
+	bear -- make BEAR_MODE=1
+	@echo "✅ compile_commands.json generated successfully."
+
 # ===== Utilities =====
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET) vgcore*
+	rm -rf $(BUILD_DIR) $(TARGET) vgcore* compile_commands.json
 	@echo "🧹 Clean complete"
 
 rebuild: clean all
 
-.PHONY: all asan run-asan valgrind clean rebuild
+.PHONY: all asan run-asan valgrind clean rebuild bear
