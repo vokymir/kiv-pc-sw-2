@@ -40,14 +40,6 @@ void jree(void *memory) {
   free(memory);
 }
 
-void jree_clear(void **memory_ptr) {
-  if (!memory_ptr || !*memory_ptr) {
-    return;
-  }
-  jree(*memory_ptr);
-  *memory_ptr = NULL;
-}
-
 size_t jemory(void) { return alloc_count; }
 
 char *jtrdup(const char *str1) {
