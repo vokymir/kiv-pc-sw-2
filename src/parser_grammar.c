@@ -489,7 +489,7 @@ static int _set_total_size(struct Data_Declaration *dd) {
   size_t i = 0, elem_size = 0;
   struct Init_Segment *is = NULL;
   RETURN_IF_FAIL(dd && dd->segments, 0);
-  elem_size = (dd->type == DATA_DWORD) ? 4 : 1;
+  elem_size = (dd->type == DATA_DWORD) ? KMA_DWORD_SIZE : KMA_BYTE_SIZE;
   dd->total_size = 0;
 
   for (i = 0; i < dd->segment_count; i++) {

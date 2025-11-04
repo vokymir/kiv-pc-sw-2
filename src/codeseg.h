@@ -4,9 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define CDSG_INITIAL_CAPACITY 16
-#define CDSG_CAPACITY_MULT 2
-
 struct Code_Segment {
   uint8_t *bytes;  // byte buffer
   size_t size;     // currently used

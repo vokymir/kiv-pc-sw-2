@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <stdlib.h>
+
 // =========================
 // ===== MACRO HELPERS =====
 // =========================
@@ -8,7 +10,6 @@
 // Implementing RAII-like cleanup procedure.
 // If condition is not satisfied, go to label.
 // Label must be at the end of the same function, to work reliably.
-#include "parser_code.h"
 #define GOTO_IF_FAIL(cond, label)                                              \
   do {                                                                         \
     if (!(cond))                                                               \
@@ -72,6 +73,8 @@ void print_verbose(int condition, const char *string, ...);
 // *string*, the next anything 'mentioned' in the string.
 void print_verbose_clean(int condition, const char *string, ...);
 
+// Is in parser_code, which cannot be included (recursive includes).
+struct Instruction_Statement;
 // United instruction output to console.
 // Only print if condition is met.
 // Format:
@@ -115,12 +118,18 @@ enum Reg_Code {
 // ===== LEXER & PARSER =====
 // ==========================
 
-#define MAX_IDENTIFIER_LEN 256  // Variable/label names in assembly
-#define MAX_REGISTER_NAME_LEN 4 // Register names like "SP"
-#define MAX_LABEL_NAME_LEN 256  // Jump target labels with @ prefix
-#define TOKEN_MAX_VALUE_LEN 256 // Token string content
+#define MAX_IDENTIFIER_LEN 256 // Variable/label names in assembly
+#define MAX_LABEL_NAME_LEN                                                     \
+  MAX_IDENTIFIER_LEN // Jump target labels with @ prefix
+#define SYMTAB_MAX_NAME_LEN                                                    \
+  MAX_IDENTIFIER_LEN // Identifier = variable/@label in symbol table
 
-#define MAX_INIT_SEGMENT_STRING_LEN 256 // String literals in .DATA
+#define MAX_REGISTER_NAME_LEN                                                  \
+  3 // Register names like "SP", add 1 for \0 just for certainty
+#define TOKEN_MAX_VALUE_LEN MAX_IDENTIFIER_LEN // Token string content
+#define MAX_INIT_SEGMENT_STRING_LEN                                            \
+  TOKEN_MAX_VALUE_LEN // String literals in .DATA, must be before processed in
+                      // tokens so make sense
 
 #define MAX_ERROR_MSG_LEN 512
 
@@ -144,10 +153,7 @@ enum Reg_Code {
 #define TOKENS_INITIAL_CAPACITY DYNAMIC_ARRAY_INITIAL_CAPACITY
 #define TOKENS_CAPACITY_MULT DYNAMIC_ARRAY_GROWTH_MULTIPLIER
 
-// ====================
-// ===== FILE I/O =====
-// ====================
-
 #define FU_GETLINE_INIT_LEN 128
+#define FU_GETLINE_CAP_MULT DYNAMIC_ARRAY_GROWTH_MULTIPLIER
 
 #endif

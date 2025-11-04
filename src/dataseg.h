@@ -4,9 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define DTSG_INITIAL_CAPACITY 16
-#define DTSG_CAPACITY_MULT 2
-
 struct Data_Segment {
   uint8_t *bytes;  // byte buffer
   size_t size;     // currently used

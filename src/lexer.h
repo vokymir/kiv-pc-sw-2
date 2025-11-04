@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#define TOKEN_MAX_VALUE_LEN 256
+#include "common.h"
 
 // All possible types of token.
 enum Token_Type {

@@ -175,7 +175,7 @@ static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
 static enum Err_Asm
 _pass2_instruction_ops_get(struct Assembler_Processing *asp,
                            const struct Instruction_Statement *is,
-                           union op_value (*op_values)[2]);
+                           union op_value (*op_values)[KMA_MAX_OPERANDS]);
 
 // Get operand from instruction statement, on index. Set enum op_value on
 // success.
@@ -197,7 +197,7 @@ _pass2_instruction_get_op_label(struct Assembler_Processing *asp,
 static enum Err_Asm
 _pass_instruction_ops_set(struct Assembler_Processing *asp,
                           const struct Instruction_Statement *is,
-                          union op_value (*op_values)[2]);
+                          union op_value (*op_values)[KMA_MAX_OPERANDS]);
 
 // On success change value adequately & return 1.
 // On failure only return 0.
@@ -367,7 +367,7 @@ static void _free_tokens_convertor(const struct Token **tokens[]) {
   if (!tokens || !*tokens) {
     return;
   }
-  jree((void *)*tokens);
+  jree((void *)*tokens); // TODO: remove void cast
   *tokens = NULL;
 }
 
@@ -745,7 +745,7 @@ static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
                                        struct Assembler_Processing *asp,
                                        enum Assembler_Context *ctx, size_t nl) {
   size_t addr = SIZE_MAX;
-  union op_value op_values[2] = {0};
+  union op_value op_values[KMA_MAX_OPERANDS] = {0};
   enum Err_Asm err = ASM_NO_ERROR;
 
   PRINT_VERBOSE("Found INSTRUCTION on line %zu, ", nl);
@@ -758,8 +758,9 @@ static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
 
   if (instruction_is_relative_jump(pstmt->content.instruction.descriptor)) {
     op_values[0].i32 =
-        op_values[0].i32 - ((addr > INT32_MAX ? INT32_MAX : (int32_t)addr) +
-                            5); // TODO: 5??? really???
+        op_values[0].i32 -
+        ((addr > INT32_MAX ? INT32_MAX : (int32_t)addr) +
+         5); // TODO: 5??? really??? // TODO: instruction_get_encoded_size
     // Relative offset = label address - (instruction address +
     // size of (instruction))
   }
@@ -855,7 +856,7 @@ static enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
 static enum Err_Asm
 _pass2_instruction_ops_get(struct Assembler_Processing *asp,
                            const struct Instruction_Statement *is,
-                           union op_value (*op_values)[2]) {
+                           union op_value (*op_values)[KMA_MAX_OPERANDS]) {
   int i = 0;
   enum Err_Asm err = ASM_NO_ERROR;
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
@@ -934,7 +935,7 @@ _pass2_instruction_get_op_label(struct Assembler_Processing *asp,
 static enum Err_Asm
 _pass_instruction_ops_set(struct Assembler_Processing *asp,
                           const struct Instruction_Statement *is,
-                          union op_value (*op_values)[2]) {
+                          union op_value (*op_values)[KMA_MAX_OPERANDS]) {
   int i = 0;
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
                           "but something went wrong.");
@@ -965,17 +966,17 @@ static int _register_name_to_value(const char *name, uint8_t *value) {
   RETURN_IF_FAIL(name && value, 0);
 
   if (strcmp(name, "A") == 0) {
-    *value = 1;
+    *value = REG_CODE_A;
   } else if (strcmp(name, "B") == 0) {
-    *value = 2;
+    *value = REG_CODE_B;
   } else if (strcmp(name, "C") == 0) {
-    *value = 3;
+    *value = REG_CODE_C;
   } else if (strcmp(name, "D") == 0) {
-    *value = 4;
+    *value = REG_CODE_D;
   } else if (strcmp(name, "S") == 0) {
-    *value = 5;
+    *value = REG_CODE_S;
   } else if (strcmp(name, "SP") == 0) {
-    *value = 6;
+    *value = REG_CODE_SP;
   } else {
     return 0;
   }

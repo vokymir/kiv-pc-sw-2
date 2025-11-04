@@ -6,9 +6,6 @@
 #include "dataseg.h"
 #include "symbol.h"
 
-#define KMA_CDSG_BYTES (256 * 1024)
-#define KMA_DTSG_BYTES (256 * 1024)
-
 struct Assembler_Processing {
   const struct Config *config;
   struct Symbol_Table *symtab;

@@ -4,8 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MAX_IDENTIFIER_LEN 256
-#define MAX_INIT_SEGMENT_STRING_LEN 256
+#include "common.h"
 
 enum Data_Type { DATA_DWORD, DATA_BYTE, DATA_ERROR };
 

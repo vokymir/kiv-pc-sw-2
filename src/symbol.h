@@ -4,9 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define SYMTAB_INITIAL_CAPACITY 16
-#define SYMTAB_CAPACITY_MULT 2
-#define SYMTAB_MAX_NAME_LEN 256
+#include "common.h"
 
 struct Symbol {
   char name[SYMTAB_MAX_NAME_LEN];

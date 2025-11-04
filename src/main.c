@@ -22,13 +22,15 @@ int main(const int argc, const char **argv) {
   // Parse arguments and save results into config.
   DONT_FAIL(args_parse(&config, argc, argv));
 
-  printf("Source: %s\nTarget: %s\nVerbose: %s\nInstructions: %s\n",
-         config.source, config.target, config.flag_verbose ? "yes" : "no",
-         config.flag_instruction ? "yes" : "no");
+  print_verbose(config.flag_verbose,
+                "Source: %s\nTarget: %s\nVerbose: %s\nInstructions: %s\n",
+                config.source, config.target,
+                config.flag_verbose ? "yes" : "no",
+                config.flag_instruction ? "yes" : "no");
 
   asp = asp_create(&config, NULL, NULL, NULL);
   if (!asp) {
-    return -1; // placeholder
+    return ERR_MY_CODE_FAILURE;
   }
 
   DONT_FAIL(process_assembler(asp));

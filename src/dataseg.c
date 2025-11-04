@@ -47,7 +47,7 @@ void dtsg_free(struct Data_Segment **dtsg) {
 int dtsg_app_b(struct Data_Segment *dtsg, uint8_t b) {
   CLEANUP_IF_FAIL(dtsg && dtsg->bytes);
 
-  if (!_dtsg_ensure_capacity(dtsg, 1)) {
+  if (!_dtsg_ensure_capacity(dtsg, KMA_BYTE_SIZE)) {
     return 0;
   }
 
@@ -65,8 +65,7 @@ int dtsg_app_dw_n(struct Data_Segment *dtsg, int32_t dw, size_t n) {
     return 1; // nothing to do
   }
 
-  // DWORD = 4 bytes
-  CLEANUP_IF_FAIL(_dtsg_ensure_capacity(dtsg, n * 4));
+  CLEANUP_IF_FAIL(_dtsg_ensure_capacity(dtsg, n * KMA_DWORD_SIZE));
 
   for (size_t i = 0; i < n; i++) {
     if (!dtsg_app_dw(dtsg, dw)) {
@@ -115,15 +114,15 @@ cleanup:
 }
 
 int dtsg_app_dw(struct Data_Segment *dtsg, int32_t dw) {
-  uint8_t bytes[4];
+  uint8_t bytes[KMA_DWORD_SIZE];
+  size_t i = 0;
   CLEANUP_IF_FAIL(dtsg && dtsg->bytes);
 
-  bytes[0] = (uint8_t)((dw >> 0) & 0xFF);
-  bytes[1] = (uint8_t)((dw >> 8) & 0xFF);
-  bytes[2] = (uint8_t)((dw >> 16) & 0xFF);
-  bytes[3] = (uint8_t)((dw >> 24) & 0xFF);
+  for (i = 0; i < KMA_DWORD_SIZE; i++) {
+    bytes[i] = (uint8_t)((dw >> (i * 8)) & 0xFF);
+  }
 
-  return dtsg_app_bs(dtsg, bytes, 4);
+  return dtsg_app_bs(dtsg, bytes, KMA_DWORD_SIZE);
 
 cleanup:
   return 0;

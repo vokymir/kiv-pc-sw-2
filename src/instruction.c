@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "common.h"
 #include "instruction.h"
 
 // The complete instruction set of KM processor.
@@ -136,21 +137,22 @@ const struct Instruction_Descriptor *instruction_find(const char *mnemonic,
 }
 
 size_t instruction_get_encoded_size(const struct Instruction_Descriptor *desc) {
-  size_t size = 1; // Always at least opcode byte
+  size_t size = KMA_BYTE_SIZE; // Always at least opcode byte
   if (!desc) {
     return 0;
   }
 
   if (desc->operand1 == OP_REG) {
-    size += 1; // sizes of REG or immediate values are defined in assignment
+    size += KMA_BYTE_SIZE; // sizes of REG or immediate values are defined in
+                           // assignment
   } else if (desc->operand1 == OP_IMM32) {
-    size += 4;
+    size += KMA_DWORD_SIZE;
   }
 
   if (desc->operand2 == OP_REG) {
-    size += 1;
+    size += KMA_BYTE_SIZE;
   } else if (desc->operand2 == OP_IMM32) {
-    size += 4;
+    size += KMA_DWORD_SIZE;
   }
 
   return size;

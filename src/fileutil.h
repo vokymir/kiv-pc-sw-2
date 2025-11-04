@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-#define FU_GETLINE_INIT_LEN 128
-
 // Return 1 if path exists, 0 otherwise.
 int fu_path_exists(const char *path);
 

@@ -8,9 +8,6 @@
 #include "lexer.h"
 #include "memory.h"
 
-#define TOKENS_INITIAL_CAPACITY 16
-#define TOKENS_CAPACITY_MULT 2
-
 // ===== STRUCTS =====
 
 struct Token_Arr {

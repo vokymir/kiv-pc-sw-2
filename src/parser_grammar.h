@@ -46,10 +46,11 @@
  * EOF
  */
 
+#include <stddef.h>
+
 #include "common.h"
 #include "lexer.h"
 #include "parser.h"
-#include <stddef.h>
 
 enum Err_Grm {
   GRM_MATCH,

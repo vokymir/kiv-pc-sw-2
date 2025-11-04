@@ -12,6 +12,7 @@
 #include <unistd.h> // for access UNIX
 #endif
 
+#include "common.h"
 #include "fileutil.h"
 #include "memory.h"
 
@@ -189,7 +190,7 @@ long fu_getline(char **lineptr, size_t *n, FILE *stream) {
   while ((ch = fgetc(stream)) != EOF) {
     // extend if needed
     if (pos + 1 >= *n) {
-      new_n = (*n) * 2;
+      new_n = (*n) * FU_GETLINE_CAP_MULT;
       tmp = jealloc(*lineptr, new_n);
       if (!tmp) {
         return -1;

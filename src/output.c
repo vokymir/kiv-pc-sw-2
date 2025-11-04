@@ -31,8 +31,8 @@ enum Err_Main output_binary(const struct Assembler_Processing *asp) {
   CLEANUP_VERBOSE_IF_FAIL(fu_open(asp->config->target, &f, "wb"),
                           "Error opening file '%s'.\n", asp->config->target);
 
-  PRINT_VERBOSE("Writing a KMA header.\n");
-  CLEANUP_VERBOSE_IF_FAIL(fu_write_bytes(f, "KMA", 3),
+  PRINT_VERBOSE("Writing a KMX header.\n");
+  CLEANUP_VERBOSE_IF_FAIL(fu_write_bytes(f, KMX_SIGNATURE, KMX_SIGNATURE_LEN),
                           "Couldn't write KMA at the beginning of the file.\n");
 
   PRINT_VERBOSE("Writing datasegment.\n");

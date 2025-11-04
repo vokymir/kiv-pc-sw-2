@@ -1,10 +1,8 @@
 #ifndef PARSER_CODE_H
 #define PARSER_CODE_H
 
+#include "common.h"
 #include "instruction.h"
-
-#define MAX_REGISTER_NAME_LEN 4
-#define MAX_LABEL_NAME_LEN 256
 
 // instruction table doesn't know offset & label, but in kma-assembly it
 // sometimes is. this is a way to count for it
@@ -27,7 +25,7 @@ struct Operand {
 
 struct Instruction_Statement {
   int operand_count;
-  struct Operand operands[2];
+  struct Operand operands[KMA_MAX_OPERANDS];
   const struct Instruction_Descriptor *descriptor; // equivalent descriptor
 };
 
