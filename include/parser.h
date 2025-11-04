@@ -7,8 +7,40 @@
 #include "instruction.h"
 #include "lexer.h"
 
-// TEMPORARY TODO: organize parser header file to only contain public thingies
-// and all private go to src/parser/internal.h or whatever
+// 1================
+// ===== ENUMS =====
+// =================
+
+// Errors encoutered while parsing a line
+enum Err_Parse {
+  PAR_NO_ERROR = 0,
+  PAR_EMPTY_LINE = 1,
+};
+
+// On one line (= one token array) is exactly one statement. Be it label
+// definition, data declaration, instruction or other
+enum Statement_Type {
+  STMT_NONE,         // Empty line or comment-only
+  STMT_KMA,          // defines assembler file
+  STMT_SECTION_DATA, // .DATA
+  STMT_SECTION_CODE, // .CODE
+  STMT_LABEL_DEF,    // Label definition
+  STMT_DATA_DECL,    // Data declaration
+  STMT_INSTRUCTION,  // An instruction
+  STMT_ERROR         // Parse error
+};
+
+// KMA computer supports these Data types
+enum Data_Type { DATA_DWORD, DATA_BYTE };
+
+// When declaring data, the declaration is a consecutive array of segments, each
+// of which can be of a different type.
+enum Init_Segment_Type {
+  INIT_SEG_VALUE,
+  INIT_SEG_DUP,
+  INIT_SEG_STRING,
+  INIT_SEG_UNINIT
+};
 
 // instruction table doesn't know offset & label, but in kma-assembly it
 // sometimes is. this is a way to count for it
@@ -17,6 +49,10 @@ enum Operand_Specifier {
   OPS_OFFSET,   // type is imm32, but really is an offset
   OPS_LABEL,    // type is imm32, but really is a label
 };
+
+// 2==================
+// ===== STRUCTS =====
+// ===================
 
 // in an instruction
 struct Operand {
@@ -37,15 +73,6 @@ struct Instruction_Statement {
 
 struct Label_Definition {
   char label_name[MAX_LABEL_NAME_LEN]; // The label name including @
-};
-
-enum Data_Type { DATA_DWORD, DATA_BYTE, DATA_ERROR };
-
-enum Init_Segment_Type {
-  INIT_SEG_VALUE,
-  INIT_SEG_DUP,
-  INIT_SEG_STRING,
-  INIT_SEG_UNINIT
 };
 
 // one segment of data declaration
@@ -75,22 +102,6 @@ struct Data_Declaration {
   int is_fully_uninit; // if 1 if and only if every init segment is_uninit
 };
 
-enum Err_Parse {
-  PAR_NO_ERROR = 0,
-  PAR_EMPTY_LINE = 1,
-};
-
-enum Statement_Type {
-  STMT_NONE,         // Empty line or comment-only
-  STMT_KMA,          // defines assembler file
-  STMT_SECTION_DATA, // .DATA
-  STMT_SECTION_CODE, // .CODE
-  STMT_LABEL_DEF,    // Label definition
-  STMT_DATA_DECL,    // Data declaration
-  STMT_INSTRUCTION,  // An instruction
-  STMT_ERROR         // Parse error
-};
-
 struct Parsed_Statement {
   enum Statement_Type type;
   enum Err_Parse err;
@@ -102,6 +113,10 @@ struct Parsed_Statement {
     struct Label_Definition label_def;
   } content;
 };
+
+// 3================================
+// ===== FUNCTION DECLARATIONS =====
+// =================================
 
 // Create new Parsed Statement from array of Tokens. This array MUST be ended by
 // the EOF Token. If the operation fails, NULL is returned. If the Parsed
