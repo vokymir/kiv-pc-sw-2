@@ -78,7 +78,7 @@ valgrind: clean
 
 # ===== Utilities =====
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET)
+	rm -rf $(BUILD_DIR) $(TARGET) vgcore*
 	@echo "🧹 Clean complete"
 
 rebuild: clean all
