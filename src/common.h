@@ -63,6 +63,6 @@ void print_verbose_clean(int condition, const char *string, ...);
 // e.g.:
 // L50: DEC A at CS:123
 void print_instruction(int condition, size_t line,
-                       struct Instruction_Statement *is, size_t addr);
+                       const struct Instruction_Statement *is, size_t addr);
 
 #endif
