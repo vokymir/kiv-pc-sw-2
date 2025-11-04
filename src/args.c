@@ -8,6 +8,22 @@
 #include "fileutil.h"
 #include "memory.h"
 
+// ===== MACRO HELPERS =====
+
+#define RET_STDERR_IF_FAIL(cond, err, fmt, ...)                                \
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      PRINT_ERR(fmt, __VA_ARGS__);                                             \
+      return err;                                                              \
+    }                                                                          \
+  } while (0)
+
+#define RET_INVALID_INPUT_FILE                                                 \
+  do {                                                                         \
+    PRINT_ERR("The input/source file is invalid.");                            \
+    return ERR_INVALID_INPUT_FILE;                                             \
+  } while (0)
+
 // ===== PRIVATE FUNCTION DECLARATIONS =====
 
 // Using ARGS find the source and return pointer to it.
@@ -39,7 +55,7 @@ enum Err_Main args_parse(struct Config *config, const int argc,
 
   if (argc < 2 || !argv || !config) { // Never could happen config == NULL
     printf("Usage: ./kmas.exe <source.kas> [target.kmx] [-v] [-i]\n");
-    return ERR_INVALID_INPUT_FILE;
+    RET_INVALID_INPUT_FILE;
   }
 
   if (!(src = _args_find_src(argc, argv))) {
