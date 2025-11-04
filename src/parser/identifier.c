@@ -3,7 +3,7 @@
 #include "parser_segment.h"
 #include "parser_token.h"
 
-// ===== GRAMMAR HELPER DECLARATIONS =====
+// ===== COMMON LOGIC DECLARATIONS =====
 
 // Both grammar_identifier_DW/DB_dec do almost the same = centralized control &
 // maintenance. If !is_dw then is_db.
@@ -20,8 +20,8 @@ static enum Err_Grm _grammar_identifier_dec2(struct Parsed_Statement *pstmt,
 static enum Err_Grm _grammar_identifier_dup(struct Parsed_Statement *pstmt,
                                             const struct Token *tokens[],
                                             size_t segment_idx, int is_dw);
-// ===================
-// functions normal
+
+// ===== HEADER DEFINITIONS =====
 
 enum Err_Grm grammar_identifier_def(struct Parsed_Statement *pstmt,
                                     const struct Token *tokens[]) {
@@ -98,7 +98,7 @@ enum Err_Grm grammar_identifier_db_dup(struct Parsed_Statement *pstmt,
   return GRM_MATCH;
 }
 
-// ===== GRAMMAR HELPER DECLARATIONS =====
+// ===== COMMON LOGIC DECLARATIONS =====
 
 static enum Err_Grm _grammar_identifier_dec(struct Parsed_Statement *pstmt,
                                             const struct Token *tokens[],

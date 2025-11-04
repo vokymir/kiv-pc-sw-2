@@ -1,9 +1,10 @@
-#include "parser_grammar.h"
-#include "parser_instruction.h"
-#include "parser_token.h"
 #include <inttypes.h>
 #include <limits.h>
 #include <stdint.h>
+
+#include "parser_grammar.h"
+#include "parser_instruction.h"
+#include "parser_token.h"
 
 enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
                                      const struct Token *tokens[]) {

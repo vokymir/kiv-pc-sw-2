@@ -15,8 +15,6 @@
 #include "parser_segment.h"
 #include "parser_token.h"
 
-// ===== HEADER DEFINITIONS =====
-
 enum Err_Grm grammar_line(struct Parsed_Statement *pstmt,
                           const struct Token *tokens[]) {
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
