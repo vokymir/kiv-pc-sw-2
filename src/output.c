@@ -6,10 +6,10 @@
 
 #define PRINT_VERBOSE(...) print_verbose(asp->config->flag_verbose, __VA_ARGS__)
 
-#define CLEANUP_VERBOSE_IF_FAIL(cond, msg, ...)                                \
+#define CLEANUP_VERBOSE_IF_FAIL(cond, ...)                                     \
   do {                                                                         \
     if (!(cond)) {                                                             \
-      PRINT_VERBOSE(msg, ##__VA_ARGS__);                                       \
+      PRINT_VERBOSE(__VA_ARGS__);                                              \
       err = ERR_MY_CODE_FAILURE;                                               \
       goto cleanup;                                                            \
     }                                                                          \
