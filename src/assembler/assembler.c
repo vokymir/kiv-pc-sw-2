@@ -365,7 +365,7 @@ static void _free_tokens_convertor(const struct Token **tokens[]) {
   if (!tokens || !*tokens) {
     return;
   }
-  jree((void *)*tokens); // TODO: remove void cast
+  jree(*tokens);
   *tokens = NULL;
 }
 
@@ -758,7 +758,7 @@ static enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
     op_values[0].i32 =
         op_values[0].i32 -
         ((addr > INT32_MAX ? INT32_MAX : (int32_t)addr) +
-         5); // TODO: 5??? really??? // TODO: instruction_get_encoded_size
+         instruction_get_encoded_size(pstmt->content.instruction.descriptor));
     // Relative offset = label address - (instruction address +
     // size of (instruction))
   }
