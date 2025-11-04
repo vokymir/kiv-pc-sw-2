@@ -15,9 +15,9 @@ submit: clean
 	# copy src folder
 	cp -r $(SRC_DIR) $(TMPDIR)/
 	# copy makefile_for_kekstein as Makefile
-	cp $(MAKEFILE_SRC) $(TMPDIR)/Makefile
+	cp $(MAKEFILE_SRC) $(TMPDIR)/makefile
 	# create Windows Makefile variant
-	sed 's/rm -rf/del \/Q \/F/' $(MAKEFILE_SRC) > $(TMPDIR)/Makefile.win
+	sed 's/rm -f/del /' $(MAKEFILE_SRC) > $(TMPDIR)/makefile.win
 	# create zip
 	cd $(TMPDIR) && zip -r ../$(ZIPNAME) *
 	@echo "✅ Created $(ZIPNAME)"
