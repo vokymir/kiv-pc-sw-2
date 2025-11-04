@@ -1,4 +1,5 @@
 #include "../src/codeseg.h"
+#include "../src/common.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>

@@ -1,4 +1,5 @@
 // tests/test_lexer_all.c
+#include "../src/common.h"
 #include "../src/lexer.h"
 #include "../src/memory.h"
 #include <assert.h>

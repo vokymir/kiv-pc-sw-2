@@ -1,3 +1,4 @@
+#include "../src/common.h"
 #include "../src/memory.h"
 #include <assert.h>
 #include <stdio.h>

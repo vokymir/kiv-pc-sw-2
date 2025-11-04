@@ -1,3 +1,4 @@
+#include "../src/common.h"
 #include "../src/lexer.h"
 #include "../src/memory.h"
 #include "../src/parser.h"

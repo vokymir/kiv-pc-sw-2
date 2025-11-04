@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../src/common.h"
 #include "../src/lexer.h"
 #include "../src/parser.h"
 #include "../src/parser_grammar.h"

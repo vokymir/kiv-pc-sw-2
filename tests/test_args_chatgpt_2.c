@@ -1,4 +1,5 @@
 #include "../src/args.h"
+#include "../src/common.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>

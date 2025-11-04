@@ -1,4 +1,5 @@
 // tests/test_dataseg.c
+#include "../src/common.h"
 #include "../src/dataseg.h"
 #include <assert.h>
 #include <limits.h> // for SIZE_MAX

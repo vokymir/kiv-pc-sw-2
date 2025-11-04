@@ -1,3 +1,4 @@
+#include "../src/common.h"
 #include "../src/instruction.h"
 #include <assert.h>
 #include <stdio.h>
