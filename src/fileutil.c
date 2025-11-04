@@ -142,11 +142,25 @@ int fu_can_write_parent_dir(const char *path) {
 }
 
 int fu_open(const char *path, FILE **f, const char *modifiers) {
-  if (!path || !f || !fu_is_file(path) || !fu_can_read(path)) {
+  if (!path || !f)
     return 0;
+
+  const char *mode = modifiers ? modifiers : "r";
+
+  // If reading, ensure file exists and can be read
+  if (mode[0] == 'r') {
+    if (!fu_is_file(path) || !fu_can_read(path)) {
+      return 0;
+    }
+  }
+  // If writing, ensure we can write in parent dir
+  else if (mode[0] == 'w' || mode[0] == 'a') {
+    if (!fu_can_write_parent_dir(path)) {
+      return 0;
+    }
   }
 
-  *f = fopen(path, modifiers ? modifiers : "r");
+  *f = fopen(path, mode);
   if (!*f) {
     return 0;
   }
