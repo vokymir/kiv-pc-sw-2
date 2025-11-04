@@ -7,7 +7,7 @@
 
 #include "common.h"
 #include "instruction.h"
-#include "parser_code.h"
+#include "parser.h"
 
 #define IS_OP(idx) (is->operands[(idx)].type != OP_NONE)
 

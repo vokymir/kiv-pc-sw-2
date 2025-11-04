@@ -12,8 +12,6 @@
 #include "lexer.h"
 #include "memory.h"
 #include "parser.h"
-#include "parser_code.h"
-#include "parser_data.h"
 #include "symbol.h"
 
 // If condition fail, set variable 'err' to given er
