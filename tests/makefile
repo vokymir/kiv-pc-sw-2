@@ -5,7 +5,7 @@
 
 # Compiler setup
 CC       := gcc
-CFLAGS   := -std=c99 -O2 -I../src \
+CFLAGS   := -std=c99 -O2 -I../include \
              -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wcast-qual -Wcast-align \
              -Wpointer-arith -Wstrict-overflow=5 -Wundef -Wwrite-strings -Wlogical-op \
              -Waggregate-return -Wfloat-equal -Winline -Wredundant-decls -Wstrict-prototypes \
