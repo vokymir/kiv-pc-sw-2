@@ -1,7 +1,9 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "common.h"
 #include "instruction.h"
@@ -13,8 +15,8 @@
 // If it already is a char * (e.g. label, variable name,...) the existing
 // pointer is returned, If is not (e.g. a numeric value), returns a pointer to
 // buf, in which it is now written. On any error returns empty string.
-static const char *get_op_text(const struct Instruction_Statement *is,
-                               size_t idx, char *buf, size_t bufsize);
+static const char *_get_op_text(const struct Instruction_Statement *is,
+                                size_t idx, char *buf, size_t bufsize);
 
 void print_verbose(int condition, const char *string, ...) {
   if (!condition)
@@ -46,17 +48,47 @@ void print_instruction(int condition, size_t line,
   if (!condition || !is || !is->descriptor || !is->descriptor->mnemonic)
     return;
 
-  op1 = get_op_text(is, 0, op1_buf, sizeof(op1_buf));
-  op2 = get_op_text(is, 1, op2_buf, sizeof(op2_buf));
+  op1 = _get_op_text(is, 0, op1_buf, sizeof(op1_buf));
+  op2 = _get_op_text(is, 1, op2_buf, sizeof(op2_buf));
 
   printf("[INSTR] L%zu: %s%s%s%s%s at CS:%zu\n", line, is->descriptor->mnemonic,
          IS_OP(0) ? " " : "", IS_OP(0) ? op1 : "", IS_OP(1) ? " " : "",
          IS_OP(1) ? op2 : "", addr);
 }
 
-static const char *get_op_text(const struct Instruction_Statement *is,
-                               size_t idx, char *buf, size_t bufsize) {
-  if (!is || idx >= 2) // TODO: magic number
+void print_err(const char *filename, size_t line, const char *string, ...) {
+  size_t len = 0;
+  time_t now = time(NULL);
+  struct tm *t = localtime(&now);
+  char timebuf[32];
+  if (!string) {
+    return;
+  }
+
+  if (t) {
+    strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", t);
+  } else {
+    snprintf(timebuf, sizeof(timebuf), "unknown-time");
+  }
+
+  fprintf(stderr, "[%s] {%s:%zu} ", timebuf,
+          filename ? filename : "unspecified", line);
+
+  va_list args;
+  va_start(args, string);
+  vfprintf(stderr, string, args);
+  va_end(args);
+
+  // ensure newline at end
+  len = strlen(string);
+  if (len == 0 || string[len - 1] != '\n') {
+    fputc('\n', stderr);
+  }
+}
+
+static const char *_get_op_text(const struct Instruction_Statement *is,
+                                size_t idx, char *buf, size_t bufsize) {
+  if (!is || idx >= KMA_MAX_OPERANDS)
     return "";
 
   const struct Operand *op = &is->operands[idx];

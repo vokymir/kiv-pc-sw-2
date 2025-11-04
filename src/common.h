@@ -84,6 +84,12 @@ struct Instruction_Statement;
 void print_instruction(int condition, size_t line,
                        const struct Instruction_Statement *is, size_t addr);
 
+// Print error message to stderr.
+void print_err(const char *filename, size_t line, const char *string, ...);
+// Use this macro to get correct filename & line number to the print_err
+// function above.
+#define PRINT_ERR(...) print_err(__FILE__, __LINE__, ...)
+
 // =====================================
 // ===== KM MACHINE SPECIFICATIONS =====
 // =====================================
