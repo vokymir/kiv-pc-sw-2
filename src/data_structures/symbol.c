@@ -19,9 +19,9 @@ struct Symbol_Table *symtab_create(void) {
   struct Symbol_Table *table = NULL;
 
   table = jalloc(sizeof(struct Symbol_Table));
-  CLEANUP_IF_FAIL(table, "TODO:");
+  CLEANUP_IF_FAIL(table, "Couldn't allocate Symbol Table.");
 
-  CLEANUP_IF_FAIL(symtab_init(table), "TODO:");
+  CLEANUP_IF_FAIL(symtab_init(table), "Couldn't initialize Symbol Table.");
 
   return table;
 
@@ -33,10 +33,11 @@ cleanup:
 }
 
 int symtab_init(struct Symbol_Table *table) {
-  CLEANUP_IF_FAIL(table, "TODO:");
+  CLEANUP_IF_FAIL(table, "The given Symbol Table was NULL.");
 
   table->symbols = jalloc(SYMTAB_INITIAL_CAPACITY * sizeof(struct Symbol));
-  CLEANUP_IF_FAIL(table->symbols, "TODO:");
+  CLEANUP_IF_FAIL(table->symbols,
+                  "Couldn't allocate Symbol Table array of symbols.");
 
   table->count = 0;
   table->capacity = SYMTAB_INITIAL_CAPACITY;
@@ -48,7 +49,7 @@ cleanup:
 }
 
 void symtab_deinit(struct Symbol_Table *table) {
-  CLEANUP_IF_FAIL(table, "TODO:");
+  CLEANUP_IF_FAIL(table, "The given Symbol Table was NULL.");
 
   if (table->symbols) {
     jree(table->symbols);
@@ -62,7 +63,7 @@ cleanup:
 }
 
 void symtab_free(struct Symbol_Table **table) {
-  CLEANUP_IF_FAIL(table, "TODO:");
+  CLEANUP_IF_FAIL(table && *table, "The given Symbol Table was NULL.");
 
   symtab_deinit(*table);
   jree(*table);
@@ -75,10 +76,13 @@ cleanup:
 struct Symbol *symtab_add(struct Symbol_Table *table, const char *name,
                           const uint32_t address) {
   struct Symbol *symbol = NULL;
-  CLEANUP_IF_FAIL(table && table->symbols && name, "TODO:");
+  CLEANUP_IF_FAIL(table && table->symbols && name,
+                  "The given Symbol Table or name were NULL.");
   symbol = &table->symbols[table->count];
 
-  CLEANUP_IF_FAIL(_symtab_ensure_capacity(table, 1), "TODO:");
+  CLEANUP_IF_FAIL(
+      _symtab_ensure_capacity(table, 1),
+      "Couldn't ensure another 1 symbol in Symbol Table symbol array.");
 
   symbol->address = address;
   strcpy(symbol->name, name);
@@ -89,7 +93,7 @@ struct Symbol *symtab_add(struct Symbol_Table *table, const char *name,
 cleanup:
   return NULL;
 }
-
+// TODO: continue here
 struct Symbol *symtab_find(const struct Symbol_Table *table, const char *name) {
   size_t i = 0;
   struct Symbol *symbol = NULL;
