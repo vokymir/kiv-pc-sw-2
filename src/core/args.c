@@ -10,11 +10,11 @@
 
 // ===== MACRO HELPERS =====
 
-#define RET_INVALID_INPUT_FILE                                                 \
-  RET_STDERR(ERR_INVALID_INPUT_FILE, "The input (source) file is invalid.")
+#define RET_INVALID_INPUT_FILE(...)                                            \
+  RET_STDERR(ERR_INVALID_INPUT_FILE, __VA_ARGS__)
 
-#define RET_INVALID_OUTPUT_FILE                                                \
-  RET_STDERR(ERR_INVALID_OUTPUT_FILE, "The output (target) file is invalid.")
+#define RET_INVALID_OUTPUT_FILE(...)                                           \
+  RET_STDERR(ERR_INVALID_OUTPUT_FILE, __VA_ARGS__)
 
 // ===== PRIVATE FUNCTION DECLARATIONS =====
 
@@ -44,14 +44,16 @@ enum Err_Main args_parse(struct Config *config, const int argc,
                          const char **argv) {
   const char *src = NULL, *tgt = NULL;
   int v = 0, i = 0, tgt_edit = 0;
+  enum Err_Main err = ERR_NO_ERROR;
 
   if (argc < 2 || !argv || !config) { // Never could happen config == NULL
     printf("Usage: ./kmas.exe <source.kas> [target.kmx] [-v] [-i]\n");
-    RET_INVALID_INPUT_FILE;
+    RET_INVALID_INPUT_FILE("The number of arguments was lesser than needed, or "
+                           "function arguments were NULL.");
   }
 
   if (!(src = _args_find_src(argc, argv))) {
-    RET_INVALID_INPUT_FILE;
+    RET_INVALID_INPUT_FILE("Couldn't find source path in CLI arguments.");
   }
 
   if (!(tgt = _args_find_tgt(argc, argv))) {
@@ -64,30 +66,35 @@ enum Err_Main args_parse(struct Config *config, const int argc,
 
   if (!args_config_init(config, src, tgt, v, i)) { // INIT CONFIG
     args_config_deinit(config);
-    RET_INVALID_INPUT_FILE;
+    RET_INVALID_INPUT_FILE("Couldn't initialize config from given arguments.");
   }
 
   if (tgt_edit) { // target didnt exist, now must exit extension
     if (!_args_change_extension(config->target)) {
       args_config_deinit(config);
-      RET_INVALID_INPUT_FILE;
       // input because output is purely based on input file
+      RET_INVALID_INPUT_FILE(
+          "The target path was not given. When trying to use the source path, "
+          "couldn't change the extension to .kmx.");
     }
   }
 
   // check both paths
   if (args_path_check_syntax(config->source, NULL, ".kas") != ARGS_NO_ERROR) {
     args_config_deinit(config);
-    RET_INVALID_INPUT_FILE;
+    RET_INVALID_INPUT_FILE("The source path is not syntactically correct.");
   }
 
   if (args_path_check_syntax(config->target, NULL, ".kmx") != ARGS_NO_ERROR) {
     args_config_deinit(config);
-    RET_INVALID_OUTPUT_FILE;
+    RET_INVALID_OUTPUT_FILE("The target path is not syntactically correct.");
   }
 
-  // last and final check
-  return args_path_check_semantic(config);
+  if ((err = args_path_check_semantic(config)) != ERR_NO_ERROR) {
+    RET_STDERR(err,
+               "Either source or target path is not semantically correct.");
+  }
+  return ERR_NO_ERROR;
 }
 
 enum Err_Args args_path_check_syntax(const char *path, const char *prefix,
