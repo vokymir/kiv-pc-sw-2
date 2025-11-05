@@ -116,12 +116,12 @@ void print_err(const char *filename, size_t line, const char *string, ...)
 // Return the index of first argument which is NULL.
 // The indicies are 1 indexed !!
 // Return 0 if none is NULL.
-size_t first_null_arg(void *args[], size_t count);
+size_t first_null_arg(const void *args[], size_t count);
 
 // Return the 1-based index of first NULL argument, or 0 if no argument is NULL.
 #define FIRST_NULL(...)                                                        \
-  first_null_arg((void *[]){__VA_ARGS__},                                      \
-                 sizeof((void *[]){__VA_ARGS__}) / sizeof(void *))
+  first_null_arg((const void *[]){__VA_ARGS__},                                \
+                 sizeof((const void *[]){__VA_ARGS__}) / sizeof(const void *))
 
 // Print to stderr which argument was invalid (first).
 #define PRINT_ERR_1ST_NULL_ARG(...)                                            \
@@ -132,7 +132,8 @@ int valid_args(size_t count, ...);
 
 // Return 1 if all arguments are not NULL
 #define VALID_ARGS(...)                                                        \
-  valid_args(sizeof((void *[]){__VA_ARGS__}) / sizeof(void *), __VA_ARGS__)
+  valid_args(sizeof((const void *[]){__VA_ARGS__}) / sizeof(const void *),     \
+             __VA_ARGS__)
 
 // =====================================
 // ===== KM MACHINE SPECIFICATIONS =====
