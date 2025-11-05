@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "common.h"
 #include "instruction.h"
 #include "internal.h"
 #include "parser.h"
@@ -19,7 +20,8 @@ enum Err_Asm pass2_line(struct Assembler_Processing *asp,
 enum Err_Asm pass2_decide(struct Parsed_Statement *pstmt,
                           struct Assembler_Processing *asp,
                           enum Assembler_Context *ctx, size_t nl) {
-  RETURN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
+  RET_STDERR_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS,
+                     "Invalid arguments.");
 
   switch (pstmt->type) {
   case STMT_KMA:
@@ -50,9 +52,13 @@ enum Err_Asm pass2_data_decl(struct Parsed_Statement *pstmt,
   const struct Init_Segment *is = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
   PRINT_VERBOSE("Found DATA DECLARATION on line %zu, ", nl);
-  RET_VERBOSE_CLN_IF_FAIL(pstmt && (dd = &pstmt->content.data_decl) &&
-                              dd->segments && asp && asp->config && ctx,
-                          ASM_INVALID_ARGS, "but something went WRONG.\n");
+
+  IF_FAIL(pstmt && (dd = &pstmt->content.data_decl) && dd->segments && asp &&
+          asp->config && ctx) {
+    PRINT_VERBOSE("but something went WRONG.\n");
+    PRINT_ERR("Invalid arguments.");
+    return ASM_INVALID_ARGS;
+  }
 
   // for all segments save them into datasegment
   for (i = 0; i < dd->segment_count; i++) {
@@ -72,6 +78,7 @@ enum Err_Asm pass2_data_decl(struct Parsed_Statement *pstmt,
       break;
     default:
       PRINT_VERBOSE_CLN("but the segment is of UNKNOWN type!\n");
+      PRINT_ERR("Unknown type of segment in data declaration.");
       return ASM_UNKNOWN_INIT_SEG;
     }
   }
@@ -89,8 +96,8 @@ enum Err_Asm pass2_instruction(struct Parsed_Statement *pstmt,
   enum Err_Asm err = ASM_NO_ERROR;
 
   PRINT_VERBOSE("Found INSTRUCTION on line %zu, ", nl);
-  RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS,
-                          "but something went wrong.");
+  INVALID_ARGS_PRINTS_ERR_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
+
   REUSE_ERR_IF_FAIL(
       pass2_instruction_ops_get(asp, &pstmt->content.instruction, &op_values));
 
@@ -119,7 +126,8 @@ cleanup:
 
 enum Err_Asm pass2_data_decl_uninit(struct Assembler_Processing *asp,
                                     const struct Init_Segment *is) {
-  RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
+  RET_STDERR_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS,
+                     "Invalid arguments.");
 
   RET_VERBOSE_CLN_IF_FAIL(
       dtsg_app_zs(asp->dtsg, is->element_count), ASM_DTSG_CANNOT_APPEND,
@@ -135,7 +143,8 @@ enum Err_Asm pass2_data_decl_value(struct Assembler_Processing *asp,
                                    const struct Init_Segment *is,
                                    enum Data_Type dt) {
   uint8_t byte = 0;
-  RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
+  RET_STDERR_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS,
+                     "Invalid arguments.");
 
   if (dt == DATA_BYTE) {
     byte = (uint8_t)(is->data.value & 0xFF);
@@ -156,7 +165,8 @@ enum Err_Asm pass2_data_decl_value(struct Assembler_Processing *asp,
 
 enum Err_Asm pass2_data_decl_string(struct Assembler_Processing *asp,
                                     const struct Init_Segment *is) {
-  RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
+  RET_STDERR_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS,
+                     "Invalid arguments.");
 
   RET_VERBOSE_CLN_IF_FAIL(
       dtsg_app_str(asp->dtsg, is->data.string), ASM_DTSG_CANNOT_APPEND,

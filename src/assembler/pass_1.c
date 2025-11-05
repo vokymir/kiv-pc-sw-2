@@ -14,8 +14,7 @@ enum Err_Asm pass1_line(struct Assembler_Processing *asp,
 enum Err_Asm pass1_decide(struct Parsed_Statement *pstmt,
                           struct Assembler_Processing *asp,
                           enum Assembler_Context *ctx, size_t nl) {
-  RET_STDERR_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS,
-                     "Invalid arguments.");
+  RET_PRINT_ERR_IF_FAIL_ARGS(pstmt, asp, ctx);
 
   switch (pstmt->type) {
   case STMT_KMA:

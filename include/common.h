@@ -124,8 +124,8 @@ size_t first_null_arg(void *args[], size_t count);
                  sizeof((void *[]){__VA_ARGS__}) / sizeof(void *))
 
 // Print to stderr which argument was invalid (first).
-#define PRINT_ERR_1ST_NULL_ARG(args)                                           \
-  PRINT_ERR("Invalid argument at %zu. position.", FIRST_NULL((args)))
+#define PRINT_ERR_1ST_NULL_ARG(...)                                            \
+  PRINT_ERR("Invalid argument at %zu. position.", FIRST_NULL(__VA_ARGS__))
 
 // Return 1 if all arguments are valid => are not NULL.
 int valid_args(size_t count, ...);

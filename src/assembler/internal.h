@@ -54,14 +54,14 @@
 
 // guard against invalid arguments in pass1 / pass2
 // checks if any argument (given as variadic) is NULL, if so, print standard
-// verbose & stderr output and return err
-#define PRINT_RET_ERR_IF_FAIL_ARGS(err, ...)                                   \
+// verbose & stderr output and return ASM_INVALID_ARGS
+#define RET_PRINT_ERR_IF_FAIL_ARGS(...)                                        \
   do {                                                                         \
-    if (!(VALID_ARGS((__VA_ARGS__)))) {                                        \
+    if (!(VALID_ARGS(__VA_ARGS__))) {                                          \
       PRINT_VERBOSE_CLN("but something went WRONG.");                          \
-      PRINT_ERR_1ST_NULL_ARG((__VA_ARGS__));                                   \
-      return (err);                                                            \
+      PRINT_ERR_1ST_NULL_ARG(__VA_ARGS__);                                     \
+      return ASM_INVALID_ARGS;                                                 \
     }                                                                          \
-  }
+  } while (0)
 
 #endif
