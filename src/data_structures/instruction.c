@@ -86,6 +86,7 @@ static const size_t INSTRUCTION_COUNT =
 int instruction_is_mnemonic(const char *word, const size_t len) {
   size_t i = 0, i_len = 0, w_len = 0;
   if (!word) {
+    PRINT_ERR("The given word pointer was NULL.");
     return 0;
   }
 
@@ -113,6 +114,7 @@ const struct Instruction_Descriptor *instruction_find(const char *mnemonic,
                                                       enum Operand_Type op2) {
   size_t i = 0, i_len = 0, w_len = 0;
   if (!mnemonic) {
+    PRINT_ERR("The given mnemonic wasn't valid pointer.");
     return NULL;
   }
 
@@ -139,12 +141,12 @@ const struct Instruction_Descriptor *instruction_find(const char *mnemonic,
 size_t instruction_get_encoded_size(const struct Instruction_Descriptor *desc) {
   size_t size = KMA_BYTE_SIZE; // Always at least opcode byte
   if (!desc) {
+    PRINT_ERR("The given instruction descriptor was NULL.");
     return 0;
   }
 
   if (desc->operand1 == OP_REG) {
-    size += KMA_BYTE_SIZE; // sizes of REG or immediate values are defined in
-                           // assignment
+    size += KMA_BYTE_SIZE;
   } else if (desc->operand1 == OP_IMM32) {
     size += KMA_DWORD_SIZE;
   }
@@ -160,6 +162,7 @@ size_t instruction_get_encoded_size(const struct Instruction_Descriptor *desc) {
 
 int instruction_is_relative_jump(const struct Instruction_Descriptor *desc) {
   if (!desc) {
+    PRINT_ERR("The given instruction descriptor was NULL.");
     return 0;
   }
 
