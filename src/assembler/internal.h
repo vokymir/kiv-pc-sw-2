@@ -43,12 +43,12 @@
 // guard against invalid arguments in pass1 / pass2
 // checks if 'cond' is FALSE, if so, print standard verbose & stderr output and
 // return err
-#define INVALID_ARGS_PRINTS_ERR_IF_FAIL(cond, err)                             \
+#define INVALID_ARGS_PRINTS_ERR_IF_FAIL(cond)                                  \
   do {                                                                         \
     IF_FAIL((cond)) {                                                          \
       PRINT_VERBOSE_CLN("but something went WRONG.");                          \
       PRINT_ERR("Invalid argument.");                                          \
-      return (err);                                                            \
+      return ASM_INVALID_ARGS;                                                 \
     }                                                                          \
   } while (0)
 
@@ -61,6 +61,22 @@
       PRINT_VERBOSE_CLN("but something went WRONG.");                          \
       PRINT_ERR_1ST_NULL_ARG(__VA_ARGS__);                                     \
       return ASM_INVALID_ARGS;                                                 \
+    }                                                                          \
+  } while (0)
+
+#define RET_PRINT_ERR_IF_FAIL_ARGS_NO_VERBOSE(...)                             \
+  do {                                                                         \
+    if (!(VALID_ARGS(__VA_ARGS__))) {                                          \
+      PRINT_ERR_1ST_NULL_ARG(__VA_ARGS__);                                     \
+      return ASM_INVALID_ARGS;                                                 \
+    }                                                                          \
+  } while (0)
+
+#define RETURN_PRINT_ERR_IF_FAIL(err, ...)                                     \
+  do {                                                                         \
+    if (!(VALID_ARGS(__VA_ARGS__))) {                                          \
+      PRINT_ERR_1ST_NULL_ARG(__VA_ARGS__);                                     \
+      return err;                                                              \
     }                                                                          \
   } while (0)
 

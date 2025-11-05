@@ -44,11 +44,7 @@ enum Err_Asm pass1_data_decl(struct Parsed_Statement *pstmt,
   char *identifier = NULL;
   PRINT_VERBOSE("Found DATA DECLARATION on line %zu, ", nl);
 
-  IF_FAIL(pstmt && asp && asp->config && ctx) {
-    PRINT_VERBOSE("but something went WRONG.\n");
-    PRINT_ERR("Invalid arguments.");
-    return ASM_INVALID_ARGS;
-  }
+  RET_PRINT_ERR_IF_FAIL_ARGS(pstmt, asp, asp->config, ctx);
 
   RET_VERBOSE_CLN_IF_FAIL(
       *ctx == ASC_DATA, ASM_DATA_ABROAD,
@@ -96,11 +92,7 @@ enum Err_Asm pass1_instruction(struct Parsed_Statement *pstmt,
   size_t size = SIZE_MAX, position = SIZE_MAX;
   PRINT_VERBOSE("Found INSTRUCTION on line %zu, ", nl);
 
-  IF_FAIL(pstmt && asp && asp->config && ctx) {
-    PRINT_VERBOSE_CLN("but something went WRONG.\n");
-    PRINT_ERR("Invalid arguments.");
-    return ASM_INVALID_ARGS;
-  }
+  RET_PRINT_ERR_IF_FAIL_ARGS(pstmt, asp, asp->config, ctx);
 
   RET_VERBOSE_CLN_IF_FAIL(
       *ctx == ASC_CODE, ASM_CODE_ABROAD,
@@ -137,11 +129,7 @@ enum Err_Asm pass1_label_def(struct Parsed_Statement *pstmt,
   size_t position = SIZE_MAX;
   PRINT_VERBOSE("Found LABEL definition on line %zu, ", nl);
 
-  IF_FAIL(pstmt && asp && asp->config && ctx) {
-    PRINT_VERBOSE_CLN("but something went WRONG.\n");
-    PRINT_ERR("Invalid arguments.");
-    return ASM_INVALID_ARGS;
-  }
+  RET_PRINT_ERR_IF_FAIL_ARGS(pstmt, asp, asp->config, ctx);
 
   label_name = pstmt->content.label_def.label_name;
   PRINT_VERBOSE_CLN("the label name is (%s), ", label_name);

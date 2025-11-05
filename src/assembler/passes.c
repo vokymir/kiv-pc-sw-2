@@ -15,7 +15,8 @@ enum Err_Asm passes_any_pass(struct Assembler_Processing *asp, int is_second) {
   size_t line_len = 0, nl = 1;
   FILE *f = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
-  RETURN_IF_FAIL(asp != NULL, ASM_INVALID_ARGS);
+  RET_PRINT_ERR_IF_FAIL_ARGS_NO_VERBOSE(asp);
+
   PRINT_VERBOSE("STARTING PASS %i\n", is_second ? 2 : 1);
   RET_VERBOSE_CLN_IF_FAIL(fu_open(asp->config->source, &f, NULL),
                           ASM_CANNOT_OPEN_FILE, "Couldn't open file: %s\n",
@@ -48,6 +49,7 @@ enum Err_Asm passes_line(struct Assembler_Processing *asp,
   struct Token *tokens = NULL;
   struct Parsed_Statement *pstmt = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
+  RET_PRINT_ERR_IF_FAIL_ARGS_NO_VERBOSE(asp, ctx, line);
 
   PRINT_VERBOSE("Tokenizing line.\n");
   tokens = lexer_tokenize_line(line, nl);
@@ -82,8 +84,7 @@ cleanup:
 enum Err_Asm passes_kma(struct Assembler_Processing *asp,
                         enum Assembler_Context *ctx, size_t nl) {
   PRINT_VERBOSE("Found KMA label on line %zu, ", nl);
-  RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
-                          "but something went WRONG.\n");
+  RET_PRINT_ERR_IF_FAIL_ARGS(asp, asp->config, ctx);
 
   RET_VERBOSE_CLN_IF_FAIL(
       *ctx == ASC_FILE_START, ASM_KMA_DOUBLE,
@@ -97,8 +98,7 @@ enum Err_Asm passes_kma(struct Assembler_Processing *asp,
 enum Err_Asm passes_code_section(struct Assembler_Processing *asp,
                                  enum Assembler_Context *ctx, size_t nl) {
   PRINT_VERBOSE("Found CODE SECTION label on line %zu, ", nl);
-  RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
-                          "but something went WRONG.\n");
+  RET_PRINT_ERR_IF_FAIL_ARGS(asp, asp->config, ctx);
 
   RET_VERBOSE_CLN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_EXPECTED,
                           "resulting in error, because it IS at the start of "
@@ -112,8 +112,7 @@ enum Err_Asm passes_code_section(struct Assembler_Processing *asp,
 enum Err_Asm passes_data_section(struct Assembler_Processing *asp,
                                  enum Assembler_Context *ctx, size_t nl) {
   PRINT_VERBOSE("Found DATA SECTION label on line %zu, ", nl);
-  RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
-                          "but something went WRONG.\n");
+  RET_PRINT_ERR_IF_FAIL_ARGS(asp, asp->config, ctx);
 
   RET_VERBOSE_CLN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_EXPECTED,
                           "resulting in error, because it IS at the start of "
@@ -125,13 +124,14 @@ enum Err_Asm passes_data_section(struct Assembler_Processing *asp,
 }
 
 enum Err_Asm passes_none(struct Assembler_Processing *asp, size_t nl) {
-  PRINT_VERBOSE(
+  PRINT_VERBOSE( // check for *asp is in the macro
       "Found NOTHING on line %zu, might be an empty line, or only comment.\n",
       nl);
   return ASM_NO_ERROR;
 }
 
 enum Err_Asm passes_error(struct Assembler_Processing *asp, size_t nl) {
+  // check for *asp is in the macro
   PRINT_VERBOSE("Weird line %zu, cannot find known statement.\n", nl);
   return ASM_UNKNOWN_PSTMT_TYPE;
 }
