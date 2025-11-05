@@ -3,6 +3,9 @@
 
 #include <stdlib.h>
 
+// Is in parser, which cannot be included (recursive includes).
+struct Instruction_Statement;
+
 // =========================
 // ===== MACRO HELPERS =====
 // =========================
@@ -65,16 +68,16 @@ struct Config {
 // Only print if condition is met, variadic arguments will be forwarded to
 // printf function from stdio.h, which require the first argument to be
 // *string*, the next anything 'mentioned' in the string.
-void print_verbose(int condition, const char *string, ...);
+void print_verbose(int condition, const char *string, ...)
+    __attribute__((format(printf, 2, 3)));
 
 // Don't print the [VERBOSE] in the beginning.
 // Only print if condition is met, variadic arguments will be forwarded to
 // printf function from stdio.h, which require the first argument to be
 // *string*, the next anything 'mentioned' in the string.
-void print_verbose_clean(int condition, const char *string, ...);
+void print_verbose_clean(int condition, const char *string, ...)
+    __attribute__((format(printf, 2, 3)));
 
-// Is in parser_code, which cannot be included (recursive includes).
-struct Instruction_Statement;
 // United instruction output to console.
 // Only print if condition is met.
 // Format:
@@ -85,7 +88,8 @@ void print_instruction(int condition, size_t line,
                        const struct Instruction_Statement *is, size_t addr);
 
 // Print error message to stderr.
-void print_err(const char *filename, size_t line, const char *string, ...);
+void print_err(const char *filename, size_t line, const char *string, ...)
+    __attribute__((format(printf, 3, 4)));
 // Use this macro to get correct filename & line number to the print_err
 // function above.
 #define PRINT_ERR(...) print_err(__FILE__, __LINE__, __VA_ARGS__)
