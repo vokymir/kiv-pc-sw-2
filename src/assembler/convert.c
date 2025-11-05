@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "assembler.h"
+#include "common.h"
 #include "memory.h"
 #include "parser.h"
 
@@ -45,6 +46,7 @@ enum Err_Main convert_err(enum Err_Asm err) {
   case ASM_CANNOT_OPEN_FILE:
     return ERR_FILE_ACCESS_FAILURE;
   default:
+    PRINT_ERR("Unknown assembler error code detected.");
     return ERR_MY_CODE_FAILURE;
   }
 }
@@ -52,7 +54,8 @@ enum Err_Main convert_err(enum Err_Asm err) {
 const struct Token **convert_tokens_to_arr(const struct Token *orig) {
   size_t count = 0, i = 0;
   const struct Token **res = NULL;
-  RETURN_IF_FAIL(orig, NULL);
+  RET_STDERR_IF_FAIL(
+      orig, NULL, "Tried to convert Token array, but NULL pointer was given.");
 
   while (orig[count].type != TOKEN_EOF) {
     count++;
@@ -61,7 +64,9 @@ const struct Token **convert_tokens_to_arr(const struct Token *orig) {
 
   res = jalloc((count + 1) *
                sizeof(*res)); // +1 for NULL terminator (for better sleep)
-  RETURN_IF_FAIL(res, NULL);
+  RET_STDERR_IF_FAIL(res, NULL,
+                     "Couldn't allocate space for array of pointers to Tokens "
+                     "(when converting).");
 
   for (i = 0; i < count; i++) {
     res[i] = &orig[i];
@@ -73,6 +78,8 @@ const struct Token **convert_tokens_to_arr(const struct Token *orig) {
 
 void convert_free_tokens_arr(const struct Token **tokens[]) {
   if (!tokens || !*tokens) {
+    PRINT_ERR(
+        "Tried to free converted token array, but the pointer given was NULL.");
     return;
   }
   jree(*tokens);
@@ -83,14 +90,16 @@ struct Parsed_Statement *convert_parse_tokens(const struct Token *tokens,
                                               size_t nl) {
   struct Parsed_Statement *pstmt = NULL;
   const struct Token **converted_tokens = NULL;
-  RETURN_IF_FAIL(tokens, 0);
+  RET_STDERR_IF_FAIL(
+      tokens, 0,
+      "Tried to parse tokens, but the pointer to 'tokens' was NULL.");
+
   converted_tokens = convert_tokens_to_arr(tokens);
-  RETURN_IF_FAIL(converted_tokens, NULL);
+  RET_STDERR_IF_FAIL(converted_tokens, NULL,
+                     "Couldn't covert tokens to array.");
 
   pstmt = parse_tokens(converted_tokens, nl);
+  convert_free_tokens_arr(&converted_tokens);
 
-  if (converted_tokens) {
-    convert_free_tokens_arr(&converted_tokens);
-  }
   return pstmt;
 }
