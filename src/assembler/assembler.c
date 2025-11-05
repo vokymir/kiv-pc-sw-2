@@ -39,9 +39,9 @@ struct Assembler_Processing *asp_create(const struct Config *config,
                                         struct Code_Segment *cdsg) {
   struct Assembler_Processing *asp =
       jalloc(sizeof(struct Assembler_Processing));
-  if (!asp) {
-    return NULL;
-  }
+  RET_STDERR_IF_FAIL(
+      asp, NULL, "Couldn't allocate space for Assembler_Processing struct.");
+
   if (!asp_init(asp, config, symtab, dtsg, cdsg)) {
     asp_free(&asp);
     return NULL;
@@ -52,9 +52,7 @@ struct Assembler_Processing *asp_create(const struct Config *config,
 int asp_init(struct Assembler_Processing *asp, const struct Config *config,
              struct Symbol_Table *symtab, struct Data_Segment *dtsg,
              struct Code_Segment *cdsg) {
-  if (!asp) {
-    return 0;
-  }
+  RET_STDERR_IF_FAIL(asp, 0, "Invalid pointer in arguments.");
   asp->config = config;
 
   if (symtab) {
@@ -62,21 +60,27 @@ int asp_init(struct Assembler_Processing *asp, const struct Config *config,
   } else {
     asp->symtab = symtab_create();
   }
-  CLEANUP_IF_FAIL(asp->symtab);
+  CLEANUP_IF_FAIL(
+      asp->symtab,
+      "Couldn't create symbol table when initializing assembler processing.");
 
   if (dtsg) {
     asp->dtsg = dtsg;
   } else {
     asp->dtsg = dtsg_create();
   }
-  CLEANUP_IF_FAIL(asp->dtsg);
+  CLEANUP_IF_FAIL(
+      asp->dtsg,
+      "Couldn't create data segment when initializing assembler processing.");
 
   if (cdsg) {
     asp->cdsg = cdsg;
   } else {
     asp->cdsg = cdsg_create();
   }
-  CLEANUP_IF_FAIL(asp->cdsg);
+  CLEANUP_IF_FAIL(
+      asp->cdsg,
+      "Couldn't create code segment when initializing assembler processing.");
 
   return 1;
 
@@ -87,6 +91,8 @@ cleanup:
 
 void asp_deinit(struct Assembler_Processing *asp) {
   if (!asp) {
+    PRINT_ERR("Tried to deinit an assembler processing struct, but gave NULL "
+              "pointer.");
     return;
   }
   asp->config = NULL;
@@ -103,6 +109,8 @@ void asp_deinit(struct Assembler_Processing *asp) {
 
 void asp_free(struct Assembler_Processing **asp) {
   if (!asp || !*asp) {
+    PRINT_ERR(
+        "Tried to free an assembler processing struct, but it doesn't exist.");
     return;
   }
   asp_deinit(*asp);
