@@ -11,10 +11,10 @@
 // ===== MACRO HELPERS =====
 
 #define RET_INVALID_INPUT_FILE                                                 \
-  do {                                                                         \
-    PRINT_ERR("The input/source file is invalid.");                            \
-    return ERR_INVALID_INPUT_FILE;                                             \
-  } while (0)
+  RET_STDERR(ERR_INVALID_INPUT_FILE, "The input (source) file is invalid.")
+
+#define RET_INVALID_OUTPUT_FILE                                                \
+  RET_STDERR(ERR_INVALID_OUTPUT_FILE, "The output (target) file is invalid.")
 
 // ===== PRIVATE FUNCTION DECLARATIONS =====
 
@@ -51,7 +51,7 @@ enum Err_Main args_parse(struct Config *config, const int argc,
   }
 
   if (!(src = _args_find_src(argc, argv))) {
-    return ERR_INVALID_INPUT_FILE;
+    RET_INVALID_INPUT_FILE;
   }
 
   if (!(tgt = _args_find_tgt(argc, argv))) {
@@ -64,26 +64,26 @@ enum Err_Main args_parse(struct Config *config, const int argc,
 
   if (!args_config_init(config, src, tgt, v, i)) { // INIT CONFIG
     args_config_deinit(config);
-    return ERR_INVALID_INPUT_FILE;
+    RET_INVALID_INPUT_FILE;
   }
 
   if (tgt_edit) { // target didnt exist, now must exit extension
     if (!_args_change_extension(config->target)) {
       args_config_deinit(config);
-      return ERR_INVALID_INPUT_FILE; // input because output is purely based on
-                                     // input file
+      RET_INVALID_INPUT_FILE;
+      // input because output is purely based on input file
     }
   }
 
   // check both paths
   if (args_path_check_syntax(config->source, NULL, ".kas") != ARGS_NO_ERROR) {
     args_config_deinit(config);
-    return ERR_INVALID_INPUT_FILE;
+    RET_INVALID_INPUT_FILE;
   }
 
   if (args_path_check_syntax(config->target, NULL, ".kmx") != ARGS_NO_ERROR) {
     args_config_deinit(config);
-    return ERR_INVALID_OUTPUT_FILE;
+    RET_INVALID_OUTPUT_FILE;
   }
 
   // last and final check
