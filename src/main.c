@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <stdio.h>
 
 #include "args.h"
 #include "assembler.h"
@@ -42,5 +41,5 @@ finalize:
   args_config_deinit(&config);
   asp_free(&asp);
   assert(jemory() == 0);
-  return err;
+  return (int)err;
 }
