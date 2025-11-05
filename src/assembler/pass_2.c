@@ -1,8 +1,10 @@
 #include "assembler_convert.h"
-#include "assembler_pass_1.h"
 #include "assembler_pass_2.h"
 #include "assembler_passes.h"
+#include "instruction.h"
 #include "internal.h"
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 enum Err_Asm pass2_line(struct Assembler_Processing *asp,
@@ -94,8 +96,8 @@ enum Err_Asm pass2_instruction(struct Parsed_Statement *pstmt,
   if (instruction_is_relative_jump(pstmt->content.instruction.descriptor)) {
     op_values[0].i32 =
         op_values[0].i32 -
-        ((addr > INT32_MAX ? INT32_MAX : (int32_t)addr) +
-         instruction_get_encoded_size(pstmt->content.instruction.descriptor));
+        (convert_size_t(addr) + convert_size_t(instruction_get_encoded_size(
+                                    pstmt->content.instruction.descriptor)));
     // Relative offset = label address - (instruction address +
     // size of (instruction))
   }

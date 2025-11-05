@@ -11,6 +11,9 @@
 // safe wrapper of convertor from uint32_t to int32_t
 int32_t convert_uint32(uint32_t u);
 
+// safe wrapper of conversion from size_t to int32_t
+int32_t convert_size_t(size_t s);
+
 // Given any ASM error, convert it to corresponding MAIN error.
 enum Err_Main convert_err(enum Err_Asm err);
 

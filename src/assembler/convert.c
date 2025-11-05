@@ -2,9 +2,14 @@
 #include "assembler_convert.h"
 #include "memory.h"
 #include "parser.h"
+#include <stdint.h>
 
 int32_t convert_uint32(uint32_t u) {
   return u > INT32_MAX ? INT32_MAX : (int32_t)u;
+}
+
+int32_t convert_size_t(size_t s) {
+  return s > INT32_MAX ? INT32_MAX : (int32_t)s;
 }
 
 enum Err_Main convert_err(enum Err_Asm err) {
