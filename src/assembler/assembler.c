@@ -14,40 +14,8 @@
 #include "parser.h"
 #include "symbol.h"
 
-// If condition fail, set variable 'err' to given er
-// & goto cleanup.
-#define ERR_IF_FAIL(cond, er)                                                  \
-  do {                                                                         \
-    if (!(cond)) {                                                             \
-      err = (er);                                                              \
-      goto cleanup;                                                            \
-    }                                                                          \
-  } while (0)
-
-// Check if func == ASM_NO_ERROR
-// Reuse error given from func & goto cleanup
-#define REUSE_ERR_IF_FAIL(func)                                                \
-  do {                                                                         \
-    if ((err = (func)) != ASM_NO_ERROR) {                                      \
-      goto cleanup;                                                            \
-    }                                                                          \
-  } while (0)
-
-#define PRINT_VERBOSE(...)                                                     \
-  print_verbose(asp && asp->config && asp->config->flag_verbose, __VA_ARGS__)
-#define PRINT_VERBOSE_CLN(...)                                                 \
-  print_verbose_clean(asp && asp->config && asp->config->flag_verbose,         \
-                      __VA_ARGS__)
-#define PRINT_VERBOSE_DBG(...) print_verbose(DEBUG, __VA_ARGS__)
-
-// If condition fail, print verbose clean & return err.
-#define RET_VERBOSE_CLN_IF_FAIL(cond, err, ...)                                \
-  do {                                                                         \
-    if (!(cond)) {                                                             \
-      PRINT_VERBOSE_CLN(__VA_ARGS__);                                          \
-      return err;                                                              \
-    }                                                                          \
-  } while (0)
+#include "assembler_convert.h"
+#include "internal.h"
 
 // ===== HELPER UNION =====
 
@@ -58,30 +26,6 @@ union op_value {
 };
 
 // ===== STATIC HELPER DECLARATIONS =====
-
-// === CONVERTING ===
-
-// safe wrapper of convertor from uint32_t to int32_t
-static int32_t _clamp_uint32(uint32_t u);
-
-// Given any ASM error, convert it to corresponding MAIN error.
-static enum Err_Main _err_convert(enum Err_Asm err);
-
-// I accidentally created a continuous array of tokens in lexer but require
-// array of pointers to tokens in parser. This function is a bridge between
-// these differences. Caller must free this "convertor" after is used. Return
-// NULL on failure, pointer on success.
-static const struct Token **_convert_tokens(const struct Token *orig);
-
-// Free the array of pointers to tokens & set the pointer to null.
-// It frees only the array, not the tokens = can have const ptr.
-static void _free_tokens_convertor(const struct Token **tokens[]);
-
-// Convert the structure given from lexer (struct Token *) to that wanted in
-// parser (struct Token **). Free that structure on return. Otherwise only a
-// wrapper around parse_tokens in parser.
-static struct Parsed_Statement *_parse_tokens(const struct Token *tokens,
-                                              size_t nl);
 
 // === SHARED LOGIC ===
 
@@ -206,12 +150,12 @@ static int _register_name_to_value(const char *name, uint8_t *value);
 enum Err_Main process_assembler(struct Assembler_Processing *asp) {
   enum Err_Asm res = ASM_NO_ERROR;
   if ((res = pass1(asp)) != ASM_NO_ERROR) {
-    return _err_convert(res);
+    return convert_err(res);
   }
   cdsg_begin(asp->cdsg); // reuse segments
   dtsg_begin(asp->dtsg); // goto start
   if ((res = pass2(asp)) != ASM_NO_ERROR) {
-    return _err_convert(res);
+    return convert_err(res);
   }
 
   return ERR_NO_ERROR;
@@ -300,91 +244,6 @@ void asp_free(struct Assembler_Processing **asp) {
 
 // ===== STATIC HELPER DEFINITIONS =====
 
-static int32_t _clamp_uint32(uint32_t u) {
-  return u > INT32_MAX ? INT32_MAX : (int32_t)u;
-}
-
-static enum Err_Main _err_convert(enum Err_Asm err) {
-  switch (err) {
-  case ASM_NO_ERROR:
-    return ERR_NO_ERROR;
-  case ASM_KMA_EXPECTED:
-  case ASM_KMA_DOUBLE:
-  case ASM_DATA_ABROAD:
-  case ASM_CODE_ABROAD:
-  case ASM_SYMTAB_ALREADY_EXIST:
-  case ASM_INVALID_INSTUCTION:
-  case ASM_INVALID_OPERAND_REGISTER:
-  case ASM_INVALID_OPERAND_LABEL:
-  case ASM_INVALID_OPERAND_OFFSET:
-    return ERR_SYNTAX_ERROR;
-  case ASM_INVALID_ARGS:
-  case ASM_CREATING_TOKENS:
-  case ASM_CREATING_PSTMT:
-  case ASM_UNKNOWN_PSTMT_TYPE:
-  case ASM_SYMTAB_CANNOT_ADD:
-  case ASM_UNKNOWN_INIT_SEG:
-    return ERR_MY_CODE_FAILURE;
-  case ASM_DTSG_CANNOT_ADVANCE:
-  case ASM_CDSG_CANNOT_ADVANCE:
-  case ASM_DTSG_TOO_LARGE:
-  case ASM_CDSG_TOO_LARGE:
-  case ASM_DTSG_CANNOT_APPEND:
-  case ASM_CDSG_CANNOT_APPEND:
-    return ERR_OUT_OF_MEMORY;
-  case ASM_CANNOT_OPEN_FILE:
-    return ERR_FILE_ACCESS_FAILURE;
-  default:
-    return ERR_MY_CODE_FAILURE;
-  }
-}
-
-static const struct Token **_convert_tokens(const struct Token *orig) {
-  size_t count = 0, i = 0;
-  const struct Token **res = NULL;
-  RETURN_IF_FAIL(orig, NULL);
-
-  while (orig[count].type != TOKEN_EOF) {
-    count++;
-  }
-  count++; // also count EOF
-
-  res = jalloc((count + 1) *
-               sizeof(*res)); // +1 for NULL terminator (for better sleep)
-  RETURN_IF_FAIL(res, NULL);
-
-  for (i = 0; i < count; i++) {
-    res[i] = &orig[i];
-  }
-  res[count] = NULL;
-
-  return res;
-}
-
-static void _free_tokens_convertor(const struct Token **tokens[]) {
-  if (!tokens || !*tokens) {
-    return;
-  }
-  jree(*tokens);
-  *tokens = NULL;
-}
-
-static struct Parsed_Statement *_parse_tokens(const struct Token *tokens,
-                                              size_t nl) {
-  struct Parsed_Statement *pstmt = NULL;
-  const struct Token **converted_tokens = NULL;
-  RETURN_IF_FAIL(tokens, 0);
-  converted_tokens = _convert_tokens(tokens);
-  RETURN_IF_FAIL(converted_tokens, NULL);
-
-  pstmt = parse_tokens(converted_tokens, nl);
-
-  if (converted_tokens) {
-    _free_tokens_convertor(&converted_tokens);
-  }
-  return pstmt;
-}
-
 static enum Err_Asm _pass(struct Assembler_Processing *asp, int is_second) {
   enum Assembler_Context ctx = ASC_FILE_START;
   char *line = NULL;
@@ -432,7 +291,7 @@ static enum Err_Asm _pass_line(struct Assembler_Processing *asp,
     print_tokens(tokens);
   }
   PRINT_VERBOSE("Parsing tokens.\n");
-  pstmt = _parse_tokens(tokens, nl);
+  pstmt = convert_parse_tokens(tokens, nl);
   ERR_IF_FAIL(pstmt &&
                   (pstmt->err == PAR_NO_ERROR || pstmt->err == PAR_EMPTY_LINE),
               ASM_CREATING_PSTMT);
@@ -925,7 +784,7 @@ _pass2_instruction_get_op_label(struct Assembler_Processing *asp,
                           "but the label named '%s' was not defined.\n",
                           lab_name);
 
-  *value = _clamp_uint32(s->address);
+  *value = convert_uint32(s->address);
 
   return ASM_NO_ERROR;
 }
