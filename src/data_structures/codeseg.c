@@ -67,11 +67,10 @@ int cdsg_app_bs(struct Code_Segment *cdsg, const uint8_t *bs, size_t count) {
     return 1; // nothing to do
   }
 
-  CLEANUP_IF_FAIL(
-      _cdsg_ensure_capacity(cdsg, count),
-      "Couldn't ensure enough additionaly capacity in code segment. "
-      "Wanted %zu bytes.",
-      count);
+  CLEANUP_IF_FAIL(_cdsg_ensure_capacity(cdsg, count),
+                  "Couldn't ensure enough additional capacity in code segment. "
+                  "Wanted %zu bytes.",
+                  count);
 
   memcpy(cdsg->bytes + cdsg->size, bs, count);
   cdsg->size += count;
