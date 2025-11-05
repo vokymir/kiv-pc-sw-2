@@ -12,7 +12,7 @@ static size_t alloc_count = 0;
 void *jalloc(const size_t bytes) {
   void *mem = NULL;
   if (bytes == 0 || bytes > SIZE_MAX / 1) {
-    PRINT_ERR("Couldn't allocat %zu bytes.", bytes);
+    PRINT_ERR("Couldn't allocate %zu bytes.", bytes);
     return NULL;
   }
   mem = calloc(bytes, 1);

@@ -123,12 +123,13 @@ int valid_args(size_t count, ...) {
 
 static const char *_get_op_text(const struct Instruction_Statement *is,
                                 size_t idx, char *buf, size_t bufsize) {
+  const struct Operand *op = NULL;
   if (!is || idx >= KMA_MAX_OPERANDS) {
     PRINT_ERR("Invalid arguments.");
     return "";
   }
 
-  const struct Operand *op = &is->operands[idx];
+  op = &is->operands[idx];
   switch (op->type) {
   case OP_NONE:
     return "";
