@@ -76,3 +76,60 @@ cleanup:
   }
   return err;
 }
+
+enum Err_Asm _pass1_kma(struct Assembler_Processing *asp,
+                        enum Assembler_Context *ctx, size_t nl) {
+  PRINT_VERBOSE("Found KMA label on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
+                          "but something went WRONG.\n");
+
+  RET_VERBOSE_CLN_IF_FAIL(
+      *ctx == ASC_FILE_START, ASM_KMA_DOUBLE,
+      "resulting in error, because it IS NOT at the start of file.\n");
+
+  *ctx = ASC_AFTER_KMA;
+  PRINT_VERBOSE_CLN("which is OK, because its start of file.\n");
+  return ASM_NO_ERROR;
+}
+
+enum Err_Asm _pass1_code_section(struct Assembler_Processing *asp,
+                                 enum Assembler_Context *ctx, size_t nl) {
+  PRINT_VERBOSE("Found CODE SECTION label on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
+                          "but something went WRONG.\n");
+
+  RET_VERBOSE_CLN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_EXPECTED,
+                          "resulting in error, because it IS at the start of "
+                          "file and KMA was expected.\n");
+
+  *ctx = ASC_CODE;
+  PRINT_VERBOSE_CLN("which is OK.\n");
+  return ASM_NO_ERROR;
+}
+
+enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
+                                 enum Assembler_Context *ctx, size_t nl) {
+  PRINT_VERBOSE("Found DATA SECTION label on line %zu, ", nl);
+  RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
+                          "but something went WRONG.\n");
+
+  RET_VERBOSE_CLN_IF_FAIL(*ctx != ASC_FILE_START, ASM_KMA_EXPECTED,
+                          "resulting in error, because it IS at the start of "
+                          "file and KMA was expected.\n");
+
+  *ctx = ASC_DATA;
+  PRINT_VERBOSE_CLN("which is OK.\n");
+  return ASM_NO_ERROR;
+}
+
+enum Err_Asm _pass1_none(struct Assembler_Processing *asp, size_t nl) {
+  PRINT_VERBOSE(
+      "Found NOTHING on line %zu, might be an empty line, or only comment.\n",
+      nl);
+  return ASM_NO_ERROR;
+}
+
+enum Err_Asm _pass1_error(struct Assembler_Processing *asp, size_t nl) {
+  PRINT_VERBOSE("Weird line %zu, cannot find known statement.\n", nl);
+  return ASM_UNKNOWN_PSTMT_TYPE;
+}
