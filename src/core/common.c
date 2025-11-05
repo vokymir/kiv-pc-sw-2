@@ -45,8 +45,13 @@ void print_instruction(int condition, size_t line,
   char op2_buf[64] = "";
   const char *op1 = NULL;
   const char *op2 = NULL;
-  if (!condition || !is || !is->descriptor || !is->descriptor->mnemonic)
+  if (!condition) {
     return;
+  }
+  if (!is || !is->descriptor || !is->descriptor->mnemonic) {
+    PRINT_ERR("Instruction statement is invalid.");
+    return;
+  }
 
   op1 = _get_op_text(is, 0, op1_buf, sizeof(op1_buf));
   op2 = _get_op_text(is, 1, op2_buf, sizeof(op2_buf));
@@ -88,8 +93,10 @@ void print_err(const char *filename, size_t line, const char *string, ...) {
 
 static const char *_get_op_text(const struct Instruction_Statement *is,
                                 size_t idx, char *buf, size_t bufsize) {
-  if (!is || idx >= KMA_MAX_OPERANDS)
+  if (!is || idx >= KMA_MAX_OPERANDS) {
+    PRINT_ERR("Invalid arguments.");
     return "";
+  }
 
   const struct Operand *op = &is->operands[idx];
   switch (op->type) {
@@ -112,6 +119,7 @@ static const char *_get_op_text(const struct Instruction_Statement *is,
     }
 
   default:
+    PRINT_ERR("Unknown operand type.");
     return "";
   }
 }
