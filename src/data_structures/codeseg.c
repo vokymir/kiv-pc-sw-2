@@ -34,6 +34,7 @@ cleanup:
 
 void cdsg_free(struct Code_Segment **cdsg) {
   if (!cdsg || !*cdsg) {
+    PRINT_ERR("Tried to free already freed (or invalid pointer) code segment.");
     return;
   }
   if ((*cdsg)->bytes) {
@@ -45,7 +46,7 @@ void cdsg_free(struct Code_Segment **cdsg) {
 }
 
 int cdsg_app_b(struct Code_Segment *cdsg, uint8_t b) {
-  CLEANUP_IF_FAIL(cdsg && cdsg->bytes, "Given codesegment wasn't valid.");
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes, "Given code segment wasn't valid.");
 
   if (!_cdsg_ensure_capacity(cdsg, 1)) {
     return 0;
@@ -59,16 +60,18 @@ cleanup:
 }
 
 int cdsg_app_bs(struct Code_Segment *cdsg, const uint8_t *bs, size_t count) {
-  CLEANUP_IF_FAIL(cdsg && cdsg->bytes && bs, "Given codesegment wasn't valid.");
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes && bs,
+                  "Given code segment wasn't valid.");
 
   if (count == 0) {
     return 1; // nothing to do
   }
 
-  CLEANUP_IF_FAIL(_cdsg_ensure_capacity(cdsg, count),
-                  "Couldn't ensure enough additionaly capacity in codesegment. "
-                  "Wanted %zu bytes.",
-                  count);
+  CLEANUP_IF_FAIL(
+      _cdsg_ensure_capacity(cdsg, count),
+      "Couldn't ensure enough additionaly capacity in code segment. "
+      "Wanted %zu bytes.",
+      count);
 
   memcpy(cdsg->bytes + cdsg->size, bs, count);
   cdsg->size += count;
