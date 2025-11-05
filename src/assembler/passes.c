@@ -7,7 +7,7 @@
 #include "memory.h"
 #include <stdio.h>
 
-enum Err_Asm _pass(struct Assembler_Processing *asp, int is_second) {
+enum Err_Asm passes_any_pass(struct Assembler_Processing *asp, int is_second) {
   enum Assembler_Context ctx = ASC_FILE_START;
   char *line = NULL;
   size_t line_len = 0, nl = 1;
@@ -21,7 +21,7 @@ enum Err_Asm _pass(struct Assembler_Processing *asp, int is_second) {
 
   while (fu_getline(&line, &line_len, f) != -1) {
     if (is_second) {
-      REUSE_ERR_IF_FAIL(_pass2_line(asp, &ctx, nl, line));
+      REUSE_ERR_IF_FAIL(pass2_line(asp, &ctx, nl, line));
     } else {
       REUSE_ERR_IF_FAIL(_pass1_line(asp, &ctx, nl, line));
     }
@@ -40,9 +40,9 @@ cleanup:
   return err;
 }
 
-enum Err_Asm _pass_line(struct Assembler_Processing *asp,
-                        enum Assembler_Context *ctx, size_t nl,
-                        const char *line, int is_second) {
+enum Err_Asm passes_line(struct Assembler_Processing *asp,
+                         enum Assembler_Context *ctx, size_t nl,
+                         const char *line, int is_second) {
   struct Token *tokens = NULL;
   struct Parsed_Statement *pstmt = NULL;
   enum Err_Asm err = ASM_NO_ERROR;
@@ -61,7 +61,7 @@ enum Err_Asm _pass_line(struct Assembler_Processing *asp,
 
   PRINT_VERBOSE("Evaluating parsed statement.\n");
   if (is_second) {
-    REUSE_ERR_IF_FAIL(_pass2_decide(pstmt, asp, ctx, nl));
+    REUSE_ERR_IF_FAIL(pass2_decide(pstmt, asp, ctx, nl));
   } else {
     REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx, nl));
   }

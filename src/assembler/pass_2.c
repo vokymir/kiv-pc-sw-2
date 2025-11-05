@@ -5,15 +5,15 @@
 #include "internal.h"
 #include <string.h>
 
-enum Err_Asm _pass2_line(struct Assembler_Processing *asp,
-                         enum Assembler_Context *ctx, size_t nl,
-                         const char *line) {
-  return _pass_line(asp, ctx, nl, line, 1);
+enum Err_Asm pass2_line(struct Assembler_Processing *asp,
+                        enum Assembler_Context *ctx, size_t nl,
+                        const char *line) {
+  return passes_line(asp, ctx, nl, line, 1);
 }
 
-enum Err_Asm _pass2_decide(struct Parsed_Statement *pstmt,
-                           struct Assembler_Processing *asp,
-                           enum Assembler_Context *ctx, size_t nl) {
+enum Err_Asm pass2_decide(struct Parsed_Statement *pstmt,
+                          struct Assembler_Processing *asp,
+                          enum Assembler_Context *ctx, size_t nl) {
   RETURN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
 
   switch (pstmt->type) {
@@ -24,9 +24,9 @@ enum Err_Asm _pass2_decide(struct Parsed_Statement *pstmt,
   case STMT_SECTION_DATA:
     return _pass1_data_section(asp, ctx, nl); // intentional
   case STMT_DATA_DECL:
-    return _pass2_data_decl(pstmt, asp, ctx, nl);
+    return pass2_data_decl(pstmt, asp, ctx, nl);
   case STMT_INSTRUCTION:
-    return _pass2_instruction(pstmt, asp, ctx, nl);
+    return pass2_instruction(pstmt, asp, ctx, nl);
   case STMT_LABEL_DEF:
     return ASM_NO_ERROR; // label definition belongs to 1st pass
   case STMT_NONE:
@@ -37,9 +37,9 @@ enum Err_Asm _pass2_decide(struct Parsed_Statement *pstmt,
   }
 }
 
-enum Err_Asm _pass2_data_decl(struct Parsed_Statement *pstmt,
-                              struct Assembler_Processing *asp,
-                              enum Assembler_Context *ctx, size_t nl) {
+enum Err_Asm pass2_data_decl(struct Parsed_Statement *pstmt,
+                             struct Assembler_Processing *asp,
+                             enum Assembler_Context *ctx, size_t nl) {
   size_t i = 0;
   const struct Data_Declaration *dd = NULL;
   const struct Init_Segment *is = NULL;
@@ -54,16 +54,16 @@ enum Err_Asm _pass2_data_decl(struct Parsed_Statement *pstmt,
     is = &dd->segments[i];
     switch (is->type) {
     case INIT_SEG_UNINIT:
-      REUSE_ERR_IF_FAIL(_pass2_data_decl_uninit(asp, is));
+      REUSE_ERR_IF_FAIL(pass2_data_decl_uninit(asp, is));
       break;
     case INIT_SEG_VALUE:
-      REUSE_ERR_IF_FAIL(_pass2_data_decl_value(asp, is, dd->type));
+      REUSE_ERR_IF_FAIL(pass2_data_decl_value(asp, is, dd->type));
       break;
     case INIT_SEG_STRING:
-      REUSE_ERR_IF_FAIL(_pass2_data_decl_string(asp, is));
+      REUSE_ERR_IF_FAIL(pass2_data_decl_string(asp, is));
       break;
     case INIT_SEG_DUP:
-      REUSE_ERR_IF_FAIL(_pass2_data_decl_dup(asp, is, dd->type));
+      REUSE_ERR_IF_FAIL(pass2_data_decl_dup(asp, is, dd->type));
       break;
     default:
       PRINT_VERBOSE_CLN("but the segment is of UNKNOWN type!\n");
@@ -76,9 +76,9 @@ cleanup:
   return err;
 }
 
-enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
-                                struct Assembler_Processing *asp,
-                                enum Assembler_Context *ctx, size_t nl) {
+enum Err_Asm pass2_instruction(struct Parsed_Statement *pstmt,
+                               struct Assembler_Processing *asp,
+                               enum Assembler_Context *ctx, size_t nl) {
   size_t addr = SIZE_MAX;
   union op_value op_values[KMA_MAX_OPERANDS] = {0};
   enum Err_Asm err = ASM_NO_ERROR;
@@ -87,7 +87,7 @@ enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
   RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS,
                           "but something went wrong.");
   REUSE_ERR_IF_FAIL(
-      _pass2_instruction_ops_get(asp, &pstmt->content.instruction, &op_values));
+      pass2_instruction_ops_get(asp, &pstmt->content.instruction, &op_values));
 
   addr = cdsg_get_size(asp->cdsg);
 
@@ -101,7 +101,7 @@ enum Err_Asm _pass2_instruction(struct Parsed_Statement *pstmt,
   }
 
   REUSE_ERR_IF_FAIL(
-      _pass_instruction_ops_set(asp, &pstmt->content.instruction, &op_values));
+      pass_2_instruction_ops_set(asp, &pstmt->content.instruction, &op_values));
 
   PRINT_VERBOSE_CLN(
       "and everything went great (see line below if -i is set).\n");
@@ -112,8 +112,8 @@ cleanup:
   return err;
 }
 
-enum Err_Asm _pass2_data_decl_uninit(struct Assembler_Processing *asp,
-                                     const struct Init_Segment *is) {
+enum Err_Asm pass2_data_decl_uninit(struct Assembler_Processing *asp,
+                                    const struct Init_Segment *is) {
   RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
 
   RET_VERBOSE_CLN_IF_FAIL(
@@ -125,9 +125,9 @@ enum Err_Asm _pass2_data_decl_uninit(struct Assembler_Processing *asp,
   return ASM_NO_ERROR;
 }
 
-enum Err_Asm _pass2_data_decl_value(struct Assembler_Processing *asp,
-                                    const struct Init_Segment *is,
-                                    enum Data_Type dt) {
+enum Err_Asm pass2_data_decl_value(struct Assembler_Processing *asp,
+                                   const struct Init_Segment *is,
+                                   enum Data_Type dt) {
   uint8_t byte = 0;
   RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
 
@@ -148,8 +148,8 @@ enum Err_Asm _pass2_data_decl_value(struct Assembler_Processing *asp,
   return ASM_NO_ERROR;
 }
 
-enum Err_Asm _pass2_data_decl_string(struct Assembler_Processing *asp,
-                                     const struct Init_Segment *is) {
+enum Err_Asm pass2_data_decl_string(struct Assembler_Processing *asp,
+                                    const struct Init_Segment *is) {
   RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
 
   RET_VERBOSE_CLN_IF_FAIL(
@@ -160,9 +160,9 @@ enum Err_Asm _pass2_data_decl_string(struct Assembler_Processing *asp,
   return ASM_NO_ERROR;
 }
 
-enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
-                                  const struct Init_Segment *is,
-                                  enum Data_Type dt) {
+enum Err_Asm pass2_data_decl_dup(struct Assembler_Processing *asp,
+                                 const struct Init_Segment *is,
+                                 enum Data_Type dt) {
   uint8_t byte = 0;
   RETURN_IF_FAIL(asp && asp->dtsg && is, ASM_INVALID_ARGS);
 
@@ -189,40 +189,40 @@ enum Err_Asm _pass2_data_decl_dup(struct Assembler_Processing *asp,
 }
 
 enum Err_Asm
-_pass2_instruction_ops_get(struct Assembler_Processing *asp,
-                           const struct Instruction_Statement *is,
-                           union op_value (*op_values)[KMA_MAX_OPERANDS]) {
+pass2_instruction_ops_get(struct Assembler_Processing *asp,
+                          const struct Instruction_Statement *is,
+                          union op_value (*op_values)[KMA_MAX_OPERANDS]) {
   int i = 0;
   enum Err_Asm err = ASM_NO_ERROR;
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
                           "but something went wrong.");
 
   for (i = 0; i < is->operand_count; i++) {
-    REUSE_ERR_IF_FAIL(_pass2_intstruction_get_op(asp, is, &(*op_values)[i], i));
+    REUSE_ERR_IF_FAIL(pass2_intstruction_get_op(asp, is, &(*op_values)[i], i));
   }
 
 cleanup:
   return err;
 }
 
-enum Err_Asm _pass2_intstruction_get_op(struct Assembler_Processing *asp,
-                                        const struct Instruction_Statement *is,
-                                        union op_value *op_value, int idx) {
+enum Err_Asm pass2_intstruction_get_op(struct Assembler_Processing *asp,
+                                       const struct Instruction_Statement *is,
+                                       union op_value *op_value, int idx) {
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_value, ASM_INVALID_ARGS,
                           "but something went wrong.");
 
   switch (is->operands[idx].type) {
   case OP_REG:
-    return _pass2_instruction_get_op_reg(
+    return pass2_instruction_get_op_reg(
         asp, is->operands[idx].value.register_name, &op_value->ui8);
   case OP_IMM32:
     switch (is->operands[idx].specifier) {
     case OPS_LABEL:
-      return _pass2_instruction_get_op_label(asp, is->operands[idx].value.label,
-                                             &op_value->i32);
+      return pass2_instruction_get_op_label(asp, is->operands[idx].value.label,
+                                            &op_value->i32);
     case OPS_OFFSET: // label & variables are saved in the same table
-      return _pass2_instruction_get_op_label(asp, is->operands[idx].value.label,
-                                             &op_value->i32);
+      return pass2_instruction_get_op_label(asp, is->operands[idx].value.label,
+                                            &op_value->i32);
     case OPS_NONE:
     default:
       op_value->i32 = is->operands[idx].value.immediate_value;
@@ -236,22 +236,23 @@ enum Err_Asm _pass2_intstruction_get_op(struct Assembler_Processing *asp,
   return ASM_NO_ERROR;
 }
 
-enum Err_Asm _pass2_instruction_get_op_reg(struct Assembler_Processing *asp,
-                                           const char *reg_name,
-                                           uint8_t *value) {
+enum Err_Asm pass2_instruction_get_op_reg(struct Assembler_Processing *asp,
+                                          const char *reg_name,
+                                          uint8_t *value) {
   RET_VERBOSE_CLN_IF_FAIL(asp && reg_name && value, ASM_INVALID_ARGS,
                           "but something went wrong.");
 
   RET_VERBOSE_CLN_IF_FAIL(
-      _register_name_to_value(reg_name, value), ASM_INVALID_OPERAND_REGISTER,
+      pass2_register_name_to_value(reg_name, value),
+      ASM_INVALID_OPERAND_REGISTER,
       "but the register name '%s' is not a valid register name.\n", reg_name);
 
   return ASM_NO_ERROR;
 }
 
-enum Err_Asm _pass2_instruction_get_op_label(struct Assembler_Processing *asp,
-                                             const char *lab_name,
-                                             int32_t *value) {
+enum Err_Asm pass2_instruction_get_op_label(struct Assembler_Processing *asp,
+                                            const char *lab_name,
+                                            int32_t *value) {
   struct Symbol *s = NULL;
   RET_VERBOSE_CLN_IF_FAIL(asp && lab_name && value, ASM_INVALID_ARGS,
                           "but something went wrong.");
@@ -267,9 +268,9 @@ enum Err_Asm _pass2_instruction_get_op_label(struct Assembler_Processing *asp,
 }
 
 enum Err_Asm
-_pass_instruction_ops_set(struct Assembler_Processing *asp,
-                          const struct Instruction_Statement *is,
-                          union op_value (*op_values)[KMA_MAX_OPERANDS]) {
+pass_2_instruction_ops_set(struct Assembler_Processing *asp,
+                           const struct Instruction_Statement *is,
+                           union op_value (*op_values)[KMA_MAX_OPERANDS]) {
   int i = 0;
   RET_VERBOSE_CLN_IF_FAIL(asp && is && op_values, ASM_INVALID_ARGS,
                           "but something went wrong.");
@@ -296,7 +297,7 @@ _pass_instruction_ops_set(struct Assembler_Processing *asp,
   return ASM_NO_ERROR;
 }
 
-int _register_name_to_value(const char *name, uint8_t *value) {
+int pass2_register_name_to_value(const char *name, uint8_t *value) {
   RETURN_IF_FAIL(name && value, 0);
 
   if (strcmp(name, "A") == 0) {

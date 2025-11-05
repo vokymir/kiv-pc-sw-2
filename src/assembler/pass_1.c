@@ -5,7 +5,7 @@
 enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
                          enum Assembler_Context *ctx, size_t nl,
                          const char *line) {
-  return _pass_line(asp, ctx, nl, line, 0);
+  return passes_line(asp, ctx, nl, line, 0);
 }
 
 enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,

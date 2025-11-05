@@ -25,9 +25,13 @@ enum Err_Main process_assembler(struct Assembler_Processing *asp) {
   return ERR_NO_ERROR;
 }
 
-enum Err_Asm pass1(struct Assembler_Processing *asp) { return _pass(asp, 0); }
+enum Err_Asm pass1(struct Assembler_Processing *asp) {
+  return passes_any_pass(asp, 0);
+}
 
-enum Err_Asm pass2(struct Assembler_Processing *asp) { return _pass(asp, 1); }
+enum Err_Asm pass2(struct Assembler_Processing *asp) {
+  return passes_any_pass(asp, 1);
+}
 
 struct Assembler_Processing *asp_create(const struct Config *config,
                                         struct Symbol_Table *symtab,
@@ -105,5 +109,3 @@ void asp_free(struct Assembler_Processing **asp) {
   jree(*asp);
   *asp = NULL;
 }
-
-// ===== STATIC HELPER DEFINITIONS =====
