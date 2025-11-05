@@ -1,3 +1,5 @@
+#include "assembler.h"
+#include "common.h"
 #include "internal.h"
 
 #include "assembler_pass_1.h"
@@ -12,7 +14,8 @@ enum Err_Asm pass1_line(struct Assembler_Processing *asp,
 enum Err_Asm pass1_decide(struct Parsed_Statement *pstmt,
                           struct Assembler_Processing *asp,
                           enum Assembler_Context *ctx, size_t nl) {
-  RETURN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
+  RET_STDERR_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS,
+                     "Invalid arguments.");
 
   switch (pstmt->type) {
   case STMT_KMA:
@@ -41,8 +44,13 @@ enum Err_Asm pass1_data_decl(struct Parsed_Statement *pstmt,
   size_t position = SIZE_MAX, size = SIZE_MAX;
   char *identifier = NULL;
   PRINT_VERBOSE("Found DATA DECLARATION on line %zu, ", nl);
-  RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && asp->config && ctx, ASM_INVALID_ARGS,
-                          "but something went WRONG.\n");
+
+  IF_FAIL(pstmt && asp && asp->config && ctx) {
+    PRINT_VERBOSE("but something went WRONG.\n");
+    PRINT_ERR("Invalid arguments.");
+    return ASM_INVALID_ARGS;
+  }
+
   RET_VERBOSE_CLN_IF_FAIL(
       *ctx == ASC_DATA, ASM_DATA_ABROAD,
       "but that IS NOT in the DATA section, resulting in ERROR.\n");
@@ -88,8 +96,13 @@ enum Err_Asm pass1_instruction(struct Parsed_Statement *pstmt,
                                enum Assembler_Context *ctx, size_t nl) {
   size_t size = SIZE_MAX, position = SIZE_MAX;
   PRINT_VERBOSE("Found INSTRUCTION on line %zu, ", nl);
-  RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && asp->config && ctx, ASM_INVALID_ARGS,
-                          "but something went WRONG.\n");
+
+  IF_FAIL(pstmt && asp && asp->config && ctx) {
+    PRINT_VERBOSE_CLN("but something went WRONG.\n");
+    PRINT_ERR("Invalid arguments.");
+    return ASM_INVALID_ARGS;
+  }
+
   RET_VERBOSE_CLN_IF_FAIL(
       *ctx == ASC_CODE, ASM_CODE_ABROAD,
       "but that IS NOT in the CODE section, resulting in ERROR.\n");
@@ -124,8 +137,13 @@ enum Err_Asm pass1_label_def(struct Parsed_Statement *pstmt,
   char *label_name = NULL;
   size_t position = SIZE_MAX;
   PRINT_VERBOSE("Found LABEL definition on line %zu, ", nl);
-  RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && asp->config && ctx, ASM_INVALID_ARGS,
-                          "but something went WRONG.\n");
+
+  IF_FAIL(pstmt && asp && asp->config && ctx) {
+    PRINT_VERBOSE_CLN("but something went WRONG.\n");
+    PRINT_ERR("Invalid arguments.");
+    return ASM_INVALID_ARGS;
+  }
+
   label_name = pstmt->content.label_def.label_name;
   PRINT_VERBOSE_CLN("the label name is (%s), ", label_name);
   RET_VERBOSE_CLN_IF_FAIL(

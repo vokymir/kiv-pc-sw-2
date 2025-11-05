@@ -27,7 +27,8 @@
 #define PRINT_VERBOSE_CLN(...)                                                 \
   print_verbose_clean(asp && asp->config && asp->config->flag_verbose,         \
                       __VA_ARGS__)
-#define PRINT_VERBOSE_DBG(...) print_verbose(DEBUG, __VA_ARGS__)
+#define PRINT_VERBOSE_DBG(...)                                                 \
+  print_verbose(DEBUG, __VA_ARGS__) // TODO: Is DEBUG used? remove
 
 // If condition fail, print verbose clean & return err.
 #define RET_VERBOSE_CLN_IF_FAIL(cond, err, ...)                                \
@@ -37,5 +38,7 @@
       return err;                                                              \
     }                                                                          \
   } while (0)
+
+#define IF_FAIL(cond) if (!(cond))
 
 #endif
