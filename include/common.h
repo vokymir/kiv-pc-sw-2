@@ -28,6 +28,15 @@ struct Instruction_Statement;
       return retval;                                                           \
   } while (0)
 
+// If condition is not satisfied, return err & print ... to stderr.
+#define RET_STDERR_IF_FAIL(cond, err, ...)                                     \
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      PRINT_ERR(__VA_ARGS__);                                                  \
+      return err;                                                              \
+    }                                                                          \
+  } while (0)
+
 #define DEBUG 1
 
 // =======================

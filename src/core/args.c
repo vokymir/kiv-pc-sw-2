@@ -10,14 +10,6 @@
 
 // ===== MACRO HELPERS =====
 
-#define RET_STDERR_IF_FAIL(cond, err, fmt, ...)                                \
-  do {                                                                         \
-    if (!(cond)) {                                                             \
-      PRINT_ERR(fmt, __VA_ARGS__);                                             \
-      return err;                                                              \
-    }                                                                          \
-  } while (0)
-
 #define RET_INVALID_INPUT_FILE                                                 \
   do {                                                                         \
     PRINT_ERR("The input/source file is invalid.");                            \
