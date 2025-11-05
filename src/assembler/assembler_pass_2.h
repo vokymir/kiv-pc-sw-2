@@ -1,9 +1,10 @@
 #ifndef ASSEMBLER_PASS_2_H
 #define ASSEMBLER_PASS_2_H
 
+#include <stddef.h>
+
 #include "assembler.h"
 #include "parser.h"
-#include <stddef.h>
 
 // Possible operand values - can be either uint8 or int32.
 union op_value {

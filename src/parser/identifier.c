@@ -1,4 +1,5 @@
 #include "memory.h"
+
 #include "parser_identifier.h"
 #include "parser_segment.h"
 #include "parser_token.h"

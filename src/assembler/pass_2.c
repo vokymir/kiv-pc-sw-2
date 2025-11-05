@@ -1,11 +1,13 @@
-#include "assembler_convert.h"
-#include "assembler_pass_2.h"
-#include "assembler_passes.h"
-#include "instruction.h"
-#include "internal.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
+#include "instruction.h"
+#include "internal.h"
+
+#include "assembler_convert.h"
+#include "assembler_pass_2.h"
+#include "assembler_passes.h"
 
 enum Err_Asm pass2_line(struct Assembler_Processing *asp,
                         enum Assembler_Context *ctx, size_t nl,
@@ -20,11 +22,11 @@ enum Err_Asm pass2_decide(struct Parsed_Statement *pstmt,
 
   switch (pstmt->type) {
   case STMT_KMA:
-    return passes_kma(asp, ctx, nl); // intentional
+    return passes_kma(asp, ctx, nl);
   case STMT_SECTION_CODE:
-    return passes_code_section(asp, ctx, nl); // intentional
+    return passes_code_section(asp, ctx, nl);
   case STMT_SECTION_DATA:
-    return passes_data_section(asp, ctx, nl); // intentional
+    return passes_data_section(asp, ctx, nl);
   case STMT_DATA_DECL:
     return pass2_data_decl(pstmt, asp, ctx, nl);
   case STMT_INSTRUCTION:
@@ -32,10 +34,10 @@ enum Err_Asm pass2_decide(struct Parsed_Statement *pstmt,
   case STMT_LABEL_DEF:
     return ASM_NO_ERROR; // label definition belongs to 1st pass
   case STMT_NONE:
-    return passes_none(asp, nl); // intentional
+    return passes_none(asp, nl);
   case STMT_ERROR:
   default:
-    return passes_error(asp, nl); // intentional
+    return passes_error(asp, nl);
   }
 }
 

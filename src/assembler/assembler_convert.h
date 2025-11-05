@@ -1,10 +1,11 @@
 #ifndef ASSEMBLER_CONVERT_H
 #define ASSEMBLER_CONVERT_H
 
-#include "assembler.h"
-#include "lexer.h"
 #include <stddef.h>
 #include <stdint.h>
+
+#include "assembler.h"
+#include "lexer.h"
 
 // === CONVERTING ===
 

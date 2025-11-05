@@ -1,11 +1,13 @@
+#include <stdio.h>
+
+#include "fileutil.h"
+#include "internal.h"
+#include "memory.h"
+
 #include "assembler_convert.h"
 #include "assembler_pass_1.h"
 #include "assembler_pass_2.h"
 #include "assembler_passes.h"
-#include "fileutil.h"
-#include "internal.h"
-#include "memory.h"
-#include <stdio.h>
 
 enum Err_Asm passes_any_pass(struct Assembler_Processing *asp, int is_second) {
   enum Assembler_Context ctx = ASC_FILE_START;

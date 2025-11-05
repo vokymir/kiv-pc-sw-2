@@ -1,6 +1,7 @@
+#include "internal.h"
+
 #include "assembler_pass_1.h"
 #include "assembler_passes.h"
-#include "internal.h"
 
 enum Err_Asm pass1_line(struct Assembler_Processing *asp,
                         enum Assembler_Context *ctx, size_t nl,

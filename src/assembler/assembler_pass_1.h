@@ -1,9 +1,10 @@
 #ifndef ASSEMBLER_PASS_1_H
 #define ASSEMBLER_PASS_1_H
 
-#include "assembler.h"
 #include <parser.h>
 #include <stdlib.h>
+
+#include "assembler.h"
 
 // Process one line in the first pass of the assembler code.
 // Return adequate error code, edit context if changed.

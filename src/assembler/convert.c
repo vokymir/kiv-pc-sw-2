@@ -1,8 +1,10 @@
+#include <stdint.h>
+
 #include "assembler.h"
-#include "assembler_convert.h"
 #include "memory.h"
 #include "parser.h"
-#include <stdint.h>
+
+#include "assembler_convert.h"
 
 int32_t convert_uint32(uint32_t u) {
   return u > INT32_MAX ? INT32_MAX : (int32_t)u;
