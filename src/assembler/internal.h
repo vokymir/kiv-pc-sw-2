@@ -2,6 +2,7 @@
 #define ASSEMBLER_INTERNAL_H
 
 #include "common.h"
+#include <stddef.h>
 
 // If condition fail, set variable 'err' to given er
 // & goto cleanup.
@@ -27,18 +28,40 @@
 #define PRINT_VERBOSE_CLN(...)                                                 \
   print_verbose_clean(asp && asp->config && asp->config->flag_verbose,         \
                       __VA_ARGS__)
-#define PRINT_VERBOSE_DBG(...)                                                 \
-  print_verbose(DEBUG, __VA_ARGS__) // TODO: Is DEBUG used? remove
 
 // If condition fail, print verbose clean & return err.
 #define RET_VERBOSE_CLN_IF_FAIL(cond, err, ...)                                \
   do {                                                                         \
     if (!(cond)) {                                                             \
       PRINT_VERBOSE_CLN(__VA_ARGS__);                                          \
-      return err;                                                              \
+      return (err);                                                            \
     }                                                                          \
   } while (0)
 
 #define IF_FAIL(cond) if (!(cond))
+
+// guard against invalid arguments in pass1 / pass2
+// checks if 'cond' is FALSE, if so, print standard verbose & stderr output and
+// return err
+#define INVALID_ARGS_PRINTS_ERR_IF_FAIL(cond, err)                             \
+  do {                                                                         \
+    IF_FAIL((cond)) {                                                          \
+      PRINT_VERBOSE_CLN("but something went WRONG.");                          \
+      PRINT_ERR("Invalid argument.");                                          \
+      return (err);                                                            \
+    }                                                                          \
+  } while (0)
+
+// guard against invalid arguments in pass1 / pass2
+// checks if any argument (given as variadic) is NULL, if so, print standard
+// verbose & stderr output and return err
+#define PRINT_RET_ERR_IF_FAIL_ARGS(err, ...)                                   \
+  do {                                                                         \
+    if (!(VALID_ARGS((__VA_ARGS__)))) {                                        \
+      PRINT_VERBOSE_CLN("but something went WRONG.");                          \
+      PRINT_ERR_1ST_NULL_ARG((__VA_ARGS__));                                   \
+      return (err);                                                            \
+    }                                                                          \
+  }
 
 #endif
