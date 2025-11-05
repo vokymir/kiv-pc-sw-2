@@ -101,29 +101,34 @@ enum Err_Args args_path_check_syntax(const char *path, const char *prefix,
                                      const char *suffix) {
   size_t plen, len = 0;
   if (!path) {
-    return ARGS_INVALID_POINTER;
+    RET_STDERR(ARGS_INVALID_POINTER, "The given pointer to path is NULL.");
   }
   if ((plen = strlen(path)) == 0) {
-    return ARGS_PATH_EMPTY;
+    RET_STDERR(ARGS_PATH_EMPTY, "The length of given path is NULL.");
   }
 
   if (prefix) {
     len = strlen(prefix);
     if (plen < len || strncmp(path, prefix, len)) {
-      return ARGS_PATH_BAD_PREFIX;
+      RET_STDERR(ARGS_PATH_BAD_PREFIX,
+                 "The given path '%s' doesn't have required prefix '%s'.", path,
+                 prefix);
     }
   }
 
   if (suffix) {
     len = strlen(suffix);
     if (plen < len || strcmp((const char *)(path + plen - len), suffix)) {
-      return ARGS_PATH_BAD_EXTENSION;
+      RET_STDERR(ARGS_PATH_BAD_EXTENSION,
+                 "The given path '%s' doesn't have required suffix '%s'.", path,
+                 suffix);
     }
   }
 
 #if defined(_WIN32)
   if (strpbrk(path, "<>\"|?*") != NULL) {
-    return ARGS_PATH_SPECIAL_CHARS;
+    RET_STDERR(ARGS_PATH_SPECIAL_CHARS,
+               "The given path contains invalid character(s).");
   }
 #endif
 
@@ -131,21 +136,19 @@ enum Err_Args args_path_check_syntax(const char *path, const char *prefix,
 }
 
 enum Err_Main args_path_check_semantic(const struct Config *config) {
-  if (!config ||
-      !config
-           ->source) { // this shouldn't happen, so suspect first possible error
-    return ERR_INVALID_INPUT_FILE;
+  if (!config || !config->source) {
+    RET_INVALID_INPUT_FILE("Config or source is NULL.");
   } else if (!config->target) {
-    return ERR_INVALID_OUTPUT_FILE;
+    RET_INVALID_OUTPUT_FILE("Target path is NULL.");
   }
 
   if (!fu_is_file(config->source)) { // source must exist and be file
-    return ERR_INVALID_INPUT_FILE;
+    RET_INVALID_INPUT_FILE("Source path doesn't exist or is not a file.");
   }
 
-  if (!fu_can_write(
-          config->target)) { // target must exist or be in writable directory
-    return ERR_INVALID_OUTPUT_FILE;
+  if (!fu_can_write(config->target)) {
+    RET_INVALID_OUTPUT_FILE(
+        "Target path must be a file or writable directory.");
   }
 
   return ERR_NO_ERROR;
@@ -156,7 +159,7 @@ enum Err_Main args_path_check_semantic(const struct Config *config) {
 int args_config_init(struct Config *config, const char *source,
                      const char *target, int verbose, int instruction) {
   size_t len = 0;
-  CLEANUP_IF_FAIL(config);
+  CLEANUP_IF_FAIL(config, "Config is NULL.");
 
   config->flag_instruction = instruction;
   config->flag_verbose = verbose;
@@ -164,14 +167,14 @@ int args_config_init(struct Config *config, const char *source,
   if (source) {
     len = strlen(source) + 1;
     config->source = jalloc(len);
-    CLEANUP_IF_FAIL(config->source);
+    CLEANUP_IF_FAIL(config->source, "Source path is NULL.");
     strcpy(config->source, source);
   }
 
   if (target) {
     len = strlen(target) + 1;
     config->target = jalloc(len);
-    CLEANUP_IF_FAIL(config->target);
+    CLEANUP_IF_FAIL(config->target, "Target path is NULL.");
     strcpy(config->target, target);
   }
 
@@ -183,7 +186,7 @@ cleanup:
 }
 
 void args_config_deinit(struct Config *config) {
-  CLEANUP_IF_FAIL(config);
+  CLEANUP_IF_FAIL(config, "Config is NULL.");
   config->flag_verbose = 0;
   config->flag_instruction = 0;
 
@@ -199,7 +202,7 @@ cleanup:
 // ===== PRIVATE FUNCTIONS =====
 
 static const char *_args_find_src(const int argc, const char **argv) {
-  CLEANUP_IF_FAIL(argc > 1 && argv && argv[1]);
+  CLEANUP_IF_FAIL(argc > 1 && argv && argv[1], "Invalid arguments were given.");
 
   return argv[1];
 
@@ -209,7 +212,7 @@ cleanup:
 
 static const char *_args_find_tgt(const int argc, const char **argv) {
   int i = 0;
-  CLEANUP_IF_FAIL(argc > 2 && argv);
+  CLEANUP_IF_FAIL(argc > 2 && argv, "Invalid arguments were given.");
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
     if (argv[i][0] != '-') {   // if is not a flag
@@ -223,7 +226,7 @@ cleanup:
 
 static int _args_is_v(const int argc, const char **argv) {
   int i = 0;
-  CLEANUP_IF_FAIL(argc > 2 && argv);
+  CLEANUP_IF_FAIL(argc > 2 && argv, "Invalid arguments were given.");
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
     if (strcmp(argv[i], "-v") == 0) {
@@ -237,7 +240,7 @@ cleanup:
 
 static int _args_is_i(const int argc, const char **argv) {
   int i = 0;
-  CLEANUP_IF_FAIL(argc > 2 && argv);
+  CLEANUP_IF_FAIL(argc > 2 && argv, "Invalid arguments were given.");
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
     if (strcmp(argv[i], "-i") == 0) {
@@ -251,13 +254,11 @@ cleanup:
 
 static int _args_change_extension(char *path) {
   char *begin = NULL;
-  if (!path) {
-    return 0;
-  }
-  begin = strstr(path, ".kas");
-  if (!begin) {
-    return 0;
-  }
+  RET_STDERR_IF_FAIL(path, 0, "Path is NULL.");
+  begin = strstr(path, ".kas"); // WARN: should maybe expect .kas only on the
+                                // last four positions?
+  RET_STDERR_IF_FAIL(begin, 0,
+                     "The file on path doesn't have '.kas' extension.");
   *(char *)(begin + 2) = 'm'; // in .kas change a->m, s->x
   *(char *)(begin + 3) = 'x';
   return 1;
