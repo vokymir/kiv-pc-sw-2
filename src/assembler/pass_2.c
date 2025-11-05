@@ -4,6 +4,7 @@
 
 #include "instruction.h"
 #include "internal.h"
+#include "parser.h"
 
 #include "assembler_convert.h"
 #include "assembler_pass_2.h"
@@ -125,7 +126,8 @@ enum Err_Asm pass2_data_decl_uninit(struct Assembler_Processing *asp,
       "but couldn't append %zu UNINITIALIZED bytes to data segment.\n",
       is->element_count);
 
-  PRINT_VERBOSE_CLN("appended %zu UNINITIALIZED bytes to data segment, ");
+  PRINT_VERBOSE_CLN("appended %zu UNINITIALIZED bytes to data segment, ",
+                    is->element_count);
   return ASM_NO_ERROR;
 }
 
