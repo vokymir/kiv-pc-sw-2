@@ -2,41 +2,41 @@
 #include "assembler_passes.h"
 #include "internal.h"
 
-enum Err_Asm _pass1_line(struct Assembler_Processing *asp,
-                         enum Assembler_Context *ctx, size_t nl,
-                         const char *line) {
+enum Err_Asm pass1_line(struct Assembler_Processing *asp,
+                        enum Assembler_Context *ctx, size_t nl,
+                        const char *line) {
   return passes_line(asp, ctx, nl, line, 0);
 }
 
-enum Err_Asm _pass1_decide(struct Parsed_Statement *pstmt,
-                           struct Assembler_Processing *asp,
-                           enum Assembler_Context *ctx, size_t nl) {
+enum Err_Asm pass1_decide(struct Parsed_Statement *pstmt,
+                          struct Assembler_Processing *asp,
+                          enum Assembler_Context *ctx, size_t nl) {
   RETURN_IF_FAIL(pstmt && asp && ctx, ASM_INVALID_ARGS);
 
   switch (pstmt->type) {
   case STMT_KMA:
-    return _pass1_kma(asp, ctx, nl);
+    return passes_kma(asp, ctx, nl);
   case STMT_SECTION_CODE:
-    return _pass1_code_section(asp, ctx, nl);
+    return passes_code_section(asp, ctx, nl);
   case STMT_SECTION_DATA:
-    return _pass1_data_section(asp, ctx, nl);
+    return passes_data_section(asp, ctx, nl);
   case STMT_DATA_DECL:
-    return _pass1_data_decl(pstmt, asp, ctx, nl);
+    return pass1_data_decl(pstmt, asp, ctx, nl);
   case STMT_INSTRUCTION:
-    return _pass1_instruction(pstmt, asp, ctx, nl);
+    return pass1_instruction(pstmt, asp, ctx, nl);
   case STMT_LABEL_DEF:
-    return _pass1_label_def(pstmt, asp, ctx, nl);
+    return pass1_label_def(pstmt, asp, ctx, nl);
   case STMT_NONE:
-    return _pass1_none(asp, nl);
+    return passes_none(asp, nl);
   case STMT_ERROR:
   default:
-    return _pass1_error(asp, nl);
+    return passes_error(asp, nl);
   }
 }
 
-enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
-                              struct Assembler_Processing *asp,
-                              enum Assembler_Context *ctx, size_t nl) {
+enum Err_Asm pass1_data_decl(struct Parsed_Statement *pstmt,
+                             struct Assembler_Processing *asp,
+                             enum Assembler_Context *ctx, size_t nl) {
   size_t position = SIZE_MAX, size = SIZE_MAX;
   char *identifier = NULL;
   PRINT_VERBOSE("Found DATA DECLARATION on line %zu, ", nl);
@@ -82,9 +82,9 @@ enum Err_Asm _pass1_data_decl(struct Parsed_Statement *pstmt,
   return ASM_NO_ERROR;
 }
 
-enum Err_Asm _pass1_instruction(struct Parsed_Statement *pstmt,
-                                struct Assembler_Processing *asp,
-                                enum Assembler_Context *ctx, size_t nl) {
+enum Err_Asm pass1_instruction(struct Parsed_Statement *pstmt,
+                               struct Assembler_Processing *asp,
+                               enum Assembler_Context *ctx, size_t nl) {
   size_t size = SIZE_MAX, position = SIZE_MAX;
   PRINT_VERBOSE("Found INSTRUCTION on line %zu, ", nl);
   RET_VERBOSE_CLN_IF_FAIL(pstmt && asp && asp->config && ctx, ASM_INVALID_ARGS,
@@ -117,9 +117,9 @@ enum Err_Asm _pass1_instruction(struct Parsed_Statement *pstmt,
   return ASM_NO_ERROR; // here no print_instruction, that is in 2nd pass
 }
 
-enum Err_Asm _pass1_label_def(struct Parsed_Statement *pstmt,
-                              struct Assembler_Processing *asp,
-                              enum Assembler_Context *ctx, size_t nl) {
+enum Err_Asm pass1_label_def(struct Parsed_Statement *pstmt,
+                             struct Assembler_Processing *asp,
+                             enum Assembler_Context *ctx, size_t nl) {
   char *label_name = NULL;
   size_t position = SIZE_MAX;
   PRINT_VERBOSE("Found LABEL definition on line %zu, ", nl);

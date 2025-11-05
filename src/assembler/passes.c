@@ -23,7 +23,7 @@ enum Err_Asm passes_any_pass(struct Assembler_Processing *asp, int is_second) {
     if (is_second) {
       REUSE_ERR_IF_FAIL(pass2_line(asp, &ctx, nl, line));
     } else {
-      REUSE_ERR_IF_FAIL(_pass1_line(asp, &ctx, nl, line));
+      REUSE_ERR_IF_FAIL(pass1_line(asp, &ctx, nl, line));
     }
     nl++;
   }
@@ -63,7 +63,7 @@ enum Err_Asm passes_line(struct Assembler_Processing *asp,
   if (is_second) {
     REUSE_ERR_IF_FAIL(pass2_decide(pstmt, asp, ctx, nl));
   } else {
-    REUSE_ERR_IF_FAIL(_pass1_decide(pstmt, asp, ctx, nl));
+    REUSE_ERR_IF_FAIL(pass1_decide(pstmt, asp, ctx, nl));
   }
 
 cleanup:
@@ -77,7 +77,7 @@ cleanup:
   return err;
 }
 
-enum Err_Asm _pass1_kma(struct Assembler_Processing *asp,
+enum Err_Asm passes_kma(struct Assembler_Processing *asp,
                         enum Assembler_Context *ctx, size_t nl) {
   PRINT_VERBOSE("Found KMA label on line %zu, ", nl);
   RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
@@ -92,7 +92,7 @@ enum Err_Asm _pass1_kma(struct Assembler_Processing *asp,
   return ASM_NO_ERROR;
 }
 
-enum Err_Asm _pass1_code_section(struct Assembler_Processing *asp,
+enum Err_Asm passes_code_section(struct Assembler_Processing *asp,
                                  enum Assembler_Context *ctx, size_t nl) {
   PRINT_VERBOSE("Found CODE SECTION label on line %zu, ", nl);
   RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
@@ -107,7 +107,7 @@ enum Err_Asm _pass1_code_section(struct Assembler_Processing *asp,
   return ASM_NO_ERROR;
 }
 
-enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
+enum Err_Asm passes_data_section(struct Assembler_Processing *asp,
                                  enum Assembler_Context *ctx, size_t nl) {
   PRINT_VERBOSE("Found DATA SECTION label on line %zu, ", nl);
   RET_VERBOSE_CLN_IF_FAIL(asp && asp->config && ctx, ASM_INVALID_ARGS,
@@ -122,14 +122,14 @@ enum Err_Asm _pass1_data_section(struct Assembler_Processing *asp,
   return ASM_NO_ERROR;
 }
 
-enum Err_Asm _pass1_none(struct Assembler_Processing *asp, size_t nl) {
+enum Err_Asm passes_none(struct Assembler_Processing *asp, size_t nl) {
   PRINT_VERBOSE(
       "Found NOTHING on line %zu, might be an empty line, or only comment.\n",
       nl);
   return ASM_NO_ERROR;
 }
 
-enum Err_Asm _pass1_error(struct Assembler_Processing *asp, size_t nl) {
+enum Err_Asm passes_error(struct Assembler_Processing *asp, size_t nl) {
   PRINT_VERBOSE("Weird line %zu, cannot find known statement.\n", nl);
   return ASM_UNKNOWN_PSTMT_TYPE;
 }

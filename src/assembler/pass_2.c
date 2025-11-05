@@ -18,11 +18,11 @@ enum Err_Asm pass2_decide(struct Parsed_Statement *pstmt,
 
   switch (pstmt->type) {
   case STMT_KMA:
-    return _pass1_kma(asp, ctx, nl); // intentional
+    return passes_kma(asp, ctx, nl); // intentional
   case STMT_SECTION_CODE:
-    return _pass1_code_section(asp, ctx, nl); // intentional
+    return passes_code_section(asp, ctx, nl); // intentional
   case STMT_SECTION_DATA:
-    return _pass1_data_section(asp, ctx, nl); // intentional
+    return passes_data_section(asp, ctx, nl); // intentional
   case STMT_DATA_DECL:
     return pass2_data_decl(pstmt, asp, ctx, nl);
   case STMT_INSTRUCTION:
@@ -30,10 +30,10 @@ enum Err_Asm pass2_decide(struct Parsed_Statement *pstmt,
   case STMT_LABEL_DEF:
     return ASM_NO_ERROR; // label definition belongs to 1st pass
   case STMT_NONE:
-    return _pass1_none(asp, nl); // intentional
+    return passes_none(asp, nl); // intentional
   case STMT_ERROR:
   default:
-    return _pass1_error(asp, nl); // intentional
+    return passes_error(asp, nl); // intentional
   }
 }
 
