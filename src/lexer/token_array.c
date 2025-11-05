@@ -5,10 +5,10 @@
 #include "lexer_token_array.h"
 
 int tok_arr_init(struct Token_Arr *arr) {
-  CLEANUP_IF_FAIL(arr);
+  CLEANUP_IF_FAIL(arr, "TODO:");
 
   arr->tokens = jalloc(TOKENS_INITIAL_CAPACITY * sizeof(struct Token));
-  CLEANUP_IF_FAIL(arr->tokens);
+  CLEANUP_IF_FAIL(arr->tokens, "TODO:");
 
   arr->count = 0;
   arr->capacity = TOKENS_INITIAL_CAPACITY;
@@ -20,7 +20,7 @@ cleanup:
 }
 
 void tok_arr_deinit(struct Token_Arr *arr) {
-  CLEANUP_IF_FAIL(arr);
+  CLEANUP_IF_FAIL(arr, "TODO:");
 
   if (arr->tokens) {
     jree(arr->tokens);
@@ -36,7 +36,7 @@ cleanup:
 int tok_arr_ensure_capacity(struct Token_Arr *arr, size_t additional_tokens) {
   size_t req = 0, new_cap = 0;
   struct Token *new_tokens = NULL;
-  CLEANUP_IF_FAIL(arr);
+  CLEANUP_IF_FAIL(arr, "TODO:");
 
   if (additional_tokens == 0) {
     return 1;
@@ -53,7 +53,7 @@ int tok_arr_ensure_capacity(struct Token_Arr *arr, size_t additional_tokens) {
   }
 
   new_tokens = jealloc(arr->tokens, new_cap * sizeof(struct Token));
-  CLEANUP_IF_FAIL(new_tokens);
+  CLEANUP_IF_FAIL(new_tokens, "TODO:");
 
   arr->tokens = new_tokens;
   arr->capacity = new_cap;

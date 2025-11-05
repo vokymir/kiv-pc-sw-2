@@ -31,11 +31,13 @@ enum Err_Grm grammar_identifier_def(struct Parsed_Statement *pstmt,
   NOMATCH_IF_FAIL(token_is(TOK_CURR, TOKEN_DATA_TYPE));
 
   if (token_value_eq(TOK_CURR, "DWORD") || token_value_eq(TOK_CURR, "DW")) {
-    CLEANUP_IF_FAIL(grammar_identifier_dw_dec(pstmt, &TOK_NEXT) == GRM_MATCH);
+    CLEANUP_IF_FAIL(grammar_identifier_dw_dec(pstmt, &TOK_NEXT) == GRM_MATCH,
+                    "TODO:");
     pstmt->content.data_decl.type = DATA_DWORD;
   } else if (token_value_eq(TOK_CURR, "BYTE") ||
              token_value_eq(TOK_CURR, "DB")) {
-    CLEANUP_IF_FAIL(grammar_identifier_db_dec(pstmt, &TOK_NEXT) == GRM_MATCH);
+    CLEANUP_IF_FAIL(grammar_identifier_db_dec(pstmt, &TOK_NEXT) == GRM_MATCH,
+                    "TODO:");
     pstmt->content.data_decl.type = DATA_BYTE;
   } else {
     return GRM_NO_MATCH;
@@ -112,38 +114,41 @@ static enum Err_Grm _grammar_identifier_dec(struct Parsed_Statement *pstmt,
 
   if (tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_DUP))) {
     if (is_dw) {
-      CLEANUP_IF_FAIL(grammar_identifier_dw_dup(pstmt, &TOK_CURR,
-                                                segment_idx) == GRM_MATCH);
+      CLEANUP_IF_FAIL(
+          grammar_identifier_dw_dup(pstmt, &TOK_CURR, segment_idx) == GRM_MATCH,
+          "TODO:");
     } else {
-      CLEANUP_IF_FAIL(grammar_identifier_db_dup(pstmt, &TOK_CURR,
-                                                segment_idx) == GRM_MATCH);
+      CLEANUP_IF_FAIL(
+          grammar_identifier_db_dup(pstmt, &TOK_CURR, segment_idx) == GRM_MATCH,
+          "TODO:");
     }
     return GRM_MATCH;
   } else if (token_is(TOK_CURR, TOKEN_NUMBER)) {
     if (is_dw) {
-      CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &TOK_NEXT) ==
-                      GRM_MATCH);
+      CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &TOK_NEXT) == GRM_MATCH,
+                      "TODO:");
     } else {
-      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) ==
-                      GRM_MATCH);
+      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) == GRM_MATCH,
+                      "TODO:");
     }
-    CLEANUP_IF_FAIL(segment_set_number(pstmt, segment_idx, TOK_CURR));
+    CLEANUP_IF_FAIL(segment_set_number(pstmt, segment_idx, TOK_CURR), "TODO:");
     return GRM_MATCH;
   } else if (token_is(TOK_CURR, TOKEN_QUESTION)) {
     if (is_dw) {
-      CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &TOK_NEXT) ==
-                      GRM_MATCH);
+      CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &TOK_NEXT) == GRM_MATCH,
+                      "TODO:");
     } else {
-      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) ==
-                      GRM_MATCH);
+      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) == GRM_MATCH,
+                      "TODO:");
     }
-    CLEANUP_IF_FAIL(segment_set_uninit(pstmt, segment_idx));
+    CLEANUP_IF_FAIL(segment_set_uninit(pstmt, segment_idx), "TODO:");
     return GRM_MATCH;
   } else {
     if (!is_dw && token_is(TOK_CURR, TOKEN_STRING)) {
-      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) ==
-                      GRM_MATCH);
-      CLEANUP_IF_FAIL(segment_set_string(pstmt, segment_idx, TOK_CURR));
+      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) == GRM_MATCH,
+                      "TODO:");
+      CLEANUP_IF_FAIL(segment_set_string(pstmt, segment_idx, TOK_CURR),
+                      "TODO:");
       return GRM_MATCH;
     }
   }

@@ -14,7 +14,7 @@
 int set_next_token(struct Token *token, const char *line, const size_t len,
                    size_t *pos, const size_t nl) {
   const char *current = NULL;
-  CLEANUP_IF_FAIL(token && line && pos && len > 0 && len > *pos);
+  CLEANUP_IF_FAIL(token && line && pos && len > 0 && len > *pos, "TODO:");
 
   current = &line[*pos];
 
@@ -41,15 +41,15 @@ int set_next_token(struct Token *token, const char *line, const size_t len,
 
   // String literal in .DATA segment
   if (*current == '"') {
-    CLEANUP_IF_FAIL(set_token_string(token, current + 1,
-                                     nl)); // +1 for opening quote
-    (*pos) += strlen(token->value) + 2;    // +2 for the quotes on begin/end
+    CLEANUP_IF_FAIL(set_token_string(token, current + 1, nl),
+                    "TODO:");           // +1 for opening quote
+    (*pos) += strlen(token->value) + 2; // +2 for the quotes on begin/end
     return 1;
   }
 
   // Label (starts with @)
   if (*current == '@') {
-    CLEANUP_IF_FAIL(set_token_label(token, current, nl));
+    CLEANUP_IF_FAIL(set_token_label(token, current, nl), "TODO:");
     (*pos) += strlen(token->value) + 1; // +1 for ':'
     return 1;
   }
@@ -57,20 +57,20 @@ int set_next_token(struct Token *token, const char *line, const size_t len,
   // Number (digit or negative number)
   if (isdigit(*current) ||
       (*current == '-' && *pos + 1 < len && isdigit(*(current + 1)))) {
-    CLEANUP_IF_FAIL(set_token_number(token, current, nl));
+    CLEANUP_IF_FAIL(set_token_number(token, current, nl), "TODO:");
     (*pos) += strlen(token->value);
     return 1;
   }
 
   // Word (instruction, register, keyword, or identifier)
   if (isalpha(*current) || *current == '.') {
-    CLEANUP_IF_FAIL(set_token_word(token, current, nl));
+    CLEANUP_IF_FAIL(set_token_word(token, current, nl), "TODO:");
     (*pos) += strlen(token->value);
     return 1;
   }
 
   // Unknown character
-  CLEANUP_IF_FAIL(set_token_len(token, TOKEN_UNKNOWN, current, nl, 1));
+  CLEANUP_IF_FAIL(set_token_len(token, TOKEN_UNKNOWN, current, nl, 1), "TODO:");
   (*pos)++;
   return 1;
 
@@ -83,7 +83,7 @@ int set_token(struct Token *token, const enum Token_Type type,
               const char *value, const size_t nl) {
   size_t val_len = 0;
 
-  CLEANUP_IF_FAIL(token);
+  CLEANUP_IF_FAIL(token, "TODO:");
 
   token->type = type;
   token->line_number = nl;
@@ -92,7 +92,7 @@ int set_token(struct Token *token, const enum Token_Type type,
   }
 
   val_len = strlen(value);
-  CLEANUP_IF_FAIL(val_len + 1 <= TOKEN_MAX_VALUE_LEN);
+  CLEANUP_IF_FAIL(val_len + 1 <= TOKEN_MAX_VALUE_LEN, "TODO:");
 
   memcpy(token->value, value, val_len);
   token->value[val_len] = '\0';
@@ -105,7 +105,8 @@ cleanup:
 
 int set_token_len(struct Token *token, const enum Token_Type type,
                   const char *value, const size_t nl, const size_t len) {
-  CLEANUP_IF_FAIL(token && value && len > 0 && len + 1 <= TOKEN_MAX_VALUE_LEN);
+  CLEANUP_IF_FAIL(token && value && len > 0 && len + 1 <= TOKEN_MAX_VALUE_LEN,
+                  "TODO:");
 
   token->type = type;
   token->line_number = nl;
@@ -121,15 +122,15 @@ cleanup:
 int set_token_string(struct Token *token, const char *s, const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
-  CLEANUP_IF_FAIL(token && s);
+  CLEANUP_IF_FAIL(token && s, "TODO:");
 
   while (*curr && *curr != '"') {
     n_chars++;
     curr++;
   }
-  CLEANUP_IF_FAIL(*curr); // strings end wasnt reached due to '\0'
+  CLEANUP_IF_FAIL(*curr, "TODO:"); // strings end wasnt reached due to '\0'
 
-  CLEANUP_IF_FAIL(set_token_len(token, TOKEN_STRING, s, nl, n_chars));
+  CLEANUP_IF_FAIL(set_token_len(token, TOKEN_STRING, s, nl, n_chars), "TODO:");
 
   return 1;
 
@@ -140,7 +141,7 @@ cleanup:
 int set_token_label(struct Token *token, const char *s, const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
-  CLEANUP_IF_FAIL(token && s && *s == '@');
+  CLEANUP_IF_FAIL(token && s && *s == '@', "TODO:");
   n_chars++; // the @ at the beginning
   curr++;
 
@@ -149,9 +150,9 @@ int set_token_label(struct Token *token, const char *s, const size_t nl) {
     curr++;
   }
 
-  CLEANUP_IF_FAIL(n_chars >= 2); // too little characters
+  CLEANUP_IF_FAIL(n_chars >= 2, "TODO:"); // too little characters
 
-  CLEANUP_IF_FAIL(set_token_len(token, TOKEN_LABEL, s, nl, n_chars));
+  CLEANUP_IF_FAIL(set_token_len(token, TOKEN_LABEL, s, nl, n_chars), "TODO:");
 
   return 1;
 
@@ -162,7 +163,7 @@ cleanup:
 int set_token_number(struct Token *token, const char *s, const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
-  CLEANUP_IF_FAIL(token && s);
+  CLEANUP_IF_FAIL(token && s, "TODO:");
 
   if (*curr == '-') { // optional negative number
     n_chars++;
@@ -174,10 +175,10 @@ int set_token_number(struct Token *token, const char *s, const size_t nl) {
     curr++;
   }
 
-  CLEANUP_IF_FAIL((n_chars > 1 && *s == '-') ||
-                  (n_chars > 0)); // too little chars
+  CLEANUP_IF_FAIL((n_chars > 1 && *s == '-') || (n_chars > 0),
+                  "TODO:"); // too little chars
 
-  CLEANUP_IF_FAIL(set_token_len(token, TOKEN_NUMBER, s, nl, n_chars));
+  CLEANUP_IF_FAIL(set_token_len(token, TOKEN_NUMBER, s, nl, n_chars), "TODO:");
 
   return 1;
 
@@ -189,7 +190,7 @@ int set_token_word(struct Token *token, const char *s, const size_t nl) {
   size_t n_chars = 0;
   const char *curr = s;
   enum Token_Type type = TOKEN_UNKNOWN;
-  CLEANUP_IF_FAIL(token && s);
+  CLEANUP_IF_FAIL(token && s, "TODO:");
 
   if (*curr && *curr == '.') {
     n_chars++;
@@ -202,7 +203,7 @@ int set_token_word(struct Token *token, const char *s, const size_t nl) {
   }
 
   type = lexer_classify_word(s, n_chars);
-  CLEANUP_IF_FAIL(set_token_len(token, type, s, nl, n_chars));
+  CLEANUP_IF_FAIL(set_token_len(token, type, s, nl, n_chars), "TODO:");
 
   return 1;
 

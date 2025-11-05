@@ -19,9 +19,9 @@ struct Symbol_Table *symtab_create(void) {
   struct Symbol_Table *table = NULL;
 
   table = jalloc(sizeof(struct Symbol_Table));
-  CLEANUP_IF_FAIL(table);
+  CLEANUP_IF_FAIL(table, "TODO:");
 
-  CLEANUP_IF_FAIL(symtab_init(table));
+  CLEANUP_IF_FAIL(symtab_init(table), "TODO:");
 
   return table;
 
@@ -33,10 +33,10 @@ cleanup:
 }
 
 int symtab_init(struct Symbol_Table *table) {
-  CLEANUP_IF_FAIL(table);
+  CLEANUP_IF_FAIL(table, "TODO:");
 
   table->symbols = jalloc(SYMTAB_INITIAL_CAPACITY * sizeof(struct Symbol));
-  CLEANUP_IF_FAIL(table->symbols);
+  CLEANUP_IF_FAIL(table->symbols, "TODO:");
 
   table->count = 0;
   table->capacity = SYMTAB_INITIAL_CAPACITY;
@@ -48,7 +48,7 @@ cleanup:
 }
 
 void symtab_deinit(struct Symbol_Table *table) {
-  CLEANUP_IF_FAIL(table);
+  CLEANUP_IF_FAIL(table, "TODO:");
 
   if (table->symbols) {
     jree(table->symbols);
@@ -62,7 +62,7 @@ cleanup:
 }
 
 void symtab_free(struct Symbol_Table **table) {
-  CLEANUP_IF_FAIL(table);
+  CLEANUP_IF_FAIL(table, "TODO:");
 
   symtab_deinit(*table);
   jree(*table);
@@ -75,10 +75,10 @@ cleanup:
 struct Symbol *symtab_add(struct Symbol_Table *table, const char *name,
                           const uint32_t address) {
   struct Symbol *symbol = NULL;
-  CLEANUP_IF_FAIL(table && table->symbols && name);
+  CLEANUP_IF_FAIL(table && table->symbols && name, "TODO:");
   symbol = &table->symbols[table->count];
 
-  CLEANUP_IF_FAIL(_symtab_ensure_capacity(table, 1));
+  CLEANUP_IF_FAIL(_symtab_ensure_capacity(table, 1), "TODO:");
 
   symbol->address = address;
   strcpy(symbol->name, name);
@@ -93,7 +93,7 @@ cleanup:
 struct Symbol *symtab_find(const struct Symbol_Table *table, const char *name) {
   size_t i = 0;
   struct Symbol *symbol = NULL;
-  CLEANUP_IF_FAIL(table && table->symbols && name);
+  CLEANUP_IF_FAIL(table && table->symbols && name, "TODO:");
 
   for (i = 0; i < table->count; i++) {
     symbol = &table->symbols[i];
@@ -112,7 +112,7 @@ static int _symtab_ensure_capacity(struct Symbol_Table *symtab,
                                    size_t additional_symbols) {
   size_t req = 0, new_cap = 0;
   struct Symbol *new_s = NULL;
-  CLEANUP_IF_FAIL(symtab && symtab->symbols);
+  CLEANUP_IF_FAIL(symtab && symtab->symbols, "TODO:");
 
   if (additional_symbols == 0) {
     return 1;
@@ -129,7 +129,7 @@ static int _symtab_ensure_capacity(struct Symbol_Table *symtab,
   }
 
   new_s = jealloc(symtab->symbols, new_cap * sizeof(struct Symbol));
-  CLEANUP_IF_FAIL(new_s);
+  CLEANUP_IF_FAIL(new_s, "TODO:");
 
   symtab->symbols = new_s;
   symtab->capacity = new_cap;

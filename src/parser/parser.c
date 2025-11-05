@@ -13,7 +13,7 @@ struct Parsed_Statement *parse_tokens(const struct Token *tokens[], size_t nl) {
   stmt = p_stmt_create(STMT_NONE, nl);
   RETURN_IF_FAIL(stmt, NULL);
 
-  CLEANUP_IF_FAIL(grammar_line(stmt, tokens) == GRM_MATCH);
+  CLEANUP_IF_FAIL(grammar_line(stmt, tokens) == GRM_MATCH, "TODO:");
 
   return stmt;
 
@@ -26,9 +26,9 @@ cleanup:
 
 struct Parsed_Statement *p_stmt_create(enum Statement_Type stype, size_t nl) {
   struct Parsed_Statement *ps = jalloc(sizeof(struct Parsed_Statement));
-  CLEANUP_IF_FAIL(ps);
+  CLEANUP_IF_FAIL(ps, "TODO:");
 
-  CLEANUP_IF_FAIL(p_stmt_init(ps, stype, nl));
+  CLEANUP_IF_FAIL(p_stmt_init(ps, stype, nl), "TODO:");
 
   return ps;
 
@@ -41,7 +41,7 @@ cleanup:
 
 int p_stmt_init(struct Parsed_Statement *ps, enum Statement_Type type,
                 size_t nl) {
-  CLEANUP_IF_FAIL(ps);
+  CLEANUP_IF_FAIL(ps, "TODO:");
 
   ps->type = type;
   ps->err = PAR_NO_ERROR;
@@ -77,7 +77,7 @@ cleanup:
 }
 
 void p_stmt_deinit(struct Parsed_Statement *ps) {
-  CLEANUP_IF_FAIL(ps);
+  CLEANUP_IF_FAIL(ps, "TODO:");
 
   switch (ps->type) {
   case STMT_NONE:
@@ -111,7 +111,7 @@ cleanup:
 }
 
 void p_stmt_free(struct Parsed_Statement **stmt) {
-  CLEANUP_IF_FAIL(stmt && *stmt);
+  CLEANUP_IF_FAIL(stmt && *stmt, "TODO:");
 
   p_stmt_deinit(*stmt);
   jree(*stmt);

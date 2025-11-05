@@ -15,13 +15,13 @@ static int _cdsg_ensure_capacity(struct Code_Segment *cdsg,
 struct Code_Segment *cdsg_create(void) {
   struct Code_Segment *cdsg = NULL;
   cdsg = jalloc(sizeof(struct Code_Segment));
-  CLEANUP_IF_FAIL(cdsg);
+  CLEANUP_IF_FAIL(cdsg, "TODO:");
 
   cdsg->size = 0;
   cdsg->capacity = CDSG_INITIAL_CAPACITY;
 
   cdsg->bytes = jalloc(cdsg->capacity);
-  CLEANUP_IF_FAIL(cdsg->bytes);
+  CLEANUP_IF_FAIL(cdsg->bytes, "TODO:");
 
   return cdsg;
 
@@ -45,7 +45,7 @@ void cdsg_free(struct Code_Segment **cdsg) {
 }
 
 int cdsg_app_b(struct Code_Segment *cdsg, uint8_t b) {
-  CLEANUP_IF_FAIL(cdsg && cdsg->bytes);
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes, "TODO:");
 
   if (!_cdsg_ensure_capacity(cdsg, 1)) {
     return 0;
@@ -59,13 +59,13 @@ cleanup:
 }
 
 int cdsg_app_bs(struct Code_Segment *cdsg, const uint8_t *bs, size_t count) {
-  CLEANUP_IF_FAIL(cdsg && cdsg->bytes && bs);
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes && bs, "TODO:");
 
   if (count == 0) {
     return 1; // nothing to do
   }
 
-  CLEANUP_IF_FAIL(_cdsg_ensure_capacity(cdsg, count));
+  CLEANUP_IF_FAIL(_cdsg_ensure_capacity(cdsg, count), "TODO:");
 
   memcpy(cdsg->bytes + cdsg->size, bs, count);
   cdsg->size += count;
@@ -76,7 +76,7 @@ cleanup:
 }
 
 int cdsg_app_op(struct Code_Segment *cdsg, uint8_t opcode) {
-  CLEANUP_IF_FAIL(cdsg && cdsg->bytes);
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes, "TODO:");
 
   return cdsg_app_b(cdsg, opcode);
 
@@ -85,7 +85,7 @@ cleanup:
 }
 
 int cdsg_app_reg(struct Code_Segment *cdsg, uint8_t reg_code) {
-  CLEANUP_IF_FAIL(cdsg && cdsg->bytes);
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes, "TODO:");
 
   return cdsg_app_b(cdsg, reg_code);
 
@@ -95,7 +95,7 @@ cleanup:
 
 int cdsg_app_imm(struct Code_Segment *cdsg, int32_t imm32b_v) {
   uint8_t bytes[4];
-  CLEANUP_IF_FAIL(cdsg && cdsg->bytes);
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes, "TODO:");
 
   bytes[0] = (uint8_t)((imm32b_v >> 0) & 0xFF);
   bytes[1] = (uint8_t)((imm32b_v >> 8) & 0xFF);
@@ -109,7 +109,7 @@ cleanup:
 }
 
 size_t cdsg_get_size(const struct Code_Segment *cdsg) {
-  CLEANUP_IF_FAIL(cdsg);
+  CLEANUP_IF_FAIL(cdsg, "TODO:");
 
   return cdsg->size;
 
@@ -118,7 +118,7 @@ cleanup:
 }
 
 const uint8_t *cdsg_get_bytes(const struct Code_Segment *cdsg) {
-  CLEANUP_IF_FAIL(cdsg && cdsg->bytes);
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes, "TODO:");
 
   return cdsg->bytes;
 
@@ -128,7 +128,7 @@ cleanup:
 
 size_t cdsg_advance(struct Code_Segment *cdsg, size_t num_bytes) {
   size_t pos = 0;
-  CLEANUP_IF_FAIL(cdsg);
+  CLEANUP_IF_FAIL(cdsg, "TODO:");
 
   if (cdsg->size > SIZE_MAX - num_bytes) {
     goto cleanup;
@@ -155,13 +155,14 @@ static int _cdsg_ensure_capacity(struct Code_Segment *cdsg,
                                  size_t additional_b) {
   size_t req = 0, new_c = 0;
   uint8_t *new_b = NULL;
-  CLEANUP_IF_FAIL(cdsg && cdsg->bytes);
+  CLEANUP_IF_FAIL(cdsg && cdsg->bytes, "TODO:");
 
   if (additional_b == 0) {
     return 1;
   }
 
-  CLEANUP_IF_FAIL(cdsg->size <= SIZE_MAX - additional_b); // add overflow
+  CLEANUP_IF_FAIL(cdsg->size <= SIZE_MAX - additional_b,
+                  "TODO:"); // add overflow
 
   req = cdsg->size + additional_b;
   if (req <= cdsg->capacity) {
@@ -170,13 +171,13 @@ static int _cdsg_ensure_capacity(struct Code_Segment *cdsg,
 
   new_c = cdsg->capacity ? cdsg->capacity : CDSG_INITIAL_CAPACITY;
   while (new_c < req) {
-    CLEANUP_IF_FAIL(new_c <=
-                    SIZE_MAX / CDSG_CAPACITY_MULT); // multiply overflow
+    CLEANUP_IF_FAIL(new_c <= SIZE_MAX / CDSG_CAPACITY_MULT,
+                    "TODO:"); // multiply overflow
     new_c *= CDSG_CAPACITY_MULT;
   }
 
   new_b = jealloc(cdsg->bytes, new_c);
-  CLEANUP_IF_FAIL(new_b); // realloc failed
+  CLEANUP_IF_FAIL(new_b, "TODO:"); // realloc failed
 
   cdsg->bytes = new_b;
   cdsg->capacity = new_c;

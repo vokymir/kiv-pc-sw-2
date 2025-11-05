@@ -30,26 +30,26 @@ struct Token *lexer_tokenize_line(const char *line, const size_t nl) {
     return NULL;
   }
 
-  CLEANUP_IF_FAIL(tok_arr_init(&arr));
+  CLEANUP_IF_FAIL(tok_arr_init(&arr), "TODO:");
 
   len = strlen(line);
 
   // Process the whole line
   while (_lexer_skip_to_next_token(line, len, &pos)) {
-    CLEANUP_IF_FAIL(tok_arr_ensure_capacity(&arr, 1));
+    CLEANUP_IF_FAIL(tok_arr_ensure_capacity(&arr, 1), "TODO:");
     token = &arr.tokens[arr.count];
 
-    CLEANUP_IF_FAIL(set_next_token(token, line, len, &pos, nl));
+    CLEANUP_IF_FAIL(set_next_token(token, line, len, &pos, nl), "TODO:");
     arr.count++;
 
     token = NULL;
   }
 
   // Add EOF to the end
-  CLEANUP_IF_FAIL(tok_arr_ensure_capacity(&arr, 1));
+  CLEANUP_IF_FAIL(tok_arr_ensure_capacity(&arr, 1), "TODO:");
   token = &arr.tokens[arr.count];
 
-  CLEANUP_IF_FAIL(set_token(token, TOKEN_EOF, NULL, nl));
+  CLEANUP_IF_FAIL(set_token(token, TOKEN_EOF, NULL, nl), "TODO:");
   arr.count++;
 
   return arr.tokens;
