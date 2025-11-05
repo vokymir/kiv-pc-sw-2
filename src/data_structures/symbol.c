@@ -93,11 +93,12 @@ struct Symbol *symtab_add(struct Symbol_Table *table, const char *name,
 cleanup:
   return NULL;
 }
-// TODO: continue here
+
 struct Symbol *symtab_find(const struct Symbol_Table *table, const char *name) {
   size_t i = 0;
   struct Symbol *symbol = NULL;
-  CLEANUP_IF_FAIL(table && table->symbols && name, "TODO:");
+  CLEANUP_IF_FAIL(table && table->symbols && name,
+                  "The given Symbol Table or name were NULL.");
 
   for (i = 0; i < table->count; i++) {
     symbol = &table->symbols[i];
@@ -116,7 +117,8 @@ static int _symtab_ensure_capacity(struct Symbol_Table *symtab,
                                    size_t additional_symbols) {
   size_t req = 0, new_cap = 0;
   struct Symbol *new_s = NULL;
-  CLEANUP_IF_FAIL(symtab && symtab->symbols, "TODO:");
+  CLEANUP_IF_FAIL(symtab && symtab->symbols,
+                  "The given Symbol Table wasn't valid.");
 
   if (additional_symbols == 0) {
     return 1;
@@ -133,7 +135,8 @@ static int _symtab_ensure_capacity(struct Symbol_Table *symtab,
   }
 
   new_s = jealloc(symtab->symbols, new_cap * sizeof(struct Symbol));
-  CLEANUP_IF_FAIL(new_s, "TODO:");
+  CLEANUP_IF_FAIL(new_s,
+                  "Couldn't grow Symbol Table symbol array using realloc.");
 
   symtab->symbols = new_s;
   symtab->capacity = new_cap;
