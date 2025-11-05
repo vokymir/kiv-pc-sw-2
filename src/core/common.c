@@ -1,4 +1,3 @@
-#include <__stdarg_va_list.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -92,7 +91,7 @@ void print_err(const char *filename, size_t line, const char *string, ...) {
   }
 }
 
-size_t first_null_arg(void *args[], size_t count) {
+size_t first_null_arg(const void *args[], size_t count) {
   size_t i = 0;
   for (i = 0; i < count; i++) {
     if (args[i] == NULL) {
@@ -112,6 +111,7 @@ int valid_args(size_t count, ...) {
   for (i = 0; i < count; i++) {
     ptr = va_arg(args, void *);
     if (ptr == NULL) {
+      va_end(args);
       return 0;
     }
     ptr = NULL;
