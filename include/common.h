@@ -1,6 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <stddef.h>
 #include <stdlib.h>
 
 // Is in parser, which cannot be included (recursive includes).
@@ -43,8 +44,6 @@ struct Instruction_Statement;
       RET_STDERR(err, __VA_ARGS__);                                            \
     }                                                                          \
   } while (0)
-
-#define DEBUG 1
 
 // =======================
 // ===== ERROR CODES =====
@@ -109,6 +108,31 @@ void print_err(const char *filename, size_t line, const char *string, ...)
 // Use this macro to get correct filename & line number to the print_err
 // function above.
 #define PRINT_ERR(...) print_err(__FILE__, __LINE__, __VA_ARGS__)
+
+// ===========================
+// ===== VARIOUS HELPERS =====
+// ===========================
+
+// Return the index of first argument which is NULL.
+// The indicies are 1 indexed !!
+// Return 0 if none is NULL.
+size_t first_null_arg(void *args[], size_t count);
+
+// Return the 1-based index of first NULL argument, or 0 if no argument is NULL.
+#define FIRST_NULL(...)                                                        \
+  first_null_arg((void *[]){__VA_ARGS__},                                      \
+                 sizeof((void *[]){__VA_ARGS__}) / sizeof(void *))
+
+// Print to stderr which argument was invalid (first).
+#define PRINT_ERR_1ST_NULL_ARG(args)                                           \
+  PRINT_ERR("Invalid argument at %zu. position.", FIRST_NULL((args)))
+
+// Return 1 if all arguments are valid => are not NULL.
+int valid_args(size_t count, ...);
+
+// Return 1 if all arguments are not NULL
+#define VALID_ARGS(...)                                                        \
+  valid_args(sizeof((void *[]){__VA_ARGS__}) / sizeof(void *), __VA_ARGS__)
 
 // =====================================
 // ===== KM MACHINE SPECIFICATIONS =====

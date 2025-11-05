@@ -1,3 +1,4 @@
+#include <__stdarg_va_list.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -89,6 +90,35 @@ void print_err(const char *filename, size_t line, const char *string, ...) {
   if (len == 0 || string[len - 1] != '\n') {
     fputc('\n', stderr);
   }
+}
+
+size_t first_null_arg(void *args[], size_t count) {
+  size_t i = 0;
+  for (i = 0; i < count; i++) {
+    if (args[i] == NULL) {
+      return i + 1;
+    }
+  }
+  return 0;
+}
+
+int valid_args(size_t count, ...) {
+  size_t i = 0;
+  void *ptr = NULL;
+
+  va_list args;
+  va_start(args, count);
+
+  for (i = 0; i < count; i++) {
+    ptr = va_arg(args, void *);
+    if (ptr == NULL) {
+      return 0;
+    }
+    ptr = NULL;
+  }
+
+  va_end(args);
+  return 1;
 }
 
 static const char *_get_op_text(const struct Instruction_Statement *is,
