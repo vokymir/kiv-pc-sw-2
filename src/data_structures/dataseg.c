@@ -119,7 +119,8 @@ int dtsg_app_dw(struct Data_Segment *dtsg, int32_t dw) {
   CLEANUP_IF_FAIL(dtsg && dtsg->bytes);
 
   for (i = 0; i < KMA_DWORD_SIZE; i++) {
-    bytes[i] = (uint8_t)((dw >> (i * 8)) & 0xFF);
+    bytes[i] = (uint8_t)((dw >> (i * 8)) &
+                         0xFF); // TODO: hejdula tvrdi, ze 0xFF je hloupost
   }
 
   return dtsg_app_bs(dtsg, bytes, KMA_DWORD_SIZE);
