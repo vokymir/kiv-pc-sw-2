@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "common.h"
 #include "memory.h"
 
 static size_t alloc_count = 0;
@@ -11,10 +12,12 @@ static size_t alloc_count = 0;
 void *jalloc(const size_t bytes) {
   void *mem = NULL;
   if (bytes == 0 || bytes > SIZE_MAX / 1) {
+    PRINT_ERR("Couldn't allocat %zu bytes.", bytes);
     return NULL;
   }
   mem = calloc(bytes, 1);
   if (!mem) {
+    PRINT_ERR("Calloc didn't allocate %zu bytes.", bytes);
     return NULL;
   }
   ++alloc_count;
@@ -33,6 +36,7 @@ void *jealloc(void *src, const size_t bytes) {
 
 void jree(void *memory) {
   if (!memory) {
+    PRINT_ERR("Tried to call free on NULL pointer.");
     return;
   }
   assert(alloc_count > 0);
@@ -46,6 +50,7 @@ char *jtrdup(const char *str1) {
   size_t len = 0;
   char *dup = NULL;
   if (!str1) {
+    PRINT_ERR("Tried to duplicate string, but the pointer was NULL.");
     return NULL;
   }
   len = strlen(str1) + 1;
@@ -58,10 +63,14 @@ char *jtrdup(const char *str1) {
 
 char *jtrndup(const char *str, size_t size) {
   char *dup = jalloc(size + 1);
-  if (!dup)
+  if (!dup) {
+    PRINT_ERR("Tried to duplicate first %zu characters of string, but the "
+              "pointer was NULL.",
+              size);
     return NULL;
+  }
 
-  memcpy(dup, str, size);
+  memcpy(dup, str, size); // TODO: what does memcpy do on size == 0 ?
   dup[size] = '\0';
   return dup;
 }
