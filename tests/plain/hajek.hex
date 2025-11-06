@@ -1,0 +1,47 @@
+4B 4D 58                            # KMX header
+20 00 00 00                         # data len
+
+01 00 00 00                         # stack_array[0] = 1
+02 00 00 00                         # stack_array[1] = 2
+03 00 00 00                         # stack_array[2] = 3
+04 00 00 00                         # stack_array[3] = 4
+05 00 00 00                         # stack_array[4] = 5
+06 00 00 00                         # stack_array[5] = 6
+07 00 00 00                         # stack_array[6] = 7
+08 00 00 00                         # stack_array[7] = 8
+
+10 03 00 00 00 00                   # MOV C, 0
+10 02 00 00 00 00                   # MOV B, OFFSET stack_array
+
+ # PUSHING
+14 01 02                             # LOAD A, B // TODO: HERE
+20 01                                # PUSH A
+30 03 01 00 00 00                     # ADD C, 1
+30 02 04 00 00 00                     # ADD B, 4
+60 03 08 00 00 00                     # CMP C, 8
+78 E4 FF FF FF                         # JLE @Pushing (relative -28)
+
+10 03 00 00 00 00                   # MOV C, 0
+10 02 00 00 00 00                   # MOV B, OFFSET stack_array
+
+ # POPPING
+21 01                               # POP A
+16 01 02                            # STOR A, B
+30 03 01 00 00 00                     # ADD C, 1
+30 02 04 00 00 00                     # ADD B, 4
+60 03 08 00 00 00                     # CMP C, 8
+78 E4 FF FF FF                         # JLE @Popping (relative -28)
+
+10 03 00 00 00 00                   # MOV C, 0
+10 02 00 00 00 00                   # MOV B, OFFSET stack_array
+
+# PRINTING
+14 01 02                             # LOAD A, B
+30 03 01 00 00 00                     # ADD C, 1
+30 02 04 00 00 00                     # ADD B, 4
+F0 01                                # OUTD A
+60 03 08 00 00 00                     # CMP C, 8
+78 E4 FF FF FF                         # JLE @Printing (relative -28)
+
+00                                  # HALT
+

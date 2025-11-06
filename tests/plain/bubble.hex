@@ -1,0 +1,79 @@
+4B 4D 58                            # KMX header
+54 00 00 00                         # LEN of Data segment = 21 * 4 = 84
+
+00 00 00 00                         # swapped DWORD ?
+00 00 00 00                         # array[0]
+00 00 00 00                         # array[1]
+00 00 00 00                         # array[2]
+00 00 00 00                         # array[3]
+00 00 00 00                         # array[4]
+00 00 00 00                         # array[5]
+00 00 00 00                         # array[6]
+00 00 00 00                         # array[7]
+00 00 00 00                         # array[8]
+00 00 00 00                         # array[9]
+00 00 00 00                         # array[10]
+00 00 00 00                         # array[11]
+00 00 00 00                         # array[12]
+00 00 00 00                         # array[13]
+00 00 00 00                         # array[14]
+00 00 00 00                         # array[15]
+00 00 00 00                         # array[16]
+00 00 00 00                         # array[17]
+00 00 00 00                         # array[18]
+00 00 00 00                         # array[19]
+
+10 01 01 00 00 00                   # MOV A, 1
+15 01 00 00 00 00                   # STOR A, OFFSET swapped
+10 04 04 00 00 00                   # MOV D, OFFSET array
+30 04 08 00 00 00                   # ADD D, 8
+10 01 0A 00 00 00                   # MOV A, 10
+16 01 04                            # STOR A, D (array[2])
+30 04 10 00 00 00                   # ADD D, 16
+10 01 14 00 00 00                   # MOV A, 20
+16 01 04                            # STOR A, D (array[1])
+30 04 08 00 00 00                   #ADD D, 8
+10 01 1E 00 00 00                   # MOV A, 30
+16 01 04                            # STOR A, D (array[3])
+
+# @LBubbleWhileBeg:
+13 01 00 00 00 00 # LOAD A, OFFSET swapped
+60 01 01 00 00 00                   # CMP A, 1
+73 62 00 00 00                      # JNE @LBubbleWhileEnd
+
+10 03 13 00 00 00                   # MOV C, 19
+10 01 00 00 00 00                   # MOV A, 0
+15 01 00 00 00 00                   # STOR A, OFFSET swapped
+10 05 04 00 00 00                   # MOV S, OFFSET array
+10 04 04 00 00 00                   # MOV D, OFFSET array
+30 04 04 00 00 00                   # ADD D, 4
+
+14 01 05                            # LOAD A, S
+14 02 04                            # LOAD B, D
+61 01 02                            # CMP A, B
+76 12 00 00 00                      # JNG @L01
+16 02 05                            # STOR B, S
+16 01 04                            # STOR A, D
+10 01 01 00 00 00                   # MOV A, 1
+15 01 00 00 00 00                   # STOR A, OFFSET swapped
+
+39 03                               # DEC C
+30 05 04 00 00 00                   # ADD S, 4
+30 04 04 00 00 00                   # ADD D, 4
+60 03 00 00 00 00                   # CMP C, 0
+74 C7 FF FF FF                      # JG @LBubbleForBeg
+
+70 3F 00 00 00                      # JMP @LBubbleWhileBeg
+
+10 03 14 00 00 00                   # MOV C, 20
+10 05 04 00 00 00                   # MOV S, OFFSET array
+
+14 01 05                            # LOAD A, S
+F0 01                               # OUTD A
+30 05 04 00 00 00                   # ADD S, 4
+39 03                               # DEC C
+60 03 00 00 00 00                   # CMP C, 0
+74 E8 FF FF FF                      # JG @LOutputForBeg
+
+00                                  # HALT
+
