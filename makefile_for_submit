@@ -1,6 +1,7 @@
 ZIPNAME = assembler.zip
 PDF = $(wildcard doc/*.pdf)
 SRC_DIR = src
+INC_DIR = include
 MAKEFILE_SRC = makefile_for_kekstein
 TMPDIR = tmp_submit
 
@@ -14,6 +15,8 @@ submit: clean
 	cp $(PDF) $(TMPDIR)/
 	# copy src folder
 	cp -r $(SRC_DIR) $(TMPDIR)/
+	# copy includes folder
+	cp -r $(INC_DIR) $(TMPDIR)/
 	# copy makefile_for_kekstein as Makefile
 	cp $(MAKEFILE_SRC) $(TMPDIR)/makefile
 	# create Windows Makefile variant
