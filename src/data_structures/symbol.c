@@ -19,9 +19,9 @@ struct Symbol_Table *symtab_create(void) {
   struct Symbol_Table *table = NULL;
 
   table = jalloc(sizeof(struct Symbol_Table));
-  CLEANUP_IF_FAIL(table, "Couldn't allocate Symbol Table.");
+  CLEANUP_IF_FAIL_ERR(table, "Couldn't allocate Symbol Table.");
 
-  CLEANUP_IF_FAIL(symtab_init(table), "Couldn't initialize Symbol Table.");
+  CLEANUP_IF_FAIL_ERR(symtab_init(table), "Couldn't initialize Symbol Table.");
 
   return table;
 
@@ -33,11 +33,11 @@ cleanup:
 }
 
 int symtab_init(struct Symbol_Table *table) {
-  CLEANUP_IF_FAIL(table, "The given Symbol Table was NULL.");
+  CLEANUP_IF_FAIL_ERR(table, "The given Symbol Table was NULL.");
 
   table->symbols = jalloc(SYMTAB_INITIAL_CAPACITY * sizeof(struct Symbol));
-  CLEANUP_IF_FAIL(table->symbols,
-                  "Couldn't allocate Symbol Table array of symbols.");
+  CLEANUP_IF_FAIL_ERR(table->symbols,
+                      "Couldn't allocate Symbol Table array of symbols.");
 
   table->count = 0;
   table->capacity = SYMTAB_INITIAL_CAPACITY;
@@ -49,7 +49,7 @@ cleanup:
 }
 
 void symtab_deinit(struct Symbol_Table *table) {
-  CLEANUP_IF_FAIL(table, "The given Symbol Table was NULL.");
+  CLEANUP_IF_FAIL_ERR(table, "The given Symbol Table was NULL.");
 
   if (table->symbols) {
     jree(table->symbols);
@@ -63,7 +63,7 @@ cleanup:
 }
 
 void symtab_free(struct Symbol_Table **table) {
-  CLEANUP_IF_FAIL(table && *table, "The given Symbol Table was NULL.");
+  CLEANUP_IF_FAIL_ERR(table && *table, "The given Symbol Table was NULL.");
 
   symtab_deinit(*table);
   jree(*table);
@@ -76,13 +76,11 @@ cleanup:
 struct Symbol *symtab_add(struct Symbol_Table *table, const char *name,
                           const uint32_t address) {
   struct Symbol *symbol = NULL;
-  CLEANUP_IF_FAIL(table && table->symbols && name,
-                  "The given Symbol Table or name were NULL.");
+  CLEANUP_IF_FAIL_ERR(table && table->symbols && name,
+                      "The given Symbol Table or name were NULL.");
   symbol = &table->symbols[table->count];
 
-  CLEANUP_IF_FAIL(
-      _symtab_ensure_capacity(table, 1),
-      "Couldn't ensure another 1 symbol in Symbol Table symbol array.");
+  CLEANUP_IF_FAIL(_symtab_ensure_capacity(table, 1));
 
   symbol->address = address;
   strcpy(symbol->name, name);
@@ -97,8 +95,8 @@ cleanup:
 struct Symbol *symtab_find(const struct Symbol_Table *table, const char *name) {
   size_t i = 0;
   struct Symbol *symbol = NULL;
-  CLEANUP_IF_FAIL(table && table->symbols && name,
-                  "The given Symbol Table or name were NULL.");
+  CLEANUP_IF_FAIL_ERR(table && table->symbols && name,
+                      "The given Symbol Table or name were NULL.");
 
   for (i = 0; i < table->count; i++) {
     symbol = &table->symbols[i];
@@ -117,8 +115,8 @@ static int _symtab_ensure_capacity(struct Symbol_Table *symtab,
                                    size_t additional_symbols) {
   size_t req = 0, new_cap = 0;
   struct Symbol *new_s = NULL;
-  CLEANUP_IF_FAIL(symtab && symtab->symbols,
-                  "The given Symbol Table wasn't valid.");
+  CLEANUP_IF_FAIL_ERR(symtab && symtab->symbols,
+                      "The given Symbol Table wasn't valid.");
 
   if (additional_symbols == 0) {
     return 1;
@@ -135,8 +133,8 @@ static int _symtab_ensure_capacity(struct Symbol_Table *symtab,
   }
 
   new_s = jealloc(symtab->symbols, new_cap * sizeof(struct Symbol));
-  CLEANUP_IF_FAIL(new_s,
-                  "Couldn't grow Symbol Table symbol array using realloc.");
+  CLEANUP_IF_FAIL_ERR(new_s,
+                      "Couldn't grow Symbol Table symbol array using realloc.");
 
   symtab->symbols = new_s;
   symtab->capacity = new_cap;
