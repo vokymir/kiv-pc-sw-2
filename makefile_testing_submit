@@ -1,0 +1,24 @@
+TMP_DIR = tmp
+
+.PHONY: all build test clean
+
+all: clean build test
+
+build:
+	@make -f makefile_for_submit
+	@mkdir -p $(TMP_DIR) && \
+	cd $(TMP_DIR) && \
+	unzip ../archive.zip && \
+	make
+	@echo "Build complete"
+
+test:
+	@cd $(TMP_DIR) && \
+	./kmas.exe && \
+	./kmas.exe ../tests/source/bubblesort.kas target.kmx && \
+	diff ./target.kmx ../tests/expected/bubblesort.kmx
+
+
+clean:
+	rm -rf $(TMP_DIR)
+	@echo "Clean complete"
