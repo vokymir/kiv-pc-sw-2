@@ -1,3 +1,4 @@
-expected/*
-target/*
-make/*
+expected/
+expected/
+target/
+make/
