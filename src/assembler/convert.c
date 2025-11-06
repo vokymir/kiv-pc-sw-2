@@ -27,7 +27,6 @@ enum Err_Main convert_err(enum Err_Asm err) {
   case ASM_INVALID_INSTUCTION:
   case ASM_INVALID_OPERAND_REGISTER:
   case ASM_INVALID_OPERAND_LABEL:
-  case ASM_INVALID_OPERAND_OFFSET:
     return ERR_SYNTAX_ERROR;
   case ASM_INVALID_ARGS:
   case ASM_CREATING_TOKENS:

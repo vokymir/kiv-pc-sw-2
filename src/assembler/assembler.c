@@ -52,7 +52,7 @@ struct Assembler_Processing *asp_create(const struct Config *config,
 int asp_init(struct Assembler_Processing *asp, const struct Config *config,
              struct Symbol_Table *symtab, struct Data_Segment *dtsg,
              struct Code_Segment *cdsg) {
-  RET_STDERR_IF_FAIL(asp, 0, "Invalid pointer in arguments.");
+  RET_STDERR_IF_FAIL(asp && config, 0, "Invalid pointer in arguments.");
   asp->config = config;
 
   if (symtab) {
