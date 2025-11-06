@@ -1,0 +1,103 @@
+4B 4D 58                            # KMX header
+54 00 00 00                         # LEN of Data segment = 21 * 4 = 84
+
+00 00 00 00                         # swapped DWORD
+13 00 00 00                         # array[0] = 19
+0B 00 00 00                         # array[1] = 11
+07 00 00 00                         # array[2] = 7
+03 00 00 00                         # array[3] = 3
+01 00 00 00                         # array[4] = 1
+12 00 00 00                         # array[5] = 18
+05 00 00 00                         # array[6] = 5
+09 00 00 00                         # array[7] = 9
+11 00 00 00                         # array[8] = 17
+0C 00 00 00                         # array[9] = 12
+02 00 00 00                         # array[10] = 2
+10 00 00 00                         # array[11] = 16
+04 00 00 00                         # array[12] = 4
+06 00 00 00                         # array[13] = 6
+0F 00 00 00                         # array[14] = 15
+0A 00 00 00                         # array[15] = 10
+08 00 00 00                         # array[16] = 8
+0D 00 00 00                         # array[17] = 13
+0E 00 00 00                         # array[18] = 14
+14 00 00 00                         # array[19] = 20
+
+10 01 01 00 00 00                   # MOV A, 1
+15 01 00 00 00 00                   # STOR A, OFFSET swapped
+
+# @LBubbleWhileBeg
+13 01 00 00 00 00                   # LOAD A, OFFSET swapped
+60 01 01 00 00 00                   # CMP A, 1
+73 62 00 00 00                      # JNE @LBubbleWhileEnd
+
+# @LBubbleForInit
+10 03 13 00 00 00                   # MOV C, 19
+10 01 00 00 00 00                   # MOV A, 0
+15 01 00 00 00 00                   # STOR A, OFFSET swapped
+
+10 05 04 00 00 00                   # MOV S, OFFSET array
+10 04 04 00 00 00                   # MOV D, OFFSET array
+30 04 04 00 00 00                   # ADD D, 4
+
+# @LBubbleForBeg
+14 01 05                            # LOAD A, S
+14 02 04                            # LOAD B, D
+61 01 02                            # CMP A, B
+76 12 00 00 00                      # JNG @L01
+
+16 02 05                            # STOR B, S
+16 01 04                            # STOR A, D
+10 01 01 00 00 00                   # MOV A, 1
+15 01 00 00 00 00                   # STOR A, OFFSET swapped
+
+# @L01
+39 03                               # DEC C
+30 05 04 00 00 00                   # ADD S, 4
+30 04 04 00 00 00                   # ADD D, 4
+60 03 00 00 00 00                   # CMP C, 0
+74 C7 FF FF FF                      # JG @LBubbleForBeg
+
+# @LBubbleForEnd
+70 0C 00 00 00                      # JMP @LBubbleWhileBeg
+
+# @LBubbleWhileEnd
+# @LRevertPushForInit
+10 03 14 00 00 00                   # MOV C, 20
+10 05 04 00 00 00                   # MOV S, OFFSET array
+
+# @LRevertPushForBeg
+14 01 05                            # LOAD A, S
+20 01                               # PUSH A
+30 05 04 00 00 00                   # ADD S, 4
+39 03                               # DEC C
+60 03 00 00 00 00                   # CMP C, 0
+74 E8 FF FF FF                      # JG @LOutputForBeg
+
+# @LRevertPopForInit
+10 03 14 00 00 00                   # MOV C, 20
+10 05 04 00 00 00                   # MOV S, OFFSET array
+
+# @LRevertPopForBeg
+21 01                               # POP A
+16 01 05                            # STOR A, S
+30 05 04 00 00 00                   # ADD S, 4
+39 03                               # DEC C
+60 03 00 00 00 00                   # CMP C, 0
+74 E8 FF FF FF                      # JG @LRevertPopForBeg
+
+# @LOutputForInit
+10 03 14 00 00 00                   # MOV C, 20
+10 05 04 00 00 00                   # MOV S, OFFSET array
+
+# @LOutputForBeg
+14 01 05                            # LOAD A, S
+F0 01                               # OUTD A
+30 05 04 00 00 00                   # ADD S, 4
+39 03                               # DEC C
+60 03 00 00 00 00                   # CMP C, 0
+74 E8 FF FF FF                      # JG @LOutputForBeg
+
+# @LOutputForEnd
+00                                  # HALT
+

@@ -1,0 +1,81 @@
+.KMA
+.DATA
+        swapped DWORD ?
+        array DWORD 19, 11, 7, 3, 1, 18, 5, 9, 17, 12, 2, 16, 4, 6, 15, 10, 8, 13, 14, 20
+.CODE
+        MOV     A, 1
+        STOR    A, OFFSET swapped
+@LBubbleWhileBeg:
+        LOAD    A, OFFSET swapped
+        CMP     A, 1
+        JNE     @LBubbleWhileEnd
+@LBubbleForInit:
+        MOV     C, 19
+        MOV     A, 0
+        STOR    A, OFFSET swapped
+        MOV     S, OFFSET array
+        MOV     D, OFFSET array
+        ADD     D, 4
+@LBubbleForBeg:
+        LOAD    A, S
+        LOAD    B, D
+        CMP     A, B
+        JNG     @L01
+        STOR    B, S
+        STOR    A, D
+        MOV     A, 1
+        STOR    A, OFFSET swapped
+@L01:
+        DEC     C
+        ADD     S, 4
+        ADD     D, 4
+        CMP     C, 0
+        JG      @LBubbleForBeg
+@LBubbleForEnd:
+        JMP     @LBubbleWhileBeg
+@LBubbleWhileEnd:
+
+; _____________________________________________________________________________
+;
+;        REARRANGE THE DATA ARRAY USING THE STACK
+; _____________________________________________________________________________
+@LRevertPushForInit:
+		MOV		C, 20
+		MOV		S, OFFSET array
+@LRevertPushForBeg:
+		LOAD	A, S
+		PUSH	A
+
+		ADD		S, 4
+		DEC		C
+		CMP		C, 0
+		JG		@LRevertPushForBeg
+
+@LRevertPopForInit:
+		MOV		C, 20
+		MOV		S, OFFSET array
+@LRevertPopForBeg:
+		POP		A
+		STOR	A, S
+
+		ADD		S, 4
+		DEC		C
+		CMP		C, 0
+		JG		@LRevertPopForBeg
+
+; _____________________________________________________________________________
+;
+;        OUTPUT THE DATA ARRAY
+; _____________________________________________________________________________
+@LOutputForInit:
+        MOV     C, 20
+        MOV     S, OFFSET array
+@LOutputForBeg:
+        LOAD    A, S
+        OUTD    A
+		ADD		S, 4
+        DEC     C
+        CMP     C, 0
+        JG      @LOutputForBeg
+@LOutputForEnd:
+        HALT
