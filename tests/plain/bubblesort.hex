@@ -1,4 +1,6 @@
 4B 4D 58                            # KMX
+54 00 00 00                         # LEN of Data segment = 21 * 4 = 84
+
 00 00 00 00                         # swapped
 00 00 00 00                         # array[0]
 00 00 00 00                         # array[1]
