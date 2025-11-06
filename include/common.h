@@ -17,14 +17,15 @@ struct Instruction_Statement;
 // Can optionally print error message, wrappers defined below.
 #define GOTO_IF_FAIL_OPTS(cond, label, print_err, ...)                         \
   do {                                                                         \
-    if (!(cond))                                                               \
+    if (!(cond)) {                                                             \
       if ((print_err)) {                                                       \
         PRINT_ERR(__VA_ARGS__);                                                \
       }                                                                        \
-    goto label;                                                                \
+      goto label;                                                              \
+    }                                                                          \
   } while (0)
 
-#define GOTO_IF_FAIL(cond, label) GOTO_IF_FAIL_OPTS((cond), (label), 0, 0)
+#define GOTO_IF_FAIL(cond, label) GOTO_IF_FAIL_OPTS((cond), (label), 0, "")
 
 #define GOTO_IF_FAIL_ERR(cond, label, ...)                                     \
   GOTO_IF_FAIL_OPTS((cond), (label), 1, __VA_ARGS__)
@@ -37,8 +38,9 @@ struct Instruction_Statement;
 
 #define RETURN_IF_FAIL(cond, retval)                                           \
   do {                                                                         \
-    if (!(cond))                                                               \
+    if (!(cond)) {                                                             \
       return retval;                                                           \
+    }                                                                          \
   } while (0)
 
 // Return Err & print error message to stderr
