@@ -21,6 +21,8 @@ enum Err_Main output_binary(const struct Assembler_Processing *asp) {
 
   if (!asp || !asp->config || !asp->cdsg || !asp->dtsg ||
       !asp->config->target) {
+    PRINT_ERR_1ST_NULL_ARG(asp, asp->config, asp->cdsg, asp->dtsg,
+                           asp->config->target);
     PRINT_VERBOSE(
         "Tried to write output binary, but some argument is missing.\n");
     return ERR_MY_CODE_FAILURE;
