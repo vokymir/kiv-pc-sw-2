@@ -14,15 +14,26 @@ struct Instruction_Statement;
 // Implementing RAII-like cleanup procedure.
 // If condition is not satisfied, go to label.
 // Label must be at the end of the same function, to work reliably.
-#define GOTO_IF_FAIL(cond, label, ...)                                         \
+// Can optionally print error message, wrappers defined below.
+#define GOTO_IF_FAIL_OPTS(cond, label, print_err, ...)                         \
   do {                                                                         \
     if (!(cond))                                                               \
-      PRINT_ERR(__VA_ARGS__);                                                  \
+      if ((print_err)) {                                                       \
+        PRINT_ERR(__VA_ARGS__);                                                \
+      }                                                                        \
     goto label;                                                                \
   } while (0)
 
+#define GOTO_IF_FAIL(cond, label) GOTO_IF_FAIL_OPTS((cond), (label), 0, 0)
+
+#define GOTO_IF_FAIL_ERR(cond, label, ...)                                     \
+  GOTO_IF_FAIL_OPTS((cond), (label), 1, __VA_ARGS__)
+
 // If condition is not satisfied, go to label 'cleanup'.
-#define CLEANUP_IF_FAIL(cond, ...) GOTO_IF_FAIL((cond), cleanup, __VA_ARGS__)
+#define CLEANUP_IF_FAIL(cond) GOTO_IF_FAIL((cond), cleanup)
+
+#define CLEANUP_IF_FAIL_ERR(cond, ...)                                         \
+  GOTO_IF_FAIL_ERR((cond), cleanup, __VA_ARGS__)
 
 #define RETURN_IF_FAIL(cond, retval)                                           \
   do {                                                                         \

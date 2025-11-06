@@ -14,7 +14,8 @@
 int set_next_token(struct Token *token, const char *line, const size_t len,
                    size_t *pos, const size_t nl) {
   const char *current = NULL;
-  CLEANUP_IF_FAIL(token && line && pos && len > 0 && len > *pos, "TODO:");
+  CLEANUP_IF_FAIL(token && line && pos && len > 0 && len > *pos,
+                  "Tried setting next token, but gave NULL argument.");
 
   current = &line[*pos];
 
@@ -41,15 +42,17 @@ int set_next_token(struct Token *token, const char *line, const size_t len,
 
   // String literal in .DATA segment
   if (*current == '"') {
-    CLEANUP_IF_FAIL(set_token_string(token, current + 1, nl),
-                    "TODO:");           // +1 for opening quote
+    CLEANUP_IF_FAIL(
+        set_token_string(token, current + 1, nl),
+        "Couldn't set token to string literal."); // +1 for opening quote
     (*pos) += strlen(token->value) + 2; // +2 for the quotes on begin/end
     return 1;
   }
 
   // Label (starts with @)
   if (*current == '@') {
-    CLEANUP_IF_FAIL(set_token_label(token, current, nl), "TODO:");
+    CLEANUP_IF_FAIL(set_token_label(token, current, nl),
+                    "Couldn't set token to label.");
     (*pos) += strlen(token->value) + 1; // +1 for ':'
     return 1;
   }
@@ -57,20 +60,24 @@ int set_next_token(struct Token *token, const char *line, const size_t len,
   // Number (digit or negative number)
   if (isdigit(*current) ||
       (*current == '-' && *pos + 1 < len && isdigit(*(current + 1)))) {
-    CLEANUP_IF_FAIL(set_token_number(token, current, nl), "TODO:");
+    CLEANUP_IF_FAIL(set_token_number(token, current, nl),
+                    "Couldn't set token to number.");
     (*pos) += strlen(token->value);
     return 1;
   }
 
   // Word (instruction, register, keyword, or identifier)
   if (isalpha(*current) || *current == '.') {
-    CLEANUP_IF_FAIL(set_token_word(token, current, nl), "TODO:");
+    CLEANUP_IF_FAIL(
+        set_token_word(token, current, nl),
+        "Couldn't set token to instruction, register, keyword or identifier.");
     (*pos) += strlen(token->value);
     return 1;
   }
 
   // Unknown character
-  CLEANUP_IF_FAIL(set_token_len(token, TOKEN_UNKNOWN, current, nl, 1), "TODO:");
+  CLEANUP_IF_FAIL(set_token_len(token, TOKEN_UNKNOWN, current, nl, 1),
+                  "Couldn't set token to UNKNOWN.");
   (*pos)++;
   return 1;
 
@@ -78,6 +85,8 @@ cleanup:
   (*pos)++; // not to endup in an infinite loop...
   return 0;
 }
+
+// TODO: continue here
 
 int set_token(struct Token *token, const enum Token_Type type,
               const char *value, const size_t nl) {
