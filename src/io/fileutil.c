@@ -19,6 +19,7 @@
 int fu_path_exists(const char *path) {
   struct stat st = {0};
   if (!path) {
+    PRINT_ERR("Tried checking if path exist but gave NULL pointer.");
     return 0;
   }
 
@@ -28,6 +29,7 @@ int fu_path_exists(const char *path) {
 int fu_is_file(const char *path) {
   struct stat st = {0};
   if (!path) {
+    PRINT_ERR("Tried checking if path is file but gave NULL pointer.");
     return 0;
   }
 
@@ -44,6 +46,7 @@ int fu_is_file(const char *path) {
 int fu_is_dir(const char *path) {
   struct stat st = {0};
   if (!path) {
+    PRINT_ERR("Tried checking if path is directory but gave NULL pointer.");
     return 0;
   }
 
@@ -59,6 +62,7 @@ int fu_is_dir(const char *path) {
 
 int fu_can_read(const char *path) {
   if (!path) {
+    PRINT_ERR("Tried checking if path can be read but gave NULL pointer.");
     return 0;
   }
 
@@ -67,6 +71,8 @@ int fu_can_read(const char *path) {
 
 int fu_can_write(const char *path) {
   if (!path) {
+    PRINT_ERR(
+        "Tried checking if path can be written into but gave NULL pointer.");
     return 0;
   }
 
@@ -84,6 +90,8 @@ int fu_can_write(const char *path) {
 
 int fu_can_write_file(const char *path) {
   if (!path) {
+    PRINT_ERR("Tried checking if file on path can be written into but gave "
+              "NULL pointer.");
     return 0;
   }
 
@@ -95,6 +103,9 @@ int fu_can_write_file(const char *path) {
 
 int fu_can_write_dir(const char *path) {
   if (!path) {
+    PRINT_ERR(
+        "Tried checking if directory on path can be written into but gave "
+        "NULL pointer.");
     return 0;
   }
 
@@ -108,6 +119,8 @@ int fu_can_write_parent_dir(const char *path) {
   char *dup, *slash = NULL;
   int res = 0;
   if (!path) {
+    PRINT_ERR("Tried checking if can be written into the parent directory of "
+              "given path but gave NULL pointer.");
     return 0;
   }
   dup = jtrdup(path);
@@ -143,8 +156,11 @@ int fu_can_write_parent_dir(const char *path) {
 }
 
 int fu_open(const char *path, FILE **f, const char *modifiers) {
-  if (!path || !f)
+  if (!path || !f) {
+    PRINT_ERR("Tried opening file on path but gave NULL pointer to path or "
+              "file descriptor.");
     return 0;
+  }
 
   const char *mode = modifiers ? modifiers : "r";
 
@@ -173,7 +189,11 @@ long fu_getline(char **lineptr, size_t *n, FILE *stream) {
   size_t pos = 0, new_n = 0;
   int ch = 0;
   char *tmp = NULL;
-  if (!lineptr || !n || !stream) {
+  if (!lineptr || !n || !stream) { // WARN: if changing this check, also change
+                                   // FIST_NULL one line bellow
+    PRINT_ERR("Tried getting line from file stream but gave NULL pointer as "
+              "argument at %zu. position.",
+              FIRST_NULL(lineptr, n, stream));
     return -1;
   }
 
@@ -182,6 +202,9 @@ long fu_getline(char **lineptr, size_t *n, FILE *stream) {
     *n = FU_GETLINE_INIT_LEN;
     *lineptr = jalloc(*n);
     if (!*lineptr) {
+      PRINT_ERR(
+          "Couldn't allocate a string of size '%zu' to save read line into.",
+          *n);
       return -1;
     }
   }
@@ -193,6 +216,9 @@ long fu_getline(char **lineptr, size_t *n, FILE *stream) {
       new_n = (*n) * FU_GETLINE_CAP_MULT;
       tmp = jealloc(*lineptr, new_n);
       if (!tmp) {
+        PRINT_ERR("Couldn't reallocate a string of size '%zu' to save read "
+                  "line into.",
+                  new_n);
         return -1;
       }
       *lineptr = tmp;
@@ -221,6 +247,7 @@ long fu_getline(char **lineptr, size_t *n, FILE *stream) {
 
 int fu_write_bytes(FILE *f, const void *buf, size_t count) {
   if (fwrite(buf, 1, count, f) != count) {
+    PRINT_ERR("Didn't write '%zu' bytes into file.", count);
     return 0;
   }
   return 1;
