@@ -26,18 +26,18 @@ static enum Err_Grm _grammar_identifier_dup(struct Parsed_Statement *pstmt,
 
 enum Err_Grm grammar_identifier_def(struct Parsed_Statement *pstmt,
                                     const struct Token *tokens[]) {
-  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL_ERR(
+      pstmt && tokens && *tokens,
+      "Tried to parse identifier definition but gave invalid pointers.");
 
   NOMATCH_IF_FAIL(token_is(TOK_CURR, TOKEN_DATA_TYPE));
 
   if (token_value_eq(TOK_CURR, "DWORD") || token_value_eq(TOK_CURR, "DW")) {
-    CLEANUP_IF_FAIL(grammar_identifier_dw_dec(pstmt, &TOK_NEXT) == GRM_MATCH,
-                    "TODO:");
+    CLEANUP_IF_FAIL(grammar_identifier_dw_dec(pstmt, &TOK_NEXT) == GRM_MATCH);
     pstmt->content.data_decl.type = DATA_DWORD;
   } else if (token_value_eq(TOK_CURR, "BYTE") ||
              token_value_eq(TOK_CURR, "DB")) {
-    CLEANUP_IF_FAIL(grammar_identifier_db_dec(pstmt, &TOK_NEXT) == GRM_MATCH,
-                    "TODO:");
+    CLEANUP_IF_FAIL(grammar_identifier_db_dec(pstmt, &TOK_NEXT) == GRM_MATCH);
     pstmt->content.data_decl.type = DATA_BYTE;
   } else {
     return GRM_NO_MATCH;
@@ -107,48 +107,46 @@ static enum Err_Grm _grammar_identifier_dec(struct Parsed_Statement *pstmt,
                                             const struct Token *tokens[],
                                             int is_dw) {
   size_t segment_idx = SIZE_MAX;
-  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL_ERR(pstmt && tokens && *tokens,
+                      "The arguments were invalid.");
 
   segment_idx = segment_append(pstmt);
   NOMATCH_IF_FAIL(segment_idx != SIZE_MAX);
 
   if (tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_DUP))) {
     if (is_dw) {
-      CLEANUP_IF_FAIL(
-          grammar_identifier_dw_dup(pstmt, &TOK_CURR, segment_idx) == GRM_MATCH,
-          "TODO:");
+      CLEANUP_IF_FAIL(grammar_identifier_dw_dup(pstmt, &TOK_CURR,
+                                                segment_idx) == GRM_MATCH);
     } else {
-      CLEANUP_IF_FAIL(
-          grammar_identifier_db_dup(pstmt, &TOK_CURR, segment_idx) == GRM_MATCH,
-          "TODO:");
+      CLEANUP_IF_FAIL(grammar_identifier_db_dup(pstmt, &TOK_CURR,
+                                                segment_idx) == GRM_MATCH);
     }
     return GRM_MATCH;
   } else if (token_is(TOK_CURR, TOKEN_NUMBER)) {
     if (is_dw) {
-      CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &TOK_NEXT) == GRM_MATCH,
-                      "TODO:");
+      CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &TOK_NEXT) ==
+                      GRM_MATCH);
     } else {
-      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) == GRM_MATCH,
-                      "TODO:");
+      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) ==
+                      GRM_MATCH);
     }
-    CLEANUP_IF_FAIL(segment_set_number(pstmt, segment_idx, TOK_CURR), "TODO:");
+    CLEANUP_IF_FAIL(segment_set_number(pstmt, segment_idx, TOK_CURR));
     return GRM_MATCH;
   } else if (token_is(TOK_CURR, TOKEN_QUESTION)) {
     if (is_dw) {
-      CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &TOK_NEXT) == GRM_MATCH,
-                      "TODO:");
+      CLEANUP_IF_FAIL(grammar_identifier_dw_dec2(pstmt, &TOK_NEXT) ==
+                      GRM_MATCH);
     } else {
-      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) == GRM_MATCH,
-                      "TODO:");
+      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) ==
+                      GRM_MATCH);
     }
-    CLEANUP_IF_FAIL(segment_set_uninit(pstmt, segment_idx), "TODO:");
+    CLEANUP_IF_FAIL(segment_set_uninit(pstmt, segment_idx));
     return GRM_MATCH;
   } else {
     if (!is_dw && token_is(TOK_CURR, TOKEN_STRING)) {
-      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) == GRM_MATCH,
-                      "TODO:");
-      CLEANUP_IF_FAIL(segment_set_string(pstmt, segment_idx, TOK_CURR),
-                      "TODO:");
+      CLEANUP_IF_FAIL(grammar_identifier_db_dec2(pstmt, &TOK_NEXT) ==
+                      GRM_MATCH);
+      CLEANUP_IF_FAIL(segment_set_string(pstmt, segment_idx, TOK_CURR));
       return GRM_MATCH;
     }
   }
@@ -162,7 +160,8 @@ cleanup:
 
 enum Err_Grm _grammar_identifier_dec2(struct Parsed_Statement *pstmt,
                                       const struct Token *tokens[], int is_dw) {
-  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL_ERR(pstmt && tokens && *tokens,
+                      "The arguments were invalid.");
 
   if (token_is(TOK_CURR, TOKEN_COMMA)) {
     if (is_dw) {
@@ -186,7 +185,8 @@ enum Err_Grm _grammar_identifier_dup(struct Parsed_Statement *pstmt,
   size_t dup_len = 5; // how many tokens it takes to have a DUP
   struct Init_Segment *segment = NULL;
 
-  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL_ERR(pstmt && tokens && *tokens,
+                      "The arguments were invalid.");
   NOMATCH_IF_FAIL(
       token_is(tokens[0], TOKEN_NUMBER) && token_is(tokens[1], TOKEN_DUP) &&
       token_is(tokens[2], TOKEN_LPAREN) && token_is(tokens[4], TOKEN_RPAREN));

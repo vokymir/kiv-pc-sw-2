@@ -54,6 +54,8 @@
 
 // TODO: CHECK IF ANY MACRO CAN BE ONLY FILE SCOPED
 #define NOMATCH_IF_FAIL(cond) RETURN_IF_FAIL((cond), GRM_NO_MATCH)
+#define NOMATCH_IF_FAIL_ERR(cond, ...)                                         \
+  RET_STDERR_IF_FAIL((cond), GRM_NO_MATCH, __VA_ARGS__)
 
 #define TOK_ARR(...) ((const enum Token_Type[]){__VA_ARGS__})
 #define TOK_CURR tokens[0]
