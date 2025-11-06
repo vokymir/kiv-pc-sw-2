@@ -60,7 +60,7 @@ int asp_init(struct Assembler_Processing *asp, const struct Config *config,
   } else {
     asp->symtab = symtab_create();
   }
-  CLEANUP_IF_FAIL(
+  CLEANUP_IF_FAIL_ERR(
       asp->symtab,
       "Couldn't create symbol table when initializing assembler processing.");
 
@@ -69,7 +69,7 @@ int asp_init(struct Assembler_Processing *asp, const struct Config *config,
   } else {
     asp->dtsg = dtsg_create();
   }
-  CLEANUP_IF_FAIL(
+  CLEANUP_IF_FAIL_ERR(
       asp->dtsg,
       "Couldn't create data segment when initializing assembler processing.");
 
@@ -78,7 +78,7 @@ int asp_init(struct Assembler_Processing *asp, const struct Config *config,
   } else {
     asp->cdsg = cdsg_create();
   }
-  CLEANUP_IF_FAIL(
+  CLEANUP_IF_FAIL_ERR(
       asp->cdsg,
       "Couldn't create code segment when initializing assembler processing.");
 
