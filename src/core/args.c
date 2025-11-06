@@ -222,7 +222,7 @@ cleanup:
 static const char *_args_find_tgt(const int argc, const char **argv) {
   int i = 0;
   CLEANUP_IF_FAIL_ERR(argv, "Invalid argv was given.");
-  CLEANUP_IF_FAIL_(argc > 2);
+  CLEANUP_IF_FAIL(argc > 2);
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
     if (argv[i][0] != '-') {   // if is not a flag
