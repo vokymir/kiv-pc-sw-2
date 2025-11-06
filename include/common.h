@@ -25,10 +25,10 @@ struct Instruction_Statement;
     }                                                                          \
   } while (0)
 
-#define GOTO_IF_FAIL(cond, label) GOTO_IF_FAIL_OPTS((cond), (label), 0, "")
+#define GOTO_IF_FAIL(cond, label) GOTO_IF_FAIL_OPTS((cond), label, 0, " ")
 
 #define GOTO_IF_FAIL_ERR(cond, label, ...)                                     \
-  GOTO_IF_FAIL_OPTS((cond), (label), 1, __VA_ARGS__)
+  GOTO_IF_FAIL_OPTS((cond), label, 1, __VA_ARGS__)
 
 // If condition is not satisfied, go to label 'cleanup'.
 #define CLEANUP_IF_FAIL(cond) GOTO_IF_FAIL((cond), cleanup)
