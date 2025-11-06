@@ -9,11 +9,12 @@
 
 struct Parsed_Statement *parse_tokens(const struct Token *tokens[], size_t nl) {
   struct Parsed_Statement *stmt = NULL;
-  RETURN_IF_FAIL(tokens, NULL);
+  RET_STDERR_IF_FAIL(
+      tokens, NULL, "Tried parse tokens but was given NULL pointer to tokens.");
   stmt = p_stmt_create(STMT_NONE, nl);
   RETURN_IF_FAIL(stmt, NULL);
 
-  CLEANUP_IF_FAIL(grammar_line(stmt, tokens) == GRM_MATCH, "TODO:");
+  CLEANUP_IF_FAIL(grammar_line(stmt, tokens) == GRM_MATCH);
 
   return stmt;
 
@@ -26,9 +27,10 @@ cleanup:
 
 struct Parsed_Statement *p_stmt_create(enum Statement_Type stype, size_t nl) {
   struct Parsed_Statement *ps = jalloc(sizeof(struct Parsed_Statement));
-  CLEANUP_IF_FAIL(ps, "TODO:");
+  CLEANUP_IF_FAIL_ERR(ps, "Couldn't allocate parsed statement.");
 
-  CLEANUP_IF_FAIL(p_stmt_init(ps, stype, nl), "TODO:");
+  CLEANUP_IF_FAIL_ERR(p_stmt_init(ps, stype, nl),
+                      "Couldn't initialize parsed statement.");
 
   return ps;
 
@@ -41,7 +43,7 @@ cleanup:
 
 int p_stmt_init(struct Parsed_Statement *ps, enum Statement_Type type,
                 size_t nl) {
-  CLEANUP_IF_FAIL(ps, "TODO:");
+  CLEANUP_IF_FAIL_ERR(ps, "Tried initialize parsed statement but gave NULL.");
 
   ps->type = type;
   ps->err = PAR_NO_ERROR;
@@ -77,7 +79,7 @@ cleanup:
 }
 
 void p_stmt_deinit(struct Parsed_Statement *ps) {
-  CLEANUP_IF_FAIL(ps, "TODO:");
+  CLEANUP_IF_FAIL_ERR(ps, "Tried deinit parsed statement but gave NULL.");
 
   switch (ps->type) {
   case STMT_NONE:
@@ -111,7 +113,8 @@ cleanup:
 }
 
 void p_stmt_free(struct Parsed_Statement **stmt) {
-  CLEANUP_IF_FAIL(stmt && *stmt, "TODO:");
+  CLEANUP_IF_FAIL_ERR(stmt && *stmt,
+                      "Tried free parsed statement but gave NULL.");
 
   p_stmt_deinit(*stmt);
   jree(*stmt);
