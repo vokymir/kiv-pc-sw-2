@@ -159,7 +159,7 @@ enum Err_Main args_path_check_semantic(const struct Config *config) {
 int args_config_init(struct Config *config, const char *source,
                      const char *target, int verbose, int instruction) {
   size_t len = 0;
-  CLEANUP_IF_FAIL(config, "Config is NULL.");
+  CLEANUP_IF_FAIL_ERR(config, "Config is NULL.");
 
   config->flag_instruction = instruction;
   config->flag_verbose = verbose;
@@ -167,14 +167,14 @@ int args_config_init(struct Config *config, const char *source,
   if (source) {
     len = strlen(source) + 1;
     config->source = jalloc(len);
-    CLEANUP_IF_FAIL(config->source, "Source path is NULL.");
+    CLEANUP_IF_FAIL_ERR(config->source, "Source path is NULL.");
     strcpy(config->source, source);
   }
 
   if (target) {
     len = strlen(target) + 1;
     config->target = jalloc(len);
-    CLEANUP_IF_FAIL(config->target, "Target path is NULL.");
+    CLEANUP_IF_FAIL_ERR(config->target, "Target path is NULL.");
     strcpy(config->target, target);
   }
 
@@ -186,7 +186,7 @@ cleanup:
 }
 
 void args_config_deinit(struct Config *config) {
-  CLEANUP_IF_FAIL(config, "Config is NULL.");
+  CLEANUP_IF_FAIL_ERR(config, "Config is NULL.");
   config->flag_verbose = 0;
   config->flag_instruction = 0;
 
@@ -202,7 +202,8 @@ cleanup:
 // ===== PRIVATE FUNCTIONS =====
 
 static const char *_args_find_src(const int argc, const char **argv) {
-  CLEANUP_IF_FAIL(argc > 1 && argv && argv[1], "Invalid arguments were given.");
+  CLEANUP_IF_FAIL_ERR(argc > 1 && argv && argv[1],
+                      "Invalid arguments were given.");
 
   return argv[1];
 
@@ -212,7 +213,7 @@ cleanup:
 
 static const char *_args_find_tgt(const int argc, const char **argv) {
   int i = 0;
-  CLEANUP_IF_FAIL(argc > 2 && argv, "Invalid arguments were given.");
+  CLEANUP_IF_FAIL_ERR(argc > 2 && argv, "Invalid arguments were given.");
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
     if (argv[i][0] != '-') {   // if is not a flag
@@ -226,7 +227,7 @@ cleanup:
 
 static int _args_is_v(const int argc, const char **argv) {
   int i = 0;
-  CLEANUP_IF_FAIL(argc > 2 && argv, "Invalid arguments were given.");
+  CLEANUP_IF_FAIL_ERR(argc > 2 && argv, "Invalid arguments were given.");
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
     if (strcmp(argv[i], "-v") == 0) {
@@ -240,7 +241,7 @@ cleanup:
 
 static int _args_is_i(const int argc, const char **argv) {
   int i = 0;
-  CLEANUP_IF_FAIL(argc > 2 && argv, "Invalid arguments were given.");
+  CLEANUP_IF_FAIL_ERR(argc > 2 && argv, "Invalid arguments were given.");
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
     if (strcmp(argv[i], "-i") == 0) {
