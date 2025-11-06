@@ -1,4 +1,6 @@
 expected/
-expected/
+expected/*
 target/
+target/*
 make/
+make/*
