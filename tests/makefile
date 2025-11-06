@@ -34,8 +34,14 @@ OBJ_FILES := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_FILES))
 # --------------------------------------------
 # Default target
 # --------------------------------------------
-.PHONY: test all clean
-test: all
+.PHONY: capture
+capture:
+	@mkdir -p make
+	@touch make/stdout.txt
+	@touch make/stderr.txt
+	@echo "📦 Running make with redirected output..."
+	@$(MAKE) all 1>make/stdout.txt 2>make/stderr.txt
+	@echo "✅ Output saved to make/stdout.txt and make/stderr.txt"
 
 # Build + run all tests
 all: $(TEST_BINS)
@@ -67,17 +73,6 @@ $(BUILD_DIR):
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
-
-# INTEGRATION TEST
-
-test_integration: ../kmas.exe
-	gcc -std=c99 -Wall -Wextra -o bin/test_integration test_integration.c
-	./bin/test_integration
-
-# Clean integration test outputs
-clean_integration:
-	rm -f expected/*.kmx
-	rm -f target/*.kmx
 
 # --------------------------------------------
 # Cleanup

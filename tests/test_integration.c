@@ -35,6 +35,8 @@
 #define DIR_SOURCE "source"
 #define DIR_TARGET "target"
 #define ASSEMBLER_PATH "../kmas.exe"
+#define VERBOSE 0
+#define INSTUCTION 0
 
 /* Test statistics */
 struct TestStats {
@@ -331,7 +333,8 @@ static int run_assembler(const char *source_file, const char *target_file) {
     /* You can comment out the next 3 lines to see assembler errors */
     freopen("/dev/null", "w", stderr);
 
-    execl(ASSEMBLER_PATH, ASSEMBLER_PATH, source_file, target_file, NULL);
+    execl(ASSEMBLER_PATH, ASSEMBLER_PATH, source_file, target_file,
+          VERBOSE ? "-v" : "", INSTUCTION ? "-i" : "", NULL);
 
     /* If exec returns, it failed */
     fprintf(stderr, "Error: Failed to execute %s\n", ASSEMBLER_PATH);
