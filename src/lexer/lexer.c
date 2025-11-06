@@ -27,29 +27,36 @@ struct Token *lexer_tokenize_line(const char *line, const size_t nl) {
   size_t len = 0;
 
   if (!line) {
+    PRINT_ERR("Tried to tokenize line, but gave NULL pointer to line.");
     return NULL;
   }
 
-  CLEANUP_IF_FAIL(tok_arr_init(&arr), "TODO:");
+  CLEANUP_IF_FAIL(tok_arr_init(&arr), "Couldn't initialize token array.");
 
   len = strlen(line);
 
   // Process the whole line
   while (_lexer_skip_to_next_token(line, len, &pos)) {
-    CLEANUP_IF_FAIL(tok_arr_ensure_capacity(&arr, 1), "TODO:");
+    CLEANUP_IF_FAIL(tok_arr_ensure_capacity(&arr, 1),
+                    "Couldn't ensure additional capacity in token array.");
     token = &arr.tokens[arr.count];
 
-    CLEANUP_IF_FAIL(set_next_token(token, line, len, &pos, nl), "TODO:");
+    CLEANUP_IF_FAIL(set_next_token(token, line, len, &pos, nl),
+                    "Couldn't initialize a token based on current position in "
+                    "line '%zu', line number: %zu.",
+                    pos, nl);
     arr.count++;
 
     token = NULL;
   }
 
   // Add EOF to the end
-  CLEANUP_IF_FAIL(tok_arr_ensure_capacity(&arr, 1), "TODO:");
+  CLEANUP_IF_FAIL(tok_arr_ensure_capacity(&arr, 1),
+                  "Couldn't ensure additional capacity in token array.");
   token = &arr.tokens[arr.count];
 
-  CLEANUP_IF_FAIL(set_token(token, TOKEN_EOF, NULL, nl), "TODO:");
+  CLEANUP_IF_FAIL(set_token(token, TOKEN_EOF, NULL, nl),
+                  "Couldn't initialize EOF token at the end of line.");
   arr.count++;
 
   return arr.tokens;
@@ -138,6 +145,7 @@ void print_tokens(const struct Token *tokens) {
 static int _lexer_skip_to_next_token(const char *line, const size_t len,
                                      size_t *pos) {
   if (!line || !pos) {
+    PRINT_ERR("Tried to skip to next token, but invalid arguments were given.");
     return 0;
   }
 
