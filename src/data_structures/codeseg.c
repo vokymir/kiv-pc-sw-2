@@ -167,7 +167,7 @@ static int _cdsg_ensure_capacity(struct Code_Segment *cdsg,
     return 1;
   }
 
-  CLEANUP_IF_FAIL(cdsg->size <= SIZE_MAX - additional_b, // [before](see bellow)
+  CLEANUP_IF_FAIL(cdsg->size <= SIZE_MAX - additional_b, // [before](see below)
                   "When trying to calculate the new size of code segment "
                   "buffer, the limit was reached and it caused an overflow.");
 

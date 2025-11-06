@@ -258,7 +258,7 @@ static int _dtsg_ensure_capacity(struct Data_Segment *dtsg,
     return 1;
   }
 
-  CLEANUP_IF_FAIL(dtsg->size <= SIZE_MAX - additional_b, // [before](see bellow)
+  CLEANUP_IF_FAIL(dtsg->size <= SIZE_MAX - additional_b, // [before](see below)
                   "When trying to calculate the new size of data segment "
                   "buffer, the limit was reached and it caused an overflow.");
 

@@ -190,7 +190,7 @@ long fu_getline(char **lineptr, size_t *n, FILE *stream) {
   int ch = 0;
   char *tmp = NULL;
   if (!lineptr || !n || !stream) { // WARN: if changing this check, also change
-                                   // FIST_NULL one line bellow
+                                   // FIST_NULL one line below
     PRINT_ERR("Tried getting line from file stream but gave NULL pointer as "
               "argument at %zu. position.",
               FIRST_NULL(lineptr, n, stream));
