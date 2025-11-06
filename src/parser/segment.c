@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "common.h"
 #include "memory.h"
 #include "parser.h"
 
@@ -7,7 +8,8 @@
 #include "parser_token.h"
 
 size_t segment_append(struct Parsed_Statement *pstmt) {
-  RETURN_IF_FAIL(pstmt, SIZE_MAX);
+  RET_STDERR_IF_FAIL(pstmt, SIZE_MAX,
+                     "Tried append segment to NULL parsed statement.");
 
   if (pstmt->content.data_decl.segment_count == SIZE_MAX) {
     return SIZE_MAX;
@@ -20,11 +22,13 @@ size_t segment_append(struct Parsed_Statement *pstmt) {
 
 int segments_finalize(struct Parsed_Statement *pstmt) {
   struct Data_Declaration *dd = NULL;
-  RETURN_IF_FAIL(pstmt, 0);
+  RET_STDERR_IF_FAIL(pstmt, 0,
+                     "Tried allocate segments for NULL parsed statement.");
 
   dd = &pstmt->content.data_decl;
   dd->segments = jalloc(dd->segment_count * sizeof(struct Init_Segment));
-  RETURN_IF_FAIL(dd->segments, 0);
+  RET_STDERR_IF_FAIL(dd->segments, 0,
+                     "Couldn't allocate segments for parsed statement.");
 
   dd->is_fully_uninit = 1; // set this assumption, if in any segment is not
                            // true, will be rewritten
@@ -35,7 +39,8 @@ int segments_finalize(struct Parsed_Statement *pstmt) {
 int segment_set_dd_total_size(struct Data_Declaration *dd) {
   size_t i = 0, elem_size = 0;
   struct Init_Segment *is = NULL;
-  RETURN_IF_FAIL(dd && dd->segments, 0);
+  RET_STDERR_IF_FAIL(dd && dd->segments, 0,
+                     "Tried set total size of data declaration on NULL.");
   elem_size = (dd->type == DATA_DWORD) ? KMA_DWORD_SIZE : KMA_BYTE_SIZE;
   dd->total_size = 0;
 
@@ -49,6 +54,7 @@ int segment_set_dd_total_size(struct Data_Declaration *dd) {
 
 void segment_remove_last(struct Parsed_Statement *pstmt) {
   if (!pstmt) {
+    PRINT_ERR("Tried remove last segment on NULL parsed statement.");
     return;
   }
 
@@ -57,7 +63,7 @@ void segment_remove_last(struct Parsed_Statement *pstmt) {
 
 int segment_set_dup(struct Parsed_Statement *pstmt, size_t segment_idx) {
   struct Init_Segment *segment = NULL;
-  RETURN_IF_FAIL(pstmt, 0);
+  RET_STDERR_IF_FAIL(pstmt, 0, "Tried set DUP on NULL parsed statement.");
   segment = &pstmt->content.data_decl.segments[segment_idx];
 
   segment->type = INIT_SEG_DUP;
@@ -72,7 +78,7 @@ int segment_set_dup(struct Parsed_Statement *pstmt, size_t segment_idx) {
 int segment_set_number(struct Parsed_Statement *pstmt, size_t segment_idx,
                        const struct Token *token) {
   struct Init_Segment *segment = NULL;
-  RETURN_IF_FAIL(pstmt, 0);
+  RET_STDERR_IF_FAIL(pstmt, 0, "Tried set NUMBER on NULL parsed statement.");
   segment = &pstmt->content.data_decl.segments[segment_idx];
 
   RETURN_IF_FAIL(token_parse_int32(token, &segment->data.value), 0);
@@ -86,7 +92,8 @@ int segment_set_number(struct Parsed_Statement *pstmt, size_t segment_idx,
 
 int segment_set_uninit(struct Parsed_Statement *pstmt, size_t segment_idx) {
   struct Init_Segment *segment = NULL;
-  RETURN_IF_FAIL(pstmt, 0);
+  RET_STDERR_IF_FAIL(pstmt, 0,
+                     "Tried set UNINITIALIZED on NULL parsed statement.");
   segment = &pstmt->content.data_decl.segments[segment_idx];
 
   segment->type = INIT_SEG_UNINIT;
@@ -99,7 +106,7 @@ int segment_set_uninit(struct Parsed_Statement *pstmt, size_t segment_idx) {
 int segment_set_string(struct Parsed_Statement *pstmt, size_t segment_idx,
                        const struct Token *token) {
   struct Init_Segment *segment = NULL;
-  RETURN_IF_FAIL(pstmt, 0);
+  RET_STDERR_IF_FAIL(pstmt, 0, "Tried set STRING on NULL parsed statement.");
   segment = &pstmt->content.data_decl.segments[segment_idx];
 
   RETURN_IF_FAIL(token_copy_value(token, segment->data.string,
