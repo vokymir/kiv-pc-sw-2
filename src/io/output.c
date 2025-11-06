@@ -57,9 +57,12 @@ enum Err_Main output_binary(const struct Assembler_Processing *asp) {
   CLEANUP_VERBOSE_IF_FAIL(fu_write_bytes(f, asp->cdsg->bytes, asp->cdsg->size),
                           "Couldn't write codesegment to the file.\n");
 
-  PRINT_VERBOSE("Writing terminating NULL.\n");
-  CLEANUP_VERBOSE_IF_FAIL(fu_write_bytes(f, "\0", 1),
-                          "Couldn't write NULL terminator.\n");
+  // Only write terminating NULL if HALT wasn't the last command of the assembly
+  if (*(asp->cdsg->bytes + asp->cdsg->size - 1) != 0) {
+    PRINT_VERBOSE("Writing terminating NULL.\n");
+    CLEANUP_VERBOSE_IF_FAIL(fu_write_bytes(f, "\0", 1),
+                            "Couldn't write NULL terminator.\n");
+  }
 
 cleanup:
   if (f) {
