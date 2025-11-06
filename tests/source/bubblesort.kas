@@ -1,0 +1,58 @@
+.KMA
+.DATA
+swapped DWORD ? ; items swapped in the inner loop , DS:[0]
+array DWORD 20 DUP (?) ; the data to be sorted , DS:[4]
+
+.CODE
+MOV A, 1 ; 10 01 01 00 00 00
+STOR A, OFFSET swapped ; 15 01 00 00 00 00
+
+@LBubbleWhileBeg: ; <--- CS:[12]
+LOAD A, OFFSET swapped ; 13 01 00 00 00 00
+CMP A, 1 ; 60 01 01 00 00 00
+JNE @LBubbleWhileEnd ; 73 62 00 00 00
+
+@LBubbleForInit: ; <--- CS:[29]
+MOV C, 19 ; 10 03 13 00 00 00
+MOV A, 0 ; 10 01 00 00 00 00
+STOR A, OFFSET swapped ; 15 01 00 00 00 00
+MOV S, OFFSET array ; 10 05 04 00 00 00
+MOV D, OFFSET array ; 10 04 04 00 00 00
+ADD D, 4 ; 30 04 04 00 00 00
+
+@LBubbleForBeg: ; <--- CS:[65]
+LOAD A, S ; 14 01 05
+LOAD B, D ; 14 02 04
+CMP A, B ; 61 01 02
+JNG @L01 ; 76 12 00 00 00
+STOR B, S ; 16 02 05
+STOR A, D ; 16 01 04
+MOV A, 1 ; 10 01 01 00 00 00
+STOR A, OFFSET swapped ; 15 01 00 00 00 00
+
+@L01: ; <--- CS:[97]
+DEC C ; 39 03
+ADD S, 4 ; 30 05 04 00 00 00
+ADD D, 4 ; 30 04 04 00 00 00
+CMP C, 0 ; 60 03 00 00 00 00
+JG @LBubbleForBeg ; 74 C7 FF FF FF
+
+@LBubbleForEnd: ; <--- CS:[122]
+JMP @LBubbleWhileBeg ; 70 0C 00 00 00
+
+@LBubbleWhileEnd: ; <--- CS:[127]
+
+@LOutputForInit: ; <--- CS:[127]
+MOV C, 20 ; 10 03 14 00 00 00
+MOV S, OFFSET array ; 10 05 04 00 00 00
+
+@LOutputForBeg: ; <--- CS:[139]
+LOAD A, S ; 14 01 05
+OUTD A ; F0 01
+ADD S, 4 ; 30 05 04 00 00 00
+DEC C ; 39 03
+CMP C, 0 ; 60 03 00 00 00 00
+JG @LOutputForBeg ; 74 E8 FF FF FF
+
+@LOutputForEnd: ; <--- CS:[157]
+HALT ; 00
