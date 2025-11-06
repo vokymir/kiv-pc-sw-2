@@ -62,3 +62,4 @@ F0 01                               # OUTD A
 74 E8 FF FF FF                      # JG @LOutputForBeg
 
 00                                  # HALT
+

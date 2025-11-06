@@ -222,6 +222,7 @@ static int convert_hex_to_binary(const char *hex_file, const char *bin_file) {
   int c = 0;
   int high_nibble = -1;
   int success = 0;
+  int SKIP = 0;
 
   in = fopen(hex_file, "r");
   if (!in) {
@@ -238,14 +239,19 @@ static int convert_hex_to_binary(const char *hex_file, const char *bin_file) {
 
   /* Read hex file and convert to binary byte by byte */
   while ((c = fgetc(in)) != EOF) {
+    if (SKIP) {
+      if (c == '\n') {
+        SKIP = 0;
+      }
+      continue;
+    }
     /* Skip whitespace and common separators */
     if (isspace(c) || c == ',' || c == ':' || c == '-') {
       continue;
     }
     if (c == '#') { // skip comments python style
-      while (c == '\n') {
-        continue;
-      }
+      SKIP = 1;
+      continue;
     }
 
     /* Check if character is valid hex digit */
