@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include "common.h"
@@ -14,6 +16,10 @@
       goto cleanup;                                                            \
     }                                                                          \
   } while (0)
+
+// Write little endian 32bit number in little endian.
+// Return 1 on success, 0 on failure.
+int _write_in_little_endian(FILE *f, size_t number);
 
 enum Err_Main output_binary(const struct Assembler_Processing *asp) {
   FILE *f = NULL;
@@ -37,6 +43,12 @@ enum Err_Main output_binary(const struct Assembler_Processing *asp) {
   CLEANUP_VERBOSE_IF_FAIL(fu_write_bytes(f, KMX_SIGNATURE, KMX_SIGNATURE_LEN),
                           "Couldn't write KMA at the beginning of the file.\n");
 
+  PRINT_VERBOSE("Writing length of data segment.\n");
+  CLEANUP_VERBOSE_IF_FAIL(asp->dtsg->size <= INT32_MAX,
+                          "The size of datasegment is too big.");
+  CLEANUP_VERBOSE_IF_FAIL(_write_in_little_endian(f, asp->dtsg->size),
+                          "Couldn't write NULL terminator.\n");
+
   PRINT_VERBOSE("Writing datasegment.\n");
   CLEANUP_VERBOSE_IF_FAIL(fu_write_bytes(f, asp->dtsg->bytes, asp->dtsg->size),
                           "Couldn't write datasegment to the file.\n");
@@ -55,4 +67,23 @@ cleanup:
     fclose(f);
   }
   return err;
+}
+
+int _write_in_little_endian(FILE *f, size_t number) {
+  int32_t n;
+  uint8_t bytes[KMA_DTSG_LEN_SIZE];
+  size_t i;
+  RET_STDERR_IF_FAIL(f, 0, "Tried to write to NULL file.");
+
+  if (number > INT32_MAX) {
+    return 0;
+  }
+  n = (int32_t)number;
+
+  // convert to little endian
+  for (i = 0; i < KMA_DTSG_LEN_SIZE; i++) {
+    bytes[i] = (uint8_t)((n >> (i * 8)) & 0xFF);
+  }
+
+  return fu_write_bytes(f, &bytes, KMA_DTSG_LEN_SIZE);
 }

@@ -158,8 +158,11 @@ int valid_args(size_t count, ...);
 #define KMA_STSG_BYTES (16 * 1024)  // 16 kB
 
 // KMX binary
+// all len in bytes
 #define KMX_SIGNATURE_LEN 3
 #define KMX_SIGNATURE "KMX" // File format signature
+#define KMA_DTSG_LEN_SIZE                                                      \
+  4 // how big is the signature of data segment after KMX signature
 
 // instruction limits
 #define KMA_MAX_OPERANDS 2 // Max operands per instruction
