@@ -1,6 +1,5 @@
 TODO:
 
-1) stderr - všude
  3) testy
  - assembler modules
  - assembler
