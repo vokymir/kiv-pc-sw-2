@@ -68,6 +68,17 @@ $(BUILD_DIR):
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
+# INTEGRATION TEST
+
+test_integration: ../kmas.exe
+	gcc -std=c99 -Wall -Wextra -o bin/test_integration test_integration.c
+	./bin/test_integration
+
+# Clean integration test outputs
+clean_integration:
+	rm -f expected/*.kmx
+	rm -f target/*.kmx
+
 # --------------------------------------------
 # Cleanup
 # --------------------------------------------
