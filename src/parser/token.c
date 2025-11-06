@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include "common.h"
 #include "parser_token.h"
 
 int token_is(const struct Token *tok, enum Token_Type type) {
@@ -16,6 +17,7 @@ int tokens_start_with(const struct Token *tokens[], size_t n,
                       const enum Token_Type types[]) {
   size_t i = 0;
   if (!tokens || !*tokens || !types) {
+    PRINT_ERR("Invalid argumnets.");
     return 0;
   }
 
@@ -35,7 +37,7 @@ int tokens_start_with(const struct Token *tokens[], size_t n,
 
 int token_copy_value(const struct Token *token, char *dest, size_t len) {
   size_t copy_len = len - 1;
-  RETURN_IF_FAIL(token && dest && copy_len > 0, 0);
+  RET_STDERR_IF_FAIL(token && dest && copy_len > 0, 0, "Invalid arguments.");
 
   memcpy(dest, token->value, copy_len);
   dest[copy_len] = '\0';
@@ -44,7 +46,7 @@ int token_copy_value(const struct Token *token, char *dest, size_t len) {
 }
 
 int token_value_eq(const struct Token *token, const char *s) {
-  RETURN_IF_FAIL(token && s, 0);
+  RET_STDERR_IF_FAIL(token && s, 0, "Invalid arguments.");
 
   return (strcmp(token->value, s) == 0);
 }
@@ -54,7 +56,8 @@ int token_value_eq(const struct Token *token, const char *s) {
 int token_parse_int32(const struct Token *token, int32_t *out) {
   intmax_t res = 0;
   char *end = NULL;
-  RETURN_IF_FAIL(token && out, 0);
+  RET_STDERR_IF_FAIL(token && out, 0,
+                     "Tried parse int32 but invalid arguments.");
 
   errno = 0;
   res = strtoimax(token->value, &end, 10);
@@ -72,7 +75,8 @@ int token_parse_int32(const struct Token *token, int32_t *out) {
 int token_parse_size_t(const struct Token *token, size_t *out) {
   unsigned long long res = 0;
   char *end = NULL;
-  RETURN_IF_FAIL(token && out, 0);
+  RET_STDERR_IF_FAIL(token && out, 0,
+                     "Tried parse size_t but invalid arguments.");
 
   errno = 0;
   res =
