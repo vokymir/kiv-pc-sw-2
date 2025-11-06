@@ -2,6 +2,7 @@
 #include <limits.h>
 #include <stdint.h>
 
+#include "common.h"
 #include "parser_grammar.h"
 #include "parser_instruction.h"
 #include "parser_token.h"
@@ -9,7 +10,8 @@
 enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
                                      const struct Token *tokens[]) {
   struct Instruction_Statement *is = NULL;
-  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL_ERR(pstmt && tokens && *tokens,
+                      "The arguments were invalid.");
   is = &pstmt->content.instruction;
 
   if (token_is_eof(TOK_CURR)) {
@@ -37,7 +39,8 @@ enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
 
 enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
                                            const struct Token *tokens[]) {
-  NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
+  NOMATCH_IF_FAIL_ERR(pstmt && tokens && *tokens,
+                      "The arguments were invalid.");
 
   if (tokens_start_with(tokens, 2, TOK_ARR(TOKEN_REGISTER, TOKEN_EOF))) {
     RETURN_IF_FAIL(_set_op_register(&pstmt->content.instruction, TOK_CURR, 1),
@@ -62,7 +65,9 @@ enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
 
 // set both operands
 int _set_ops_none(struct Instruction_Statement *is) {
-  RETURN_IF_FAIL(is, 0);
+  RET_STDERR_IF_FAIL(is, 0,
+                     "Tried set operands to NONE, but the pointer to "
+                     "instruction statement is NULL.");
 
   is->operand_count = 0;
   is->operands[0].type = OP_NONE;
@@ -74,8 +79,9 @@ int _set_ops_none(struct Instruction_Statement *is) {
 // set is->op[idx] to label of token->value
 int _set_op_label(struct Instruction_Statement *is, const struct Token *token,
                   size_t idx) {
-  RETURN_IF_FAIL(
-      is && token && idx < sizeof(is->operands) / sizeof(struct Operand), 0);
+  RET_STDERR_IF_FAIL(is && token &&
+                         idx < sizeof(is->operands) / sizeof(struct Operand),
+                     0, "Invalid arguments.");
   RETURN_IF_FAIL(token_copy_value(token, is->operands[idx].value.label,
                                   sizeof(is->operands[idx].value.label)),
                  0);
@@ -89,8 +95,9 @@ int _set_op_label(struct Instruction_Statement *is, const struct Token *token,
 // set is->op[idx] to register of token->value
 int _set_op_register(struct Instruction_Statement *is,
                      const struct Token *token, size_t idx) {
-  RETURN_IF_FAIL(
-      is && token && idx < sizeof(is->operands) / sizeof(struct Operand), 0);
+  RET_STDERR_IF_FAIL(is && token &&
+                         idx < sizeof(is->operands) / sizeof(struct Operand),
+                     0, "Invalid arguments.");
   RETURN_IF_FAIL(
       token_copy_value(token, is->operands[idx].value.register_name,
                        sizeof(is->operands[idx].value.register_name)),
@@ -105,8 +112,9 @@ int _set_op_register(struct Instruction_Statement *is,
 // set is->op[idx] to number saved in string format in token->value
 int _set_op_number(struct Instruction_Statement *is, const struct Token *token,
                    size_t idx) {
-  RETURN_IF_FAIL(
-      is && token && idx < sizeof(is->operands) / sizeof(struct Operand), 0);
+  RET_STDERR_IF_FAIL(is && token &&
+                         idx < sizeof(is->operands) / sizeof(struct Operand),
+                     0, "Invalid arguments.");
   RETURN_IF_FAIL(
       token_parse_int32(token, &is->operands[idx].value.immediate_value), 0);
   RETURN_IF_FAIL(_set_op_count(is, idx), 0);
@@ -118,8 +126,9 @@ int _set_op_number(struct Instruction_Statement *is, const struct Token *token,
 
 int _set_op_offset(struct Instruction_Statement *is, const struct Token *token,
                    size_t idx) {
-  RETURN_IF_FAIL(
-      is && token && idx < sizeof(is->operands) / sizeof(struct Operand), 0);
+  RET_STDERR_IF_FAIL(is && token &&
+                         idx < sizeof(is->operands) / sizeof(struct Operand),
+                     0, "Invalid arguments.");
   RETURN_IF_FAIL(token_copy_value(token, is->operands[idx].value.label,
                                   sizeof(is->operands[idx].value.label)),
                  0);
@@ -131,7 +140,7 @@ int _set_op_offset(struct Instruction_Statement *is, const struct Token *token,
 }
 
 int _set_op_count(struct Instruction_Statement *is, size_t idx) {
-  RETURN_IF_FAIL(is, 0);
+  RET_STDERR_IF_FAIL(is, 0, "The given instruction statement is NULL.");
   RETURN_IF_FAIL(idx < INT_MAX, 0); // idx > sizeof(int)
   if ((int)(idx + 1) > is->operand_count) {
     is->operand_count = (int)(idx + 1);
