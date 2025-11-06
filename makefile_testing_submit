@@ -1,23 +1,33 @@
 TMP_DIR = tmp
+SRC_TEST = ../tests/source
+EXPECTED_TEST = ../tests/expected
+TARGET_KMX = target.kmx
 
-.PHONY: all build test clean
+all: test
 
-all: clean build test
-
-build:
+build: clean
 	@make -f makefile_for_submit
 	@mkdir -p $(TMP_DIR) && \
 	cd $(TMP_DIR) && \
-	unzip ../archive.zip && \
+	unzip ../assembler.zip && \
 	make
 	@echo "Build complete"
 
-test:
-	@cd $(TMP_DIR) && \
-	./kmas.exe && \
-	./kmas.exe ../tests/source/bubblesort.kas target.kmx && \
-	diff ./target.kmx ../tests/expected/bubblesort.kmx
+test: build test1 test2
 
+test1:
+	@echo "TEST 1"
+	@cd $(TMP_DIR) && ./kmas.exe ; \
+	if [ $$? -ne 1 ]; then \
+	  echo "❌ First run: expected exit code 1"; \
+	  exit 1; \
+	fi
+
+test2:
+	@echo "TEST 2"
+	@cd $(TMP_DIR) && ./kmas.exe $(SRC_TEST)/bubblesort.kas $(TARGET_KMX)
+	@cd $(TMP_DIR) && diff $(TARGET_KMX) $(EXPECTED_TEST)/bubblesort.kmx || \
+	( echo "❌ Output mismatch"; exit 1 )
 
 clean:
 	rm -rf $(TMP_DIR)

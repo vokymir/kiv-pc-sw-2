@@ -4,6 +4,7 @@ source.kmx
 *.o
 /build/
 /bin/
+tmp/
 vgcore.*
 assembler.zip
 .cache/
