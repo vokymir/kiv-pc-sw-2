@@ -46,10 +46,14 @@ enum Err_Main args_parse(struct Config *config, const int argc,
   int v = 0, i = 0, tgt_edit = 0;
   enum Err_Main err = ERR_NO_ERROR;
 
-  if (argc < 2 || !argv || !config) { // Never could happen config == NULL
+  if (!argv || !config) {
     printf("Usage: ./kmas.exe <source.kas> [target.kmx] [-v] [-i]\n");
-    RET_INVALID_INPUT_FILE("The number of arguments was lesser than needed, or "
-                           "function arguments were NULL.");
+    RET_INVALID_INPUT_FILE("Arguments were NULL.");
+  }
+
+  if (argc < 2) {
+    printf("Usage: ./kmas.exe <source.kas> [target.kmx] [-v] [-i]\n");
+    return ERR_INVALID_INPUT_FILE;
   }
 
   if (!(src = _args_find_src(argc, argv))) {
@@ -190,10 +194,14 @@ void args_config_deinit(struct Config *config) {
   config->flag_verbose = 0;
   config->flag_instruction = 0;
 
-  jree(config->source);
-  config->source = NULL;
-  jree(config->target);
-  config->target = NULL;
+  if (config->source) {
+    jree(config->source);
+    config->source = NULL;
+  }
+  if (config->target) {
+    jree(config->target);
+    config->target = NULL;
+  }
 
 cleanup:
   return;
