@@ -1,6 +1,6 @@
 // tests/test_dataseg.c
-#include "../src/common.h"
-#include "../src/dataseg.h"
+#include "common.h"
+#include "dataseg.h"
 #include <assert.h>
 #include <limits.h> // for SIZE_MAX
 #include <stdint.h>

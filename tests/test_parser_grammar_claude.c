@@ -1,8 +1,12 @@
-#include "../src/common.h"
-#include "../src/lexer.h"
-#include "../src/memory.h"
-#include "../src/parser.h"
-#include "../src/parser_grammar.h"
+#include "../src/parser/parser_grammar.h"
+#include "../src/parser/parser_identifier.h"
+#include "../src/parser/parser_instruction.h"
+#include "../src/parser/parser_segment.h"
+#include "../src/parser/parser_token.h"
+#include "common.h"
+#include "lexer.h"
+#include "memory.h"
+#include "parser.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

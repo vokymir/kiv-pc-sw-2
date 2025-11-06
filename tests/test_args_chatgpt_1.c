@@ -6,8 +6,8 @@
 
 #define _POSIX_C_SOURCE 200809L
 
-#include "../src/args.h"
-#include "../src/common.h"
+#include "args.h"
+#include "common.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

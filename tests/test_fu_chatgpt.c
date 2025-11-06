@@ -5,8 +5,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "../src/common.h"
-#include "../src/fileutil.h"
+#include "common.h"
+#include "fileutil.h"
 
 static void print_header(const char *name) { printf("\n=== %s ===\n", name); }
 

@@ -1,10 +1,10 @@
-#include "../src/assembler.h"
-#include "../src/codeseg.h"
-#include "../src/common.h"
-#include "../src/dataseg.h"
-#include "../src/fileutil.h"
-#include "../src/memory.h"
-#include "../src/symbol.h"
+#include "assembler.h"
+#include "codeseg.h"
+#include "common.h"
+#include "dataseg.h"
+#include "fileutil.h"
+#include "memory.h"
+#include "symbol.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>

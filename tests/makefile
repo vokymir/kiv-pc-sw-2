@@ -28,7 +28,7 @@ TEST_SRCS := $(wildcard $(TEST_DIR)/test_*.c)
 TEST_BINS := $(patsubst $(TEST_DIR)/%.c,$(BIN_DIR)/%,$(TEST_SRCS))
 
 # Project sources (exclude main.c!)
-SRC_FILES := $(filter-out $(SRC_DIR)/main.c, $(wildcard $(SRC_DIR)/*.c))
+SRC_FILES := $(filter-out $(SRC_DIR)/main.c, $(shell find $(SRC_DIR) -name '*.c'))
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_FILES))
 
 # --------------------------------------------
@@ -40,7 +40,7 @@ capture:
 	@touch make/stdout.txt
 	@touch make/stderr.txt
 	@echo "📦 Running make with redirected output..."
-	@$(MAKE) all 1>make/stdout.txt 2>make/stderr.txt
+	@make all 1>make/stdout.txt 2>make/stderr.txt
 	@echo "✅ Output saved to make/stdout.txt and make/stderr.txt"
 
 # Build + run all tests

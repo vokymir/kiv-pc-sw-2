@@ -1,6 +1,6 @@
-#include "../src/common.h"
-#include "../src/lexer.h"
-#include "../src/memory.h"
+#include "common.h"
+#include "lexer.h"
+#include "memory.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>

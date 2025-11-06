@@ -1,9 +1,7 @@
-#include "../src/common.h"
-#include "../src/lexer.h"
-#include "../src/memory.h"
-#include "../src/parser.h"
-#include "../src/parser_code.h"
-#include "../src/parser_data.h"
+#include "common.h"
+#include "lexer.h"
+#include "memory.h"
+#include "parser.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

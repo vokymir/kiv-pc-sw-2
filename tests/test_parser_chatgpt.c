@@ -10,10 +10,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../src/common.h"
-#include "../src/lexer.h"
-#include "../src/parser.h"
-#include "../src/parser_grammar.h"
+#include "../src/parser/parser_grammar.h"
+#include "../src/parser/parser_identifier.h"
+#include "../src/parser/parser_instruction.h"
+#include "../src/parser/parser_segment.h"
+#include "../src/parser/parser_token.h"
+#include "common.h"
+#include "lexer.h"
+#include "parser.h"
 
 // Counters for simple test harness
 static int tests_run = 0;
