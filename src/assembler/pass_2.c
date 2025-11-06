@@ -62,7 +62,7 @@ enum Err_Asm pass2_data_decl(struct Parsed_Statement *pstmt,
     is = &dd->segments[i];
     switch (is->type) {
     case INIT_SEG_UNINIT:
-      REUSE_ERR_IF_FAIL(pass2_data_decl_uninit(asp, is));
+      REUSE_ERR_IF_FAIL(pass2_data_decl_uninit(asp, is, dd->type));
       break;
     case INIT_SEG_VALUE:
       REUSE_ERR_IF_FAIL(pass2_data_decl_value(asp, is, dd->type));
@@ -122,16 +122,19 @@ cleanup:
 }
 
 enum Err_Asm pass2_data_decl_uninit(struct Assembler_Processing *asp,
-                                    const struct Init_Segment *is) {
+                                    const struct Init_Segment *is,
+                                    enum Data_Type dt) {
+  size_t element_size = dt == DATA_DWORD ? KMA_DWORD_SIZE : KMA_BYTE_SIZE;
   RET_PRINT_ERR_IF_FAIL_ARGS_NO_VERBOSE(asp, asp->dtsg, is);
 
   RET_VERBOSE_CLN_IF_FAIL(
-      dtsg_app_zs(asp->dtsg, is->element_count), ASM_DTSG_CANNOT_APPEND,
+      dtsg_app_zs(asp->dtsg, is->element_count * element_size),
+      ASM_DTSG_CANNOT_APPEND,
       "but couldn't append %zu UNINITIALIZED bytes to data segment.\n",
-      is->element_count);
+      is->element_count * element_size);
 
   PRINT_VERBOSE_CLN("appended %zu UNINITIALIZED bytes to data segment, ",
-                    is->element_count);
+                    is->element_count * element_size);
   return ASM_NO_ERROR;
 }
 

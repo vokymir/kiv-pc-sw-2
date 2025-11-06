@@ -29,7 +29,8 @@ enum Err_Asm pass2_instruction(struct Parsed_Statement *pstmt,
                                enum Assembler_Context *ctx, size_t nl);
 
 enum Err_Asm pass2_data_decl_uninit(struct Assembler_Processing *asp,
-                                    const struct Init_Segment *is);
+                                    const struct Init_Segment *is,
+                                    enum Data_Type dt);
 
 enum Err_Asm pass2_data_decl_value(struct Assembler_Processing *asp,
                                    const struct Init_Segment *is,
