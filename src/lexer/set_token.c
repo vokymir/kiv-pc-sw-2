@@ -136,7 +136,7 @@ int set_token_string(struct Token *token, const char *s, const size_t nl) {
     curr++;
   }
   CLEANUP_IF_FAIL(
-      *cur); // Strings closing \" wasn't reached due to '\\0' before.
+      *curr); // Strings closing \" wasn't reached due to '\\0' before.
 
   CLEANUP_IF_FAIL(set_token_len(token, TOKEN_STRING, s, nl, n_chars));
 
