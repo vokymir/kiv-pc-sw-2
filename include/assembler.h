@@ -1,5 +1,6 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
+/* Module for processing the assembler .kas file. Does use all other modules. */
 
 #include "codeseg.h"
 #include "common.h"

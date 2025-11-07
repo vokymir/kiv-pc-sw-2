@@ -1,5 +1,6 @@
 #ifndef ARGS_H
 #define ARGS_H
+/* Module for processing CLI arguments. */
 
 #include <stddef.h>
 
