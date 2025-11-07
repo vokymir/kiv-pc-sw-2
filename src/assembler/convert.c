@@ -18,7 +18,7 @@ int32_t convert_size_t(size_t s) {
 enum Err_Main convert_err(enum Err_Asm err) {
   switch (err) {
   case ASM_NO_ERROR:
-    return ERR_NO_ERROR;
+    return ERR_NO_ERROR; // 0
   case ASM_KMA_EXPECTED:
   case ASM_KMA_DOUBLE:
   case ASM_DATA_ABROAD:
@@ -26,27 +26,29 @@ enum Err_Main convert_err(enum Err_Asm err) {
   case ASM_SYMTAB_ALREADY_EXIST:
   case ASM_INVALID_INSTUCTION:
   case ASM_INVALID_OPERAND_REGISTER:
+    return ERR_SYNTAX_ERROR; // 3
+  case ASM_CANNOT_OPEN_FILE:
+    return ERR_FILE_ACCESS_FAILURE; // 4
   case ASM_INVALID_OPERAND_LABEL:
-    return ERR_SYNTAX_ERROR;
+    return ERR_UNRESOLVED_REFERENCE; // 6
+  case ASM_CDSG_TOO_LARGE:
+  case ASM_CDSG_CANNOT_APPEND:
+  case ASM_CDSG_CANNOT_ADVANCE:
+    return ERR_CODE_SEGMENT_TOO_LARGE; // 7
+  case ASM_DTSG_TOO_LARGE:
+  case ASM_DTSG_CANNOT_APPEND:
+  case ASM_DTSG_CANNOT_ADVANCE:
+    return ERR_DATA_SEGMENT_TOO_LARGE; // 8
   case ASM_INVALID_ARGS:
   case ASM_CREATING_TOKENS:
   case ASM_CREATING_PSTMT:
   case ASM_UNKNOWN_PSTMT_TYPE:
   case ASM_SYMTAB_CANNOT_ADD:
   case ASM_UNKNOWN_INIT_SEG:
-    return ERR_MY_CODE_FAILURE;
-  case ASM_DTSG_CANNOT_ADVANCE:
-  case ASM_CDSG_CANNOT_ADVANCE:
-  case ASM_DTSG_TOO_LARGE:
-  case ASM_CDSG_TOO_LARGE:
-  case ASM_DTSG_CANNOT_APPEND:
-  case ASM_CDSG_CANNOT_APPEND:
-    return ERR_OUT_OF_MEMORY;
-  case ASM_CANNOT_OPEN_FILE:
-    return ERR_FILE_ACCESS_FAILURE;
+    return ERR_MY_CODE_FAILURE; // 42
   default:
     PRINT_ERR("Unknown assembler error code detected.");
-    return ERR_MY_CODE_FAILURE;
+    return ERR_MY_CODE_FAILURE; // 42
   }
 }
 
