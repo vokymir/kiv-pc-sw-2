@@ -1,8 +1,8 @@
 #ifndef CODESEG_H
 #define CODESEG_H
 /* Module for working with Code Segment - provide functions for creating/freeing
- * and common usecase e.g. 'Append byte to the Code Segment'. The acronym CDSG
- * standing for CoDe SeGment is used everywhere. */
+ * and common usecase e.g. 'Append OP-code to the Code Segment'. The acronym
+ * CDSG standing for CoDe SeGment is used everywhere. */
 
 #include <stddef.h>
 #include <stdint.h>
@@ -30,7 +30,7 @@ int cdsg_app_b(struct Code_Segment *cdsg, uint8_t b);
 
 // Code Segment Append Bytes.
 // Require pointer to uint8_t array of <count> members, which will be appended
-// to the codesegment. Return 1 on success, 0 on failure.
+// to the code segment. Return 1 on success, 0 on failure.
 int cdsg_app_bs(struct Code_Segment *cdsg, const uint8_t *bs, size_t count);
 
 // Code Segment Append OP-code.
