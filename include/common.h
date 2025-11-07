@@ -1,20 +1,24 @@
 #ifndef COMMON_H
 #define COMMON_H
+/* Contains all commonly needed functions and macros for the project as a whole.
+ */
 
 #include <stddef.h>
 #include <stdlib.h>
 
-// Is in parser, which cannot be included (recursive includes).
+// Needed as parameter of a function. Is in parser module, which cannot be
+// included (recursive includes).
 struct Instruction_Statement;
 
-// =========================
-// ===== MACRO HELPERS =====
-// =========================
+// =======================
+// ===== MACRO GOTOS =====
+// =======================
 
 // Implementing RAII-like cleanup procedure.
 // If condition is not satisfied, go to label.
-// Label must be at the end of the same function, to work reliably.
-// Can optionally print error message, wrappers defined below.
+// Label must be at the end of the same function, to work as intended.
+// Has options: print error message? if so, what it is? Useful wrappers defined
+// below.
 #define GOTO_IF_FAIL_OPTS(cond, label, print_err, ...)                         \
   do {                                                                         \
     if (!(cond)) {                                                             \
@@ -25,17 +29,24 @@ struct Instruction_Statement;
     }                                                                          \
   } while (0)
 
+// Goto <label> if <cond>ition fail. No error output.
 #define GOTO_IF_FAIL(cond, label) GOTO_IF_FAIL_OPTS((cond), label, 0, " ")
 
+// If <cond>ition fail print error message (in <...>) and goto <label>.
 #define GOTO_IF_FAIL_ERR(cond, label, ...)                                     \
   GOTO_IF_FAIL_OPTS((cond), label, 1, __VA_ARGS__)
 
-// If condition is not satisfied, go to label 'cleanup'.
+// If <cond>ition is not satisfied, go to label 'cleanup'.
+// Useful for functions dynamically allocating.
 #define CLEANUP_IF_FAIL(cond) GOTO_IF_FAIL((cond), cleanup)
 
+// If <cond>ition is not satisfied print error message and goto 'cleanup'.
+// Useful for functions dynamically allocating.
 #define CLEANUP_IF_FAIL_ERR(cond, ...)                                         \
   GOTO_IF_FAIL_ERR((cond), cleanup, __VA_ARGS__)
 
+// If <cond>ition fails return <retval>.
+// Useful for functions without dynamic allocation.
 #define RETURN_IF_FAIL(cond, retval)                                           \
   do {                                                                         \
     if (!(cond)) {                                                             \
@@ -43,14 +54,14 @@ struct Instruction_Statement;
     }                                                                          \
   } while (0)
 
-// Return Err & print error message to stderr
+// Print <...> error message to stderr using PRINT_ERR and return <err>.
 #define RET_STDERR(err, ...)                                                   \
   do {                                                                         \
     PRINT_ERR(__VA_ARGS__);                                                    \
     return err;                                                                \
   } while (0)
 
-// If condition is not satisfied, return err & print ... to stderr.
+// If <cond>ition is not satisfied print <...> to stderr and return <err>.
 #define RET_STDERR_IF_FAIL(cond, err, ...)                                     \
   do {                                                                         \
     if (!(cond)) {                                                             \
@@ -62,30 +73,38 @@ struct Instruction_Statement;
 // ===== ERROR CODES =====
 // =======================
 
-// Errors specific to main, which the program outputs.
+// Assignment-defined standard error codes of the program. Each member define
+// unique matter of failure. One error code was added compared to the assignment
+// = MY CODE FAILURE
 enum Err_Main {
-  ERR_NO_ERROR = 0,
-  ERR_INVALID_INPUT_FILE = 1,
-  ERR_INVALID_OUTPUT_FILE = 2,
-  ERR_SYNTAX_ERROR = 3,
-  ERR_FILE_ACCESS_FAILURE = 4,
-  ERR_OUT_OF_MEMORY = 5,
-  ERR_UNRESOLVED_REFERENCE = 6,
-  ERR_CODE_SEGMENT_TOO_LARGE = 7,
-  ERR_DATA_SEGMENT_TOO_LARGE = 8,
-  ERR_MY_CODE_FAILURE = 42,
+  ERR_NO_ERROR = 0, // The program ran succesfully
+  ERR_INVALID_INPUT_FILE =
+      1, // The given path to input file/the file was invalid
+  ERR_INVALID_OUTPUT_FILE = 2, // The path to output file was invalid
+  ERR_SYNTAX_ERROR = 3,        // Assembler source file has syntax error
+                               // WARNING: is used, but correctly?
+  ERR_FILE_ACCESS_FAILURE = 4, // The source/target path file cannot be opened
+                               // WARNING: UNUSED
+  ERR_OUT_OF_MEMORY = 5,       // The assemblers operative memory ran out
+
+  ERR_UNRESOLVED_REFERENCE = 6,   // Found undefined symbol
+  ERR_CODE_SEGMENT_TOO_LARGE = 7, // CDSG larger than KMA computer has
+  ERR_DATA_SEGMENT_TOO_LARGE = 8, // DTSG larger than KMA computer has
+  ERR_MY_CODE_FAILURE = 42, // Something was wrong in the code not in the .kas
+                            // file or in anything what user provided
 };
 
 // ==================
 // ===== CONFIG =====
 // ==================
 
-// Holds information needed throughout the whole program.
+// Holds information gotten from CLI arguments which are needed everywhere.
 struct Config {
-  int flag_verbose;
-  int flag_instruction;
-  char *source;
-  char *target;
+  int flag_verbose;     // -v
+  int flag_instruction; // -i
+  char *source;         // mandatory argument
+  char *target; // optional argument, if not provided source path with different
+                // extension is used
 };
 
 // ==================
@@ -118,17 +137,14 @@ void print_instruction(int condition, size_t line,
 // Print error message to stderr.
 void print_err(const char *filename, size_t line, const char *string, ...)
     __attribute__((format(printf, 3, 4)));
-// Use this macro to get correct filename & line number to the print_err
+
+// Use this macro to easily get correct filename & line number to the print_err
 // function above.
 #define PRINT_ERR(...) print_err(__FILE__, __LINE__, __VA_ARGS__)
 
-// ===========================
-// ===== VARIOUS HELPERS =====
-// ===========================
-
 // Return the index of first argument which is NULL.
 // The indicies are 1 indexed !!
-// Return 0 if none is NULL.
+// Return 0 if nothing is NULL.
 size_t first_null_arg(const void *args[], size_t count);
 
 // Return the 1-based index of first NULL argument, or 0 if no argument is NULL.
@@ -136,11 +152,11 @@ size_t first_null_arg(const void *args[], size_t count);
   first_null_arg((const void *[]){__VA_ARGS__},                                \
                  sizeof((const void *[]){__VA_ARGS__}) / sizeof(const void *))
 
-// Print to stderr which argument was invalid (first).
+// Print to stderr which argument was invalid (only the first).
 #define PRINT_ERR_1ST_NULL_ARG(...)                                            \
   PRINT_ERR("Invalid argument at %zu. position.", FIRST_NULL(__VA_ARGS__))
 
-// Return 1 if all arguments are valid => are not NULL.
+// Return 1 if all arguments are valid = are not NULL.
 int valid_args(size_t count, ...);
 
 // Return 1 if all arguments are not NULL
@@ -158,13 +174,13 @@ int valid_args(size_t count, ...);
 #define KMA_STSG_BYTES (16 * 1024)  // 16 kB
 
 // KMX binary
-// all len in bytes
-#define KMX_SIGNATURE_LEN 3
+// all len is in bytes
+#define KMX_SIGNATURE_LEN 3 // Length of the below
 #define KMX_SIGNATURE "KMX" // File format signature
 #define KMA_DTSG_LEN_SIZE                                                      \
-  4 // how big is the signature of data segment after KMX signature
+  4 // how much bytes are used to store the size of data segment
 
-// instruction limits
+// instruction limits gathered from instruction.c or assignment
 #define KMA_MAX_OPERANDS 2 // Max operands per instruction
 
 // Register values (specified in assignment)
@@ -192,17 +208,16 @@ enum Reg_Code {
   MAX_IDENTIFIER_LEN // Identifier = variable/@label in symbol table
 
 #define MAX_REGISTER_NAME_LEN                                                  \
-  3 // Register names like "SP", add 1 for \0 just for certainty
+  3 // Register names like "A","SP", add 1 for \0 just for certainty
 #define TOKEN_MAX_VALUE_LEN MAX_IDENTIFIER_LEN // Token string content
 #define MAX_INIT_SEGMENT_STRING_LEN                                            \
   TOKEN_MAX_VALUE_LEN // String literals in .DATA, must be before processed in
                       // tokens so make sense
 
-#define MAX_ERROR_MSG_LEN 512
-
 // ==========================
 // ===== DYNAMIC ARRAYS =====
 // ==========================
+// Are used in some variations on more places.
 
 #define DYNAMIC_ARRAY_INITIAL_CAPACITY 16
 #define DYNAMIC_ARRAY_GROWTH_MULTIPLIER 2
