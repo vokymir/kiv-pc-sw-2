@@ -70,9 +70,9 @@ const struct Token **convert_tokens_to_arr(const struct Token *orig) {
                      "(when converting).");
 
   for (i = 0; i < count; i++) {
-    res[i] = &orig[i];
+    res[i] = &orig[i]; // set values in array to point to tokens
   }
-  res[count] = NULL;
+  res[count] = NULL; // NULL terminator
 
   return res;
 }
@@ -100,7 +100,7 @@ struct Parsed_Statement *convert_parse_tokens(const struct Token *tokens,
                      "Couldn't covert tokens to array.");
 
   pstmt = parse_tokens(converted_tokens, nl);
-  convert_free_tokens_arr(&converted_tokens);
 
+  convert_free_tokens_arr(&converted_tokens);
   return pstmt;
 }
