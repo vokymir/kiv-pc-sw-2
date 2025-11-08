@@ -1,5 +1,6 @@
 #ifndef ASSEMBLER_INTERNAL_H
 #define ASSEMBLER_INTERNAL_H
+/* Contains macros/functionality for the Assembler module. */
 
 #include "common.h"
 #include <stddef.h>
@@ -23,6 +24,7 @@
     }                                                                          \
   } while (0)
 
+// Shortcuts because all functions use <asp>.
 #define PRINT_VERBOSE(...)                                                     \
   print_verbose(asp && asp->config && asp->config->flag_verbose, __VA_ARGS__)
 #define PRINT_VERBOSE_CLN(...)                                                 \
@@ -38,8 +40,10 @@
     }                                                                          \
   } while (0)
 
+// Simple wrapper for reverse logic when checking condition.
 #define IF_FAIL(cond) if (!(cond))
 
+// Deprecated: in favor for RET_PRINT_ERR_IF_FAIL_ARGS macro
 // guard against invalid arguments in pass1 / pass2
 // checks if 'cond' is FALSE, if so, print standard verbose & stderr output and
 // return err
@@ -64,6 +68,7 @@
     }                                                                          \
   } while (0)
 
+// Does the same as RET_PRINT_ERR_IF_FAIL_ARGS but the verbose output is clean.
 #define RET_PRINT_ERR_IF_FAIL_ARGS_NO_VERBOSE(...)                             \
   do {                                                                         \
     if (!(VALID_ARGS(__VA_ARGS__))) {                                          \
@@ -72,6 +77,8 @@
     }                                                                          \
   } while (0)
 
+// Return given <err>or if any given condition fail. Print to stderr which
+// argument/condition failed.
 #define RETURN_PRINT_ERR_IF_FAIL(err, ...)                                     \
   do {                                                                         \
     if (!(VALID_ARGS(__VA_ARGS__))) {                                          \
