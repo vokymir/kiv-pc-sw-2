@@ -13,11 +13,14 @@
 
 enum Err_Main process_assembler(struct Assembler_Processing *asp) {
   enum Err_Asm res = ASM_NO_ERROR;
+  // 1st pass
   if ((res = pass1(asp)) != ASM_NO_ERROR) {
     return convert_err(res);
   }
+  // prep for 2nd pass
   cdsg_begin(asp->cdsg); // reuse segments
-  dtsg_begin(asp->dtsg); // goto start
+  dtsg_begin(asp->dtsg);
+  // 2nd pass
   if ((res = pass2(asp)) != ASM_NO_ERROR) {
     return convert_err(res);
   }
@@ -26,10 +29,12 @@ enum Err_Main process_assembler(struct Assembler_Processing *asp) {
 }
 
 enum Err_Asm pass1(struct Assembler_Processing *asp) {
+  // pass1 and 2 are very similiar
   return passes_any_pass(asp, 0);
 }
 
 enum Err_Asm pass2(struct Assembler_Processing *asp) {
+  // pass1 and 2 are very similiar
   return passes_any_pass(asp, 1);
 }
 
