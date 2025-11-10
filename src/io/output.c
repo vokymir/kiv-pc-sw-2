@@ -6,8 +6,12 @@
 #include "fileutil.h"
 #include "output.h"
 
+// wrapper around verbose pring using arguments. only relevant for this file
 #define PRINT_VERBOSE(...) print_verbose(asp->config->flag_verbose, __VA_ARGS__)
 
+// wrapper also only relevant for this file
+// if <cond>ition fails, print verbose output, set err to MY_CODE_FAILURE and
+// goto cleanup
 #define CLEANUP_VERBOSE_IF_FAIL(cond, ...)                                     \
   do {                                                                         \
     if (!(cond)) {                                                             \
@@ -35,7 +39,6 @@ enum Err_Main output_binary(const struct Assembler_Processing *asp) {
   }
 
   PRINT_VERBOSE("Opening a file '%s'.\n", asp->config->target);
-
   CLEANUP_VERBOSE_IF_FAIL(fu_open(asp->config->target, &f, "wb"),
                           "Error opening file '%s'.\n", asp->config->target);
 
@@ -45,19 +48,20 @@ enum Err_Main output_binary(const struct Assembler_Processing *asp) {
 
   PRINT_VERBOSE("Writing length of data segment.\n");
   CLEANUP_VERBOSE_IF_FAIL(asp->dtsg->size <= INT32_MAX,
-                          "The size of datasegment is too big.");
+                          "The size of data segment is too big.");
   CLEANUP_VERBOSE_IF_FAIL(_write_in_little_endian(f, asp->dtsg->size),
-                          "Couldn't write NULL terminator.\n");
+                          "Couldn't write the length of data segment.\n");
 
-  PRINT_VERBOSE("Writing datasegment.\n");
+  PRINT_VERBOSE("Writing data segment.\n");
   CLEANUP_VERBOSE_IF_FAIL(fu_write_bytes(f, asp->dtsg->bytes, asp->dtsg->size),
-                          "Couldn't write datasegment to the file.\n");
+                          "Couldn't write data segment to the file.\n");
 
-  PRINT_VERBOSE("Writing codesegment.\n");
+  PRINT_VERBOSE("Writing code segment.\n");
   CLEANUP_VERBOSE_IF_FAIL(fu_write_bytes(f, asp->cdsg->bytes, asp->cdsg->size),
-                          "Couldn't write codesegment to the file.\n");
+                          "Couldn't write code segment to the file.\n");
 
   // Only write terminating NULL if HALT wasn't the last command of the assembly
+  // = the last byte already is 0x00
   if (*(asp->cdsg->bytes + asp->cdsg->size - 1) != 0) {
     PRINT_VERBOSE("Writing terminating NULL.\n");
     CLEANUP_VERBOSE_IF_FAIL(fu_write_bytes(f, "\0", 1),
