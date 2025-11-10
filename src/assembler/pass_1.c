@@ -8,6 +8,7 @@
 enum Err_Asm pass1_line(struct Assembler_Processing *asp,
                         enum Assembler_Context *ctx, size_t nl,
                         const char *line) {
+  // set is_second to NO
   return passes_line(asp, ctx, nl, line, 0);
 }
 
@@ -24,11 +25,11 @@ enum Err_Asm pass1_decide(struct Parsed_Statement *pstmt,
   case STMT_SECTION_DATA:
     return passes_data_section(asp, ctx, nl);
   case STMT_DATA_DECL:
-    return pass1_data_decl(pstmt, asp, ctx, nl);
+    return pass1_data_decl(pstmt, asp, ctx, nl); // unique for 1st pass
   case STMT_INSTRUCTION:
-    return pass1_instruction(pstmt, asp, ctx, nl);
+    return pass1_instruction(pstmt, asp, ctx, nl); // unique for 1st pass
   case STMT_LABEL_DEF:
-    return pass1_label_def(pstmt, asp, ctx, nl);
+    return pass1_label_def(pstmt, asp, ctx, nl); // unique for 1st pass
   case STMT_NONE:
     return passes_none(asp, nl);
   case STMT_ERROR:
@@ -53,9 +54,11 @@ enum Err_Asm pass1_data_decl(struct Parsed_Statement *pstmt,
   size = pstmt->content.data_decl.total_size;
   identifier = pstmt->content.data_decl.identifier;
 
+  // not actually allocating, only advancing pointer
   PRINT_VERBOSE_CLN("ADVANCING DATASEGMENT of TOTALSIZE=%zu, ", size);
   position = dtsg_advance(asp->dtsg, size);
 
+  // multiple checks for different fails
   RET_VERBOSE_CLN_IF_FAIL(position != SIZE_MAX, ASM_DTSG_CANNOT_ADVANCE,
                           "but when trying to 'reserve' the space in data "
                           "segment, ERROR happened.\n");
@@ -72,11 +75,11 @@ enum Err_Asm pass1_data_decl(struct Parsed_Statement *pstmt,
       "but data segment position %zu does not fit into 32-bit address.\n",
       position);
 
+  // add to the symbol table
   RET_VERBOSE_CLN_IF_FAIL(
       symtab_find(asp->symtab, identifier) == NULL, ASM_SYMTAB_ALREADY_EXIST,
       "but identifier %s was already used = illegal redeclaration.\n",
       identifier);
-
   RET_VERBOSE_CLN_IF_FAIL(
       symtab_add(asp->symtab, identifier, (uint32_t)position),
       ASM_SYMTAB_CANNOT_ADD,
@@ -107,6 +110,8 @@ enum Err_Asm pass1_instruction(struct Parsed_Statement *pstmt,
 
   PRINT_VERBOSE_CLN("ADVANCING CODESEGMENT of TOTALSIZE=%zu, ", size);
   position = cdsg_advance(asp->cdsg, size);
+
+  // check multiple causes of failure
   RET_VERBOSE_CLN_IF_FAIL(
       position <= KMA_CDSG_BYTES - size, ASM_CDSG_TOO_LARGE,
       "but code segment overflow: position=%zu size=%zu capacity=%zu.\n",
@@ -139,6 +144,8 @@ enum Err_Asm pass1_label_def(struct Parsed_Statement *pstmt,
 
   PRINT_VERBOSE_CLN("retrieving label position in code segment, ");
   position = cdsg_advance(asp->cdsg, 0);
+
+  // different fail causes
   RET_VERBOSE_CLN_IF_FAIL(
       position <= KMA_CDSG_BYTES, ASM_CDSG_TOO_LARGE,
       "but code segment overflow: position=%zu capacity=%zu.\n", position,
@@ -148,6 +155,7 @@ enum Err_Asm pass1_label_def(struct Parsed_Statement *pstmt,
       "but code segment position %zu does not fit into 32-bit address.\n",
       position);
 
+  // add to the symbol table
   RET_VERBOSE_CLN_IF_FAIL(
       symtab_find(asp->symtab, label_name) == NULL, ASM_SYMTAB_ALREADY_EXIST,
       "but label name %s was already used = illegal redeclaration.\n",
