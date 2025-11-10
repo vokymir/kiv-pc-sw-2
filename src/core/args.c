@@ -88,16 +88,15 @@ enum Err_Main args_parse(struct Config *config, const int argc,
     args_config_deinit(config);
     RET_INVALID_INPUT_FILE("The source path is not syntactically correct.");
   }
-
   if (args_path_check_syntax(config->target, NULL, ".kmx") != ARGS_NO_ERROR) {
     args_config_deinit(config);
     RET_INVALID_OUTPUT_FILE("The target path is not syntactically correct.");
   }
-
   if ((err = args_path_check_semantic(config)) != ERR_NO_ERROR) {
     RET_STDERR(err,
                "Either source or target path is not semantically correct.");
   }
+
   return ERR_NO_ERROR;
 }
 
@@ -265,8 +264,11 @@ cleanup:
 static int _args_change_extension(char *path) {
   char *begin = NULL;
   RET_STDERR_IF_FAIL(path, 0, "Path is NULL.");
-  begin = strstr(path, ".kas"); // WARN: should maybe expect .kas only on the
-                                // last four positions?
+  // assume the path will be checked, so blindly change .kas to .kmx anywhere on
+  // the path it may be (hopefully at the end of path and nothing like
+  // /dir/file.kas/haha.docx is passed to the program)
+  begin = strstr(path, ".kas");
+
   RET_STDERR_IF_FAIL(begin, 0,
                      "The file on path doesn't have '.kas' extension.");
   *(char *)(begin + 2) = 'm'; // in .kas change a->m, s->x
