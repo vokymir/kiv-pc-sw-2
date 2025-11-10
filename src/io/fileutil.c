@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+/* Even new Windows machines have _WIN32 defined, backwards compatible. */
 #if defined(_WIN32)
 #include <io.h>        // for _access WIN
 #define stat _stat     // rename to UNIX
@@ -11,6 +12,10 @@
 #else
 #include <unistd.h> // for access UNIX
 #endif
+/* What happened just above?
+ * In this file only used UNIX function names (except for explicit _WIN32
+ * blocks) and the above "renamed" the windows functions to have the same
+ * name.*/
 
 #include "common.h"
 #include "fileutil.h"
@@ -134,8 +139,8 @@ int fu_can_write_parent_dir(const char *path) {
   if (backslash &&
       (!slash ||
        backslash >
-           slash)) { // if path is using backslash and slash either doesn't even
-                     // is in path, or backslash is later in the path
+           slash)) { // if path is using backslash and slash a) doesn't even
+                     // is in path, or  b) backslash is later in the path
     slash = backslash;
   }
 #endif
@@ -189,8 +194,8 @@ long fu_getline(char **lineptr, size_t *n, FILE *stream) {
   size_t pos = 0, new_n = 0;
   int ch = 0;
   char *tmp = NULL;
-  if (!lineptr || !n || !stream) { // WARN: if changing this check, also change
-                                   // FIST_NULL one line below
+  // WARNING: if changing this check, also change FIST_NULL one line below
+  if (!lineptr || !n || !stream) {
     PRINT_ERR("Tried getting line from file stream but gave NULL pointer as "
               "argument at %zu. position.",
               FIRST_NULL(lineptr, n, stream));
@@ -216,7 +221,7 @@ long fu_getline(char **lineptr, size_t *n, FILE *stream) {
       new_n = (*n) * FU_GETLINE_CAP_MULT;
       tmp = jealloc(*lineptr, new_n);
       if (!tmp) {
-        PRINT_ERR("Couldn't reallocate a string of size '%zu' to save read "
+        PRINT_ERR("Couldn't reallocate a string of size '%zu' to save "
                   "line into.",
                   new_n);
         return -1;
