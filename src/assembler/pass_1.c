@@ -25,11 +25,11 @@ enum Err_Asm pass1_decide(struct Parsed_Statement *pstmt,
   case STMT_SECTION_DATA:
     return passes_data_section(asp, ctx, nl);
   case STMT_DATA_DECL:
-    return pass1_data_decl(pstmt, asp, ctx, nl); // unique for 1st pass
+    return pass1_data_decl(pstmt, asp, ctx, nl); // unique to 1st pass
   case STMT_INSTRUCTION:
-    return pass1_instruction(pstmt, asp, ctx, nl); // unique for 1st pass
+    return pass1_instruction(pstmt, asp, ctx, nl); // unique to 1st pass
   case STMT_LABEL_DEF:
-    return pass1_label_def(pstmt, asp, ctx, nl); // unique for 1st pass
+    return pass1_label_def(pstmt, asp, ctx, nl); // unique to 1st pass
   case STMT_NONE:
     return passes_none(asp, nl);
   case STMT_ERROR:
