@@ -1,5 +1,5 @@
 ZIPNAME = assembler.zip
-PDF = $(wildcard doc/*.pdf)
+PDF = $(wildcard doc/doc.pdf)
 SRC_DIR = src
 INC_DIR = include
 MAKEFILE_SRC = makefile_for_kekstein
