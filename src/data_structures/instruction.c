@@ -131,7 +131,8 @@ const struct Instruction_Descriptor *instruction_find(const char *mnemonic,
     if (strncmp(INSTRUCTION_TABLE[i].mnemonic, mnemonic, w_len) == 0 &&
         INSTRUCTION_TABLE[i].operand1 == op1 &&
         INSTRUCTION_TABLE[i].operand2 == op2) {
-      return &INSTRUCTION_TABLE[i]; // Has the same mnemonic & both operands
+      return &INSTRUCTION_TABLE[i]; // Has the same mnemonic & both operand
+                                    // types
     }
   }
 
@@ -139,7 +140,7 @@ const struct Instruction_Descriptor *instruction_find(const char *mnemonic,
 }
 
 size_t instruction_get_encoded_size(const struct Instruction_Descriptor *desc) {
-  size_t size = KMA_BYTE_SIZE; // Always at least opcode byte
+  size_t size = KMA_BYTE_SIZE; // Always opcode byte
   if (!desc) {
     PRINT_ERR("The given instruction descriptor was NULL.");
     return 0;
@@ -166,5 +167,6 @@ int instruction_is_relative_jump(const struct Instruction_Descriptor *desc) {
     return 0;
   }
 
+  // may change if the KM processor evolve :D
   return 0x72 <= desc->opcode && desc->opcode < 0x80;
 }
