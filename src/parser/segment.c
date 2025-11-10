@@ -41,6 +41,7 @@ int segment_set_dd_total_size(struct Data_Declaration *dd) {
   struct Init_Segment *is = NULL;
   RET_STDERR_IF_FAIL(dd && dd->segments, 0,
                      "Tried set total size of data declaration on NULL.");
+
   elem_size = (dd->type == DATA_DWORD) ? KMA_DWORD_SIZE : KMA_BYTE_SIZE;
   dd->total_size = 0;
 
