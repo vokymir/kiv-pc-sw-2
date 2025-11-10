@@ -69,6 +69,9 @@ int cdsg_app_bs(struct Code_Segment *cdsg, const uint8_t *bs, size_t count) {
 
   CLEANUP_IF_FAIL(_cdsg_ensure_capacity(cdsg, count));
 
+  // any justified usage of this function with the intent to copy overlapping
+  // bytes wasn't found, therefore if the program fails on this, it's because of
+  // wrong usage and that SHOULD FAIL
   memcpy(cdsg->bytes + cdsg->size, bs, count);
   cdsg->size += count;
   return 1;
