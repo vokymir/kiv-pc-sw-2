@@ -7,6 +7,9 @@
 #include "common.h"
 #include "memory.h"
 
+// Keep track on how many allocations were made and not yet freed. This variable
+// is local to this file and cannot be altered from the outside in any way
+// directly, only using memory-related functions of this module.
 static size_t alloc_count = 0;
 
 void *jalloc(const size_t bytes) {
@@ -44,6 +47,7 @@ void jree(void *memory) {
   free(memory);
 }
 
+// peeking at the "private" variable
 size_t jemory(void) { return alloc_count; }
 
 char *jtrdup(const char *str1) {
@@ -53,9 +57,10 @@ char *jtrdup(const char *str1) {
     PRINT_ERR("Tried to duplicate string, but the pointer was NULL.");
     return NULL;
   }
-  len = strlen(str1) + 1;
+  len = strlen(str1) + 1; // terminating \0
   dup = jalloc(len);
   if (dup) {
+    // memory was now allocated => cannot overlap => memcpy is safe
     memcpy(dup, str1, len);
   }
   return dup;
@@ -70,7 +75,8 @@ char *jtrndup(const char *str, size_t size) {
     return NULL;
   }
 
-  memcpy(dup, str, size); // TODO: what does memcpy do on size == 0 ?
+  // memory was now allocated => cannot overlap => memcpy is safe
+  memcpy(dup, str, size);
   dup[size] = '\0';
   return dup;
 }
