@@ -14,18 +14,23 @@ enum Err_Grm grammar_instruction_rhs(struct Parsed_Statement *pstmt,
                       "The arguments were invalid.");
   is = &pstmt->content.instruction;
 
-  if (token_is_eof(TOK_CURR)) {
+  if (token_is_eof(TOK_CURR)) { // some instruction have no operand
     RETURN_IF_FAIL(_set_ops_none(is), GRM_GENERIC_ERROR);
     return GRM_MATCH;
+
   } else if (tokens_start_with(tokens, 2, TOK_ARR(TOKEN_LABEL, TOKEN_EOF))) {
     RETURN_IF_FAIL(_set_op_label(is, TOK_CURR, 0), GRM_GENERIC_ERROR);
     return GRM_MATCH;
+
   } else if (tokens_start_with(tokens, 2, TOK_ARR(TOKEN_REGISTER, TOKEN_EOF))) {
     RETURN_IF_FAIL(_set_op_register(is, TOK_CURR, 0), GRM_GENERIC_ERROR);
     return GRM_MATCH;
+
   } else if (tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_EOF))) {
     RETURN_IF_FAIL(_set_op_number(is, TOK_CURR, 0), GRM_GENERIC_ERROR);
     return GRM_MATCH;
+
+    // some instruction have multiple (two) operands
   } else if (tokens_start_with(tokens, 2,
                                TOK_ARR(TOKEN_REGISTER, TOKEN_COMMA))) {
     NOMATCH_IF_FAIL(grammar_instruction_rhs_after(pstmt, &tokens[2]) ==
@@ -42,14 +47,17 @@ enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
   NOMATCH_IF_FAIL_ERR(pstmt && tokens && *tokens,
                       "The arguments were invalid.");
 
+  // different types of 2nd instruction argument
   if (tokens_start_with(tokens, 2, TOK_ARR(TOKEN_REGISTER, TOKEN_EOF))) {
     RETURN_IF_FAIL(_set_op_register(&pstmt->content.instruction, TOK_CURR, 1),
                    GRM_GENERIC_ERROR);
     return GRM_MATCH;
+
   } else if (tokens_start_with(tokens, 2, TOK_ARR(TOKEN_NUMBER, TOKEN_EOF))) {
     RETURN_IF_FAIL(_set_op_number(&pstmt->content.instruction, TOK_CURR, 1),
                    GRM_GENERIC_ERROR);
     return GRM_MATCH;
+
   } else if (tokens_start_with(
                  tokens, 3,
                  TOK_ARR(TOKEN_OFFSET, TOKEN_IDENTIFIER, TOKEN_EOF))) {
@@ -63,7 +71,6 @@ enum Err_Grm grammar_instruction_rhs_after(struct Parsed_Statement *pstmt,
 
 // ===== OPERANDS HELPER DECLARATIONS =====
 
-// set both operands
 int _set_ops_none(struct Instruction_Statement *is) {
   RET_STDERR_IF_FAIL(is, 0,
                      "Tried set operands to NONE, but the pointer to "
@@ -76,7 +83,6 @@ int _set_ops_none(struct Instruction_Statement *is) {
   return 1;
 }
 
-// set is->op[idx] to label of token->value
 int _set_op_label(struct Instruction_Statement *is, const struct Token *token,
                   size_t idx) {
   RET_STDERR_IF_FAIL(is && token &&
@@ -92,7 +98,6 @@ int _set_op_label(struct Instruction_Statement *is, const struct Token *token,
   return 1;
 }
 
-// set is->op[idx] to register of token->value
 int _set_op_register(struct Instruction_Statement *is,
                      const struct Token *token, size_t idx) {
   RET_STDERR_IF_FAIL(is && token &&
@@ -109,7 +114,6 @@ int _set_op_register(struct Instruction_Statement *is,
   return 1;
 }
 
-// set is->op[idx] to number saved in string format in token->value
 int _set_op_number(struct Instruction_Statement *is, const struct Token *token,
                    size_t idx) {
   RET_STDERR_IF_FAIL(is && token &&
