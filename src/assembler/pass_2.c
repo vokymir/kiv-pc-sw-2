@@ -14,6 +14,7 @@
 enum Err_Asm pass2_line(struct Assembler_Processing *asp,
                         enum Assembler_Context *ctx, size_t nl,
                         const char *line) {
+  // setting: is_second = TRUE
   return passes_line(asp, ctx, nl, line, 1);
 }
 
@@ -30,10 +31,10 @@ enum Err_Asm pass2_decide(struct Parsed_Statement *pstmt,
   case STMT_SECTION_DATA:
     return passes_data_section(asp, ctx, nl);
   case STMT_DATA_DECL:
-    return pass2_data_decl(pstmt, asp, ctx, nl);
+    return pass2_data_decl(pstmt, asp, ctx, nl); // unique to 2nd pass
   case STMT_INSTRUCTION:
-    return pass2_instruction(pstmt, asp, ctx, nl);
-  case STMT_LABEL_DEF:
+    return pass2_instruction(pstmt, asp, ctx, nl); // unique to 2nd pass
+  case STMT_LABEL_DEF:                             // unique to 2nd pass
     return ASM_NO_ERROR; // label definition belongs to 1st pass
   case STMT_NONE:
     return passes_none(asp, nl);
@@ -57,7 +58,7 @@ enum Err_Asm pass2_data_decl(struct Parsed_Statement *pstmt,
                              asp->config, ctx);
   dd = &pstmt->content.data_decl;
 
-  // for all segments save them into datasegment
+  // save all segments into the DTSG
   for (i = 0; i < dd->segment_count; i++) {
     is = &dd->segments[i];
     switch (is->type) {
@@ -100,6 +101,10 @@ enum Err_Asm pass2_instruction(struct Parsed_Statement *pstmt,
 
   addr = cdsg_get_size(asp->cdsg);
 
+  // special case if instruction is a relative jump, because that require
+  // different calculation of values - JMP is the only jump that takes absolute
+  // address, other jumps need relative address
+  // all jumps take only 1 argument
   if (instruction_is_relative_jump(pstmt->content.instruction.descriptor)) {
     op_values[0].i32 =
         op_values[0].i32 -
@@ -180,6 +185,7 @@ enum Err_Asm pass2_data_decl_dup(struct Assembler_Processing *asp,
   RET_PRINT_ERR_IF_FAIL_ARGS_NO_VERBOSE(asp, asp->dtsg, is);
 
   if (dt == DATA_BYTE) {
+    // dup.value stores 32 bit, but only 8 was really used
     byte = (uint8_t)(is->data.dup.value & 0xFF);
     RET_VERBOSE_CLN_IF_FAIL(
         dtsg_app_b_n(asp->dtsg, byte, is->data.dup.count),
@@ -242,7 +248,8 @@ enum Err_Asm pass2_intstruction_get_op(struct Assembler_Processing *asp,
     break;
   case OP_NONE:
   default:
-    break; // WARN: what else to do? this should run anyway
+    PRINT_ERR("Tried to get operand value on operand type NONE or UNKNOWN.");
+    break;
   }
   return ASM_NO_ERROR;
 }
@@ -283,11 +290,13 @@ pass_2_instruction_ops_set(struct Assembler_Processing *asp,
   int i = 0;
   RET_PRINT_ERR_IF_FAIL_ARGS(asp, is, op_values);
 
+  // OP-code
   RET_VERBOSE_CLN_IF_FAIL(
       cdsg_app_op(asp->cdsg, is->descriptor->opcode), ASM_CDSG_CANNOT_APPEND,
       "but couldn't append OP-code '%02x' to code segment.\n",
       is->descriptor->opcode);
 
+  // arguments
   for (i = 0; i < is->operand_count; i++) {
     if (is->operands[i].type == OP_REG) {
       RET_VERBOSE_CLN_IF_FAIL(
