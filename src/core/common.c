@@ -9,12 +9,14 @@
 #include "instruction.h"
 #include "parser.h"
 
+// Is operand on index used i.e. not OP_NONE?
 #define IS_OP(idx) (is->operands[(idx)].type != OP_NONE)
 
-// Get text from operand on idx in is.
+// Get text from operand on idx in <is>.
 // If it already is a char * (e.g. label, variable name,...) the existing
 // pointer is returned, If is not (e.g. a numeric value), returns a pointer to
-// buf, in which it is now written. On any error returns empty string.
+// buf, in which it is now written. On any error returns empty string. Caller
+// must provide and free the buffer.
 static const char *_get_op_text(const struct Instruction_Statement *is,
                                 size_t idx, char *buf, size_t bufsize);
 
@@ -33,6 +35,7 @@ void print_verbose_clean(int condition, const char *string, ...) {
   if (!condition)
     return;
 
+  // don't start the line with VERBOSE
   va_list args;
   va_start(args, string);
   vprintf(string, args);
@@ -53,9 +56,13 @@ void print_instruction(int condition, size_t line,
     return;
   }
 
+  // get text representation of both operands - be it in the op*_buf (in case of
+  // numeric values) or pointer to somewhere else (e.g. label name)
   op1 = _get_op_text(is, 0, op1_buf, sizeof(op1_buf));
   op2 = _get_op_text(is, 1, op2_buf, sizeof(op2_buf));
 
+  // each operand is there twice because to format nicely we need to insert
+  // additional space
   printf("[INSTR] L%zu: %s%s%s%s%s at CS:%zu\n", line, is->descriptor->mnemonic,
          IS_OP(0) ? " " : "", IS_OP(0) ? op1 : "", IS_OP(1) ? " " : "",
          IS_OP(1) ? op2 : "", addr);
@@ -70,15 +77,18 @@ void print_err(const char *filename, size_t line, const char *string, ...) {
     return;
   }
 
+  // use timestamp
   if (t) {
     strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", t);
   } else {
     snprintf(timebuf, sizeof(timebuf), "unknown-time");
   }
 
+  // error message "header" with timestamp and error location
   fprintf(stderr, "[%s] {%s:%zu} ", timebuf,
           filename ? filename : "unspecified", line);
 
+  // given message
   va_list args;
   va_start(args, string);
   vfprintf(stderr, string, args);
@@ -108,6 +118,7 @@ int valid_args(size_t count, ...) {
   va_list args;
   va_start(args, count);
 
+  // return if any argument is NULL
   for (i = 0; i < count; i++) {
     ptr = va_arg(args, void *);
     if (ptr == NULL) {
