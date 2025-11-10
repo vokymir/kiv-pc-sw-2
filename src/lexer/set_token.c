@@ -77,7 +77,8 @@ int set_next_token(struct Token *token, const char *line, const size_t len,
   return 1;
 
 cleanup:
-  (*pos)++; // not to endup in an infinite loop...
+  (*pos)++; // not to end up in an infinite loop...
+            // by incrementing by one, the token won't be processed again
   return 0;
 }
 
@@ -135,8 +136,9 @@ int set_token_string(struct Token *token, const char *s, const size_t nl) {
     n_chars++;
     curr++;
   }
-  CLEANUP_IF_FAIL(
-      *curr); // Strings closing \" wasn't reached due to '\\0' before.
+
+  // Strings closing \" wasn't reached due to '\\0' before.
+  CLEANUP_IF_FAIL(*curr);
 
   CLEANUP_IF_FAIL(set_token_len(token, TOKEN_STRING, s, nl, n_chars));
 
@@ -160,7 +162,7 @@ int set_token_label(struct Token *token, const char *s, const size_t nl) {
     curr++;
   }
 
-  CLEANUP_IF_FAIL(n_chars >= 2); // must be  at least '@.'
+  CLEANUP_IF_FAIL(n_chars >= 2); // must be  at least '@.' ('.' as in regex)
 
   CLEANUP_IF_FAIL(set_token_len(token, TOKEN_LABEL, s, nl, n_chars));
 
