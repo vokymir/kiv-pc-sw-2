@@ -101,13 +101,17 @@ enum Err_Grm grammar_line_identifier(struct Parsed_Statement *pstmt,
                                      const struct Token *tokens[]) {
   NOMATCH_IF_FAIL(pstmt && tokens && *tokens);
   NOMATCH_IF_FAIL(token_is(TOK_CURR, TOKEN_IDENTIFIER));
+
+  // recursively look for all declaration segments
   NOMATCH_IF_FAIL(grammar_identifier_def(pstmt, &TOK_NEXT) == GRM_MATCH);
 
   pstmt->type = STMT_DATA_DECL;
   pstmt->err = PAR_NO_ERROR;
 
+  // count all segment counts and add them to total size
   RETURN_IF_FAIL(segment_set_dd_total_size(&pstmt->content.data_decl),
                  GRM_GENERIC_ERROR);
+  // copy identifier
   RETURN_IF_FAIL(token_copy_value(TOK_CURR, pstmt->content.data_decl.identifier,
                                   sizeof(pstmt->content.data_decl.identifier)),
                  GRM_GENERIC_ERROR);
