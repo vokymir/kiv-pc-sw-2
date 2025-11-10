@@ -96,6 +96,9 @@ int dtsg_app_bs(struct Data_Segment *dtsg, const uint8_t *bs, size_t count) {
 
   CLEANUP_IF_FAIL(_dtsg_ensure_capacity(dtsg, count));
 
+  // any justified usage of this function with the intent to copy overlapping
+  // bytes wasn't found, therefore if the program fails on this, it's because of
+  // wrong usage and that SHOULD FAIL
   memcpy(dtsg->bytes + dtsg->size, bs, count);
   dtsg->size += count;
   return 1;
@@ -128,6 +131,7 @@ int dtsg_app_dw(struct Data_Segment *dtsg, int32_t dw) {
   CLEANUP_IF_FAIL_ERR(dtsg && dtsg->bytes,
                       "The given data segment wasn't valid.");
 
+  // shortcut for little endian
   for (i = 0; i < KMA_DWORD_SIZE; i++) {
     bytes[i] = (uint8_t)((dw >> (i * 8)) & 0xFF);
   }
@@ -169,7 +173,7 @@ int dtsg_app_str(struct Data_Segment *dtsg, const char *string) {
 
   CLEANUP_IF_FAIL(_dtsg_ensure_capacity(dtsg, len));
 
-  memmove(dtsg->bytes + dtsg->size, string, len);
+  memmove(dtsg->bytes + dtsg->size, string, len); // safe
   dtsg->size += len;
   return 1;
 
