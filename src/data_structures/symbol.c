@@ -78,10 +78,10 @@ struct Symbol *symtab_add(struct Symbol_Table *table, const char *name,
   struct Symbol *symbol = NULL;
   CLEANUP_IF_FAIL_ERR(table && table->symbols && name,
                       "The given Symbol Table or name were NULL.");
-  symbol = &table->symbols[table->count];
 
   CLEANUP_IF_FAIL(_symtab_ensure_capacity(table, 1));
 
+  symbol = &table->symbols[table->count];
   symbol->address = address;
   strcpy(symbol->name, name);
   table->count++;
