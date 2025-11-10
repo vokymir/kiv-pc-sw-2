@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+// Helper temporary struct used when tokenizing line. Provides simple interface
+// for ensuring enough space for new tokens, but nothing more.
 struct Token_Arr {
   struct Token *tokens;
   size_t count;
