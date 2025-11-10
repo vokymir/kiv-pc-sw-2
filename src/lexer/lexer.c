@@ -14,7 +14,7 @@
 
 // Skip all whitespaces or comments in line by INCREMENTING the pos value.
 // Return 1 if there is a token waiting to be parsed on pos.
-// Return 0 if end of line was reached.
+// Return 0 if end of line was reached, or error detected.
 static int _lexer_skip_to_next_token(const char *line, const size_t len,
                                      size_t *pos);
 
@@ -143,22 +143,23 @@ static int _lexer_skip_to_next_token(const char *line, const size_t len,
     return 0;
   }
 
+  // pos pointing somewhere after end of line
   if (*pos >= len) {
     *pos = len;
     return 0;
   }
 
-  while (*pos < len && isspace((unsigned char)line[*pos])) { // skip whitespaces
+  // skip whitespaces
+  while (*pos < len && isspace((unsigned char)line[*pos])) {
     (*pos)++;
   }
 
-  if (*pos >= len) { // reached EO Line
+  if (*pos >= len) { // reached end of Line
     *pos = len;
     return 0;
-  }
-
-  if (line[*pos] == ';') { // reached comments
+  } else if (line[*pos] == ';') { // reached comments
     return 0;
+  } else { // found something meaningful
+    return 1;
   }
-  return 1; // found something meaningful
 }
