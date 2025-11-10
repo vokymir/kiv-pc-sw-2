@@ -22,6 +22,7 @@ enum Err_Asm passes_any_pass(struct Assembler_Processing *asp, int is_second) {
                           ASM_CANNOT_OPEN_FILE, "Couldn't open file: %s\n",
                           asp->config->source);
 
+  // while having line to parse
   while (fu_getline(&line, &line_len, f) != -1) {
     if (is_second) {
       REUSE_ERR_IF_FAIL(pass2_line(asp, &ctx, nl, line));
@@ -54,11 +55,15 @@ enum Err_Asm passes_line(struct Assembler_Processing *asp,
   PRINT_VERBOSE("Tokenizing line.\n");
   tokens = lexer_tokenize_line(line, nl);
   ERR_IF_FAIL(tokens, ASM_CREATING_TOKENS);
+  // from here must goto cleanup on fail
+
   if (asp->config->flag_verbose) {
     print_tokens(tokens);
   }
+
   PRINT_VERBOSE("Parsing tokens.\n");
   pstmt = convert_parse_tokens(tokens, nl);
+  // goto cleanup on fail
   ERR_IF_FAIL(pstmt &&
                   (pstmt->err == PAR_NO_ERROR || pstmt->err == PAR_EMPTY_LINE),
               ASM_CREATING_PSTMT);
