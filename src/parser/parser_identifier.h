@@ -33,12 +33,15 @@ enum Err_Grm grammar_identifier_dw_dup(struct Parsed_Statement *pstmt,
                                        const struct Token *tokens[],
                                        size_t segment_idx);
 
+// The same as grammar_identifier_dw_dec but for BYTE/DB data type.
 enum Err_Grm grammar_identifier_db_dec(struct Parsed_Statement *pstmt,
                                        const struct Token *tokens[]);
 
+// The same as grammar_identifier_dw_dec2 but for BYTE/DB data type.
 enum Err_Grm grammar_identifier_db_dec2(struct Parsed_Statement *pstmt,
                                         const struct Token *tokens[]);
 
+// The same as grammar_identifier_dw_dup but for BYTE/DB data type.
 enum Err_Grm grammar_identifier_db_dup(struct Parsed_Statement *pstmt,
                                        const struct Token *tokens[],
                                        size_t segment_idx);
