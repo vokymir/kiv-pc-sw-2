@@ -14,6 +14,7 @@ struct Parsed_Statement *parse_tokens(const struct Token *tokens[], size_t nl) {
   stmt = p_stmt_create(STMT_NONE, nl);
   RETURN_IF_FAIL(stmt, NULL);
 
+  // delegate all work to 'grammar submodule'
   CLEANUP_IF_FAIL(grammar_line(stmt, tokens) == GRM_MATCH);
 
   return stmt;
@@ -49,6 +50,7 @@ int p_stmt_init(struct Parsed_Statement *ps, enum Statement_Type type,
   ps->err = PAR_NO_ERROR;
   ps->line_number = nl;
 
+  // diferent clearing is needed for union
   switch (ps->type) {
   case STMT_NONE:
   case STMT_KMA:
@@ -81,6 +83,7 @@ cleanup:
 void p_stmt_deinit(struct Parsed_Statement *ps) {
   CLEANUP_IF_FAIL_ERR(ps, "Tried deinit parsed statement but gave NULL.");
 
+  // diferent clearing is needed for union
   switch (ps->type) {
   case STMT_NONE:
   case STMT_KMA:
