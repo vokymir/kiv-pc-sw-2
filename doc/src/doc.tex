@@ -1,4 +1,7 @@
 \documentclass[czech, kiv, he, sem, pdf, viewonly]{fasthesis}
+
+\usepackage{pdfpages}
+
 \title{Assembler procesoru architektury MISC}
 \author{Jakub}{Vokoun}{}{}
 
@@ -10,13 +13,32 @@
 \tableofcontents
 
 \chapter{Zadání}
-
+Naprogramujte v ANSI C přenositelnou konzolovou aplikaci,
+která bude zajišťovat funkcionalitu velmi jednoduchého
+(ale plně funkčního) překladače jazyka symbolických adres
+(JSA) teoretického/virtuálního počítače – nazvěme ho třeba
+K’s Machine (KM) – s procesorem architektury MISC (= Minimal
+Instruction Set Computer). Vámi vyvinutý program zpracuje
+zdrojový soubor zapsaný v JSA (nebo krátce a zjednodušeně assembly)
+procesoru KM a vygeneruje binární spustitelný soubor ve formátu KMX
+(K’s Machine eXecutable) obsahující odpovídající sekvenci instrukcí
+strojového kódu níže popsaného minimalistického teoretického/virtuálního počítače.
+\footnote{Toto je pouze výtah ze zadání. Kompletní znění najdete jako přílohu \ref{app:assignment}
+na straně \pageref{app:assignment}.}
 
 
 \chapter{Analýza úlohy}
 \chapter{Popis implementace}
 \chapter{Uživatelská příručka}
 \chapter{Závěr}
+
+\appendix
+
+\chapter{Zadání}\label{app:assignment}
+Následující strany obasahují kompletní a nezkrácené zadání semestrální práce, včetně přílohy.
+
+% \includepdf[pages=-, scale=0.8,trim=12mm 25mm 12mm 25mm, clip, pagecommand={}, frame=true]{../sw2025-01.pdf}
+\includepdf[pages=-, scale=0.75, pagecommand={}, frame=true]{../sw2025-01.pdf}
 
 \backmatter
 \backpage
