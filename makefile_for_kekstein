@@ -1,14 +1,12 @@
 CC = gcc
 CFLAGS = -Wall -pedantic -std=c99
-INCLUDE_DIR = include
-SRC_DIR = src
-SRC_FILES = $(shell find $(SRC_DIR) -name '*.c')
+SRC_FILES = $(shell find . -name '*.c')
 TARGET = kmas.exe
 
 all: clean $(TARGET)
 
 $(TARGET): $(SRC_FILES)
-	$(CC) $(CFLAGS) -I./$(INCLUDE_DIR) $(SRC_FILES) -o $@
+	$(CC) $(CFLAGS) $(SRC_FILES) -o $@
 
 clean:
 	rm -f $(TARGET)
