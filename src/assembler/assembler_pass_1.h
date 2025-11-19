@@ -2,10 +2,10 @@
 #define ASSEMBLER_PASS_1_H
 /* Module helper for functionality specific to 1st pass. */
 
-#include <parser.h>
 #include <stdlib.h>
 
 #include "assembler.h"
+#include "parser.h"
 
 // Process one <line> in the first pass of the assembler code.
 // Might edit <context> or any structure inside <asp>, based on what is on the
