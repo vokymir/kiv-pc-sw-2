@@ -14,14 +14,13 @@ submit: clean
 	# copy PDF to root
 	cp $(PDF) $(TMPDIR)/
 	# copy src folder
-	find $(SRC_DIR) -maxdepth 5 -type f -name '*.c' \
-	    -exec sh -c ' \
-	        for f; do \
-	            g=${f#/}               # remove leading slash if any
-	            g=${g//\//_}            # replace slashes with underscores
-	            cp "$f" "$(TMPDIR)/$g"; \
-	        done \
-	    ' sh {} +
+	find src -maxdepth 5 -type f -name '*.c' \
+	-exec sh -c ' \
+		for f in "$$@"; do \
+			g=$$(printf "%s" "$$f" | tr "/" "_" ); \
+			cp "$$f" "$(TMPDIR)/$$g"; \
+		done \
+	' sh {} +
 	find $(SRC_DIR) -maxdepth 5 -type f -name '*.h' -exec cp {} $(TMPDIR)/ \;
 	# copy includes folder
 	cp -r $(INC_DIR)/* $(TMPDIR)/
