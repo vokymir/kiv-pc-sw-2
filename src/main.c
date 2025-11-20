@@ -25,6 +25,12 @@ int main(const int argc, const char **argv) {
   // Parse CLI arguments and save results into config.
   DONT_FAIL(args_parse(&config, argc, argv));
 
+  print_verbose(config.flag_verbose,
+                "Source: %s\nTarget: %s\nVerbose: %s\nInstructions: %s\n",
+                config.source, config.target,
+                config.flag_verbose ? "yes" : "no",
+                config.flag_instruction ? "yes" : "no");
+
   // Prepare for processing assembler
   asp = asp_create(&config, NULL, NULL, NULL);
   if (!asp) {
