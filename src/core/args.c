@@ -235,7 +235,8 @@ cleanup:
 
 static int _args_is_v(const int argc, const char **argv) {
   int i = 0;
-  CLEANUP_IF_FAIL_ERR(argc > 2 && argv, "Invalid arguments were given.");
+  // argv[0] = ./kmas.exe; argv[1] = input.kas
+  CLEANUP_IF_FAIL_ERR(argc >= 2 && argv, "Invalid arguments were given.");
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
     if (strcmp(argv[i], "-v") == 0) {
@@ -249,7 +250,8 @@ cleanup:
 
 static int _args_is_i(const int argc, const char **argv) {
   int i = 0;
-  CLEANUP_IF_FAIL_ERR(argc > 2 && argv, "Invalid arguments were given.");
+  // argv[0] = ./kmas.exe; argv[1] = input.kas
+  CLEANUP_IF_FAIL_ERR(argc >= 2 && argv, "Invalid arguments were given.");
 
   for (i = 2; i < argc; i++) { // skip .exe and src argumnets
     if (strcmp(argv[i], "-i") == 0) {
