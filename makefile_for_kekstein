@@ -1,5 +1,15 @@
 CC = gcc
-CFLAGS = -Wall -pedantic -std=c99
+CFLAGS = -Wall -Wextra -Wpedantic -Wconversion -std=c99 \
+  -Wshadow -Wshadow=compatible-local -Wcast-qual -Wcast-align \
+  -Wpointer-arith -Wstrict-overflow=5 -Wundef -Wwrite-strings -Wlogical-op \
+  -Waggregate-return -Wfloat-equal -Winline -Wredundant-decls -Wstrict-prototypes \
+  -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wold-style-definition \
+  -Wbad-function-cast -Wjump-misses-init -Wuninitialized -Wmaybe-uninitialized \
+  -Wmissing-include-dirs -Wswitch-enum -Wswitch-default -Wformat=2 -Wdouble-promotion \
+  -Wvla -Walloc-zero -Walloca -Wstringop-overflow=4  \
+  -fstack-protector-all -Wformat-security -Wfatal-errors \
+  -Wstrict-aliasing=2 -Wimplicit-fallthrough -Wnonnull \
+  -Wduplicated-cond -Wduplicated-branches -Wunreachable-code -Wno-nonnull
 SRC_FILES = $(shell find . -name '*.c')
 TARGET = kmas.exe
 
