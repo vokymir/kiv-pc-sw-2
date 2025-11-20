@@ -26,6 +26,7 @@ enum Err_Main convert_err(enum Err_Asm err) {
   case ASM_SYMTAB_ALREADY_EXIST:
   case ASM_INVALID_INSTUCTION:
   case ASM_INVALID_OPERAND_REGISTER:
+  case ASM_CREATING_PSTMT:   // pstmt cannot be created because of syntax error
     return ERR_SYNTAX_ERROR; // 3
   case ASM_CANNOT_OPEN_FILE:
     return ERR_FILE_ACCESS_FAILURE; // 4
@@ -41,7 +42,6 @@ enum Err_Main convert_err(enum Err_Asm err) {
     return ERR_DATA_SEGMENT_TOO_LARGE; // 8
   case ASM_INVALID_ARGS:
   case ASM_CREATING_TOKENS:
-  case ASM_CREATING_PSTMT:
   case ASM_UNKNOWN_PSTMT_TYPE:
   case ASM_SYMTAB_CANNOT_ADD:
   case ASM_UNKNOWN_INIT_SEG:
