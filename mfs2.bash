@@ -7,7 +7,7 @@ TMPDIR=$(mktemp -d)
 
 echo "Copying files to temporary directory..."
 
-cp mfk2 "$TMPDIR/makefile"
+cp makefile_for_kekstein_2 "$TMPDIR/makefile"
 
 cp -r include "$TMPDIR/"
 cp -r src "$TMPDIR/"
