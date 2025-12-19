@@ -3,29 +3,33 @@
 \usepackage{pdfpages}
 
 \title{Assembler procesoru architektury MISC}
+
 \author{Jakub}{Vokoun}{}{}
 
 \nobastardtitle
+
 \nocopyrightnotice
 
+
 \begin{document}
+
 \frontpages[notm]
+
 \tableofcontents
 
 \chapter{Zadání}
 
-Naprogramujte v ANSI C přenositelnou konzolovou aplikaci,
-která bude zajišťovat funkcionalitu velmi jednoduchého
-(ale plně funkčního) překladače jazyka symbolických adres
-(JSA) teoretického/virtuálního počítače – nazvěme ho třeba
-K’s Machine (KM) – s procesorem architektury MISC (= Minimal
-Instruction Set Computer). Vámi vyvinutý program zpracuje
-zdrojový soubor zapsaný v JSA (nebo krátce a zjednodušeně assembly)
-procesoru KM a vygeneruje binární spustitelný soubor ve formátu KMX
-(K’s Machine eXecutable) obsahující odpovídající sekvenci instrukcí
-strojového kódu níže popsaného minimalistického teoretického/virtuálního počítače.
-\footnote{Toto je pouze výtah ze zadání. Kompletní znění najdete jako přílohu \ref{app:assignment}
-na straně \pageref{app:assignment}.}
+Naprogramujte v ANSI C přenositelnou konzolovou aplikaci, která bude zajišťovat
+funkcionalitu velmi jednoduchého (ale plně funkčního) překladače jazyka
+symbolických adres (JSA) teoretického/virtuálního počítače – nazvěme ho třeba
+K’s Machine (KM) – s procesorem architektury MISC (= Minimal Instruction Set
+Computer). Vámi vyvinutý program zpracuje zdrojový soubor zapsaný v JSA (nebo
+krátce a zjednodušeně assembly) procesoru KM a vygeneruje binární spustitelný
+soubor ve formátu KMX (K’s Machine eXecutable) obsahující odpovídající sekvenci
+instrukcí strojového kódu níže popsaného minimalistického
+teoretického/virtuálního počítače. \footnote{Toto je pouze výtah ze zadání.
+Kompletní znění najdete jako přílohu \ref{app:assignment} na straně
+\pageref{app:assignment}.}
 
 
 \chapter{Analýza úlohy}
@@ -34,28 +38,38 @@ Překlad libovolného assembly souboru do binárního souboru, tedy překlad z j
 symbolických adres do instrukcí konkrétního procesoru obnáší následující obtíže:
 
 \begin{itemize}
-    \item Dopředná reference
+
+  \item Dopředná reference
+
 \end{itemize}
 
 \section{Dopředná reference}
 
-Jazyk symbolických adres je programátory preferovaný oproti strojovému (binárnímu) kódu
-přesně z toho důvodu, který mu dal jméno. Lze definovat a používat symboly - ať už se
-jedná o jméno proměnné nebo návěší.
+Jazyk symbolických adres je programátory preferovaný proti strojovému
+(binárnímu) kódu přesně z toho důvodu, který mu dal jméno. Zatímco ve strojovém
+kódu se mohou vyskytovat pouze adresy (absolutní nebo relativní), v JSA lze
+definovat a používat symboly,s reprezentující jméno proměnné nebo návěší, které
+se v době překladu vyhodnotí a do výsledného strojového kódu se zapíší už
+konkrétní adresy. Tato vlastnost dává programátorům
 
 
 \chapter{Popis implementace}
+
 \chapter{Uživatelská příručka}
+
 \chapter{Závěr}
 
 \appendix
 
-\chapter{Zadání}\label{app:assignment}
-Následující strany obasahují kompletní a nezkrácené zadání semestrální práce, včetně přílohy.
+\chapter{Zadání}\label{app:assignment} Následující strany obasahují kompletní a
+nezkrácené zadání semestrální práce, včetně přílohy.
 
-% \includepdf[pages=-, scale=0.8,trim=12mm 25mm 12mm 25mm, clip, pagecommand={}, frame=true]{../sw2025-01.pdf}
+% \includepdf[pages=-, scale=0.8,trim=12mm 25mm 12mm 25mm, clip, pagecommand={},
+% frame=true]{../sw2025-01.pdf}
 \includepdf[pages=-, scale=0.75, pagecommand={}, frame=true]{../sw2025-01.pdf}
 
 \backmatter
+
 \backpage
+
 \end{document}
