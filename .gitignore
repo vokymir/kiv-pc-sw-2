@@ -6,6 +6,6 @@ source.kmx
 /bin/
 tmp/
 vgcore.*
-assembler.zip
+*.zip
 .cache/
 compile_commands.json
