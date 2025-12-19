@@ -10,7 +10,6 @@
 
 \nocopyrightnotice
 
-
 \begin{document}
 
 \frontpages[notm]
@@ -50,7 +49,12 @@ Jazyk symbolických adres je programátory preferovaný proti strojovému
 kódu se mohou vyskytovat pouze adresy (absolutní nebo relativní), v JSA lze
 definovat a používat symboly,s reprezentující jméno proměnné nebo návěší, které
 se v době překladu vyhodnotí a do výsledného strojového kódu se zapíší už
-konkrétní adresy. Tato vlastnost dává programátorům
+konkrétní adresy. Tato vlastnost dává programátorům možnost odkazovat se na
+libovolnou adresu bez toho, aby ji explicitně uváděli, čímž se zabraňuje
+množství chyb z nepozornosti. Navíc při přidání jediné instrukce ve strojovém
+kódu je třeba zkontrolovat celý soubor, jelikož všechny adresy následující po
+této instrukci mají změněnou adresu. Tyto problémy jazyk symbolických adres za
+cenu potřeby překladu zdrojového kódu elegantně odstiňuje od programátorů.
 
 
 \chapter{Popis implementace}
@@ -61,8 +65,10 @@ konkrétní adresy. Tato vlastnost dává programátorům
 
 \appendix
 
-\chapter{Zadání}\label{app:assignment} Následující strany obasahují kompletní a
-nezkrácené zadání semestrální práce, včetně přílohy.
+\chapter{Zadání}\label{app:assignment}
+
+Následující strany obasahují kompletní a nezkrácené zadání semestrální práce,
+včetně přílohy.
 
 % \includepdf[pages=-, scale=0.8,trim=12mm 25mm 12mm 25mm, clip, pagecommand={},
 % frame=true]{../sw2025-01.pdf}
