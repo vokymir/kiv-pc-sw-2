@@ -139,6 +139,18 @@ aby ověřil existenci uživateli zadaných souborů.
 
 \subsection{common}
 
+Tento modul definuje mnoho maker, které využívají jazykové konstrukce
+\command{goto}. Přestože makra mohou být zneužita, záměr je bezpečný. Předpoklad
+je, že v těle jedné funkce může být více míst, na kterých může ztroskotat.
+Zároveň každé z těchto míst bude vyžadovat podobné \textit{uklízecí příkazy}, v
+mnoha případech dokonce stejné.
+
+\input{partials/function_macros.tex}
+
+\input{partials/function_macros2.tex}
+
+ahoj
+
 \subsection{memory}
 
 \section{io}

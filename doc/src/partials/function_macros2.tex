@@ -1,0 +1,22 @@
+\begin{code}{C}{Příklad funkce, která benefituje z existence maker v modulu common.}
+int do_smth2(int cond1){
+  int *buffer = NULL;
+  int result = 0;
+
+  buffer = malloc(10 * sizeof(int));
+  CLEANUP_IF_FAIL(buffer);
+
+  CLEANUP_IF_FAIL(cond1);
+  buffer[0] = 5;
+
+  for (i = 0; i < 10; i++){
+    result += buffer[i];
+  }
+
+cleanup:
+  if (buffer){
+    free(buffer);
+  }
+  return result;
+}
+\end{code}
