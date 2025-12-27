@@ -1,7 +1,9 @@
 ZIPNAME = assembler.zip
 PDF = $(wildcard doc/doc.pdf)
+DOC_TEX = doc/src/doc.tex
 SRC_DIR = src
 INC_DIR = include
+REVERSE_SRC = reverse.bash
 MAKEFILE_SRC = makefile_for_kekstein
 TMPDIR = tmp_submit
 
@@ -11,10 +13,14 @@ submit: clean
 	@echo "📦 Creating submission archive..."
 	# create temp directory
 	mkdir -p $(TMPDIR)
+	# copy reverse script to root
+	cp $(REVERSE_SRC) $(TMPDIR)/
 	# copy PDF to root
 	cp $(PDF) $(TMPDIR)/
+	# copy doc.tex to root
+	cp $(DOC_TEX) $(TMPDIR)/
 	# copy src folder
-	find src -maxdepth 5 -type f -name '*.c' \
+	find $(SRC_DIR) -maxdepth 5 -type f -name '*.c' \
 	-exec sh -c ' \
 		for f in "$$@"; do \
 			g=$$(printf "%s" "$$f" | tr "/" "_" ); \
