@@ -76,7 +76,10 @@ místa obsahující symboly a doplnit je všechny až po projití celého soubor
 
 Jiným řešením je víceprůchodový algoritmus, který v prvních průchodech
 negeneruje binární kód, pouze zaznamenává pozice symbolů a teprve v dalším
-(posledním) průchodu přeloží JSA na strojový kód.
+(posledním) průchodu přeloží JSA na strojový kód. Tato varianta nevyžaduje tolik
+paměti RAM, jelikož není potřeba si pamatovat všechny výskyty symbolů. Lépe
+ilustruje rozdělení analýzy a generace kódu. Nevýhodou je nutnost vícenásobného
+čtení zdrojového souboru, což může prodloužit dobu kompilace.
 
 \section{Instrukční sada}
 
