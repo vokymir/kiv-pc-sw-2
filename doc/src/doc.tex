@@ -2,6 +2,8 @@
 
 \usepackage{pdfpages}
 
+\usepackage{float}
+
 \title{Assembler procesoru architektury MISC}
 
 \author{Jakub}{Vokoun}{}{}
@@ -36,12 +38,6 @@ Kompletní znění najdete jako přílohu \ref{app:assignment} na straně
 Překlad libovolného assembly souboru do binárního souboru, tedy překlad z jazyka
 symbolických adres do instrukcí konkrétního procesoru obnáší následující obtíže:
 
-\begin{itemize}
-
-  \item Dopředná reference
-
-\end{itemize}
-
 \section{Dopředná reference}
 
 Jazyk symbolických adres je programátory preferovaný proti strojovému
@@ -55,6 +51,28 @@ množství chyb z nepozornosti. Navíc při přidání jediné instrukce ve stro
 kódu je třeba zkontrolovat celý soubor, jelikož všechny adresy následující po
 této instrukci mají změněnou adresu. Tyto problémy jazyk symbolických adres za
 cenu potřeby překladu zdrojového kódu elegantně odstiňuje od programátorů.
+
+Řešením tohoto problému může být jednoprůchodový algoritmus, který si udržuje v
+paměti informace o adresách všech symbolů (proměnných a návěští), zároveň ale i
+informace o všech místech, kde byl použit neznámý symbol. Algoritmus z kontextu
+pozná počet bajtů které je třeba rezervovat a zaznamená si neznámý symbol.
+Jakmile narazí na definici nového symbolu, doplní jeho adresu na všechny místa,
+kde chybí. Alternativně lze během prvního průchodu pouze zaznamenávat všechna
+místa obsahující symboly a doplnit je všechny až po projití celého souboru.
+
+\begin{figure}[H]
+
+  \centering
+
+  \includegraphics[width=0.5\textwidth]{img/one-pass_compiler.pdf}
+
+  \caption{Zjednodušené zobrazení jednoprůchodového překladače. Znázorněny
+  varianty doplnění symbolů v průběhu a na konci pomocí čárkovaně ohraničených
+  boxů.}
+
+  \label{fig:one_pass_compiler}
+
+\end{figure}
 
 
 \chapter{Popis implementace}
