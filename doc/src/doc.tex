@@ -82,9 +82,7 @@ negeneruje binární kód, pouze zaznamenává pozice symbolů a teprve v dalš�
 
 \chapter{Popis implementace}
 
-\section{Modularizace}
-
-Projekt je založen na standardní adresářové struktuře pro C/C++ projekty
+Projekt je založen na standardní adresářové struktuře pro \term{C/C++} projekty
 \footnote{Validační server pro odevzdávání práce se nedokázal s takto dodaným
 projektem úspěšně vypořádat. Konkrétně nástroj pro statickou analýzu kódu splint
 vyžadoval hlavičkové soubory ve stejném adresáři se zdrojovými soubory, jinak je
@@ -98,7 +96,18 @@ dodaný makefile funguje pouze na strukturu vyžadovanou validačním serverem.
 Adaptace na standardní adresářovou strukturu je ponechána jako cvičení
 čtenáři.}. V adresáři \command{include} se nachází veřejné hlavičkové soubory
 pro jednotlivé části projektu, moduly. Implementace jednotlivých modulů se
-nachází v adresáři \command{src}
+nachází v adresáři \command{src}, přičemž jednotlivé zdrojové soubory jsou navíc
+rozdělené do podadresářů podle funkcionality, které zastávají. Tyto podadresáře
+v některých případech vyžadují navíc své privátní hlavičkové soubory - takové,
+které obsahují funkcionalitu společnou pro všechny zdrojové soubory v
+podadresáři.
+
+% TODO: nástin adresářové struktury - viz doc kiv-web
+
+V následujících sekcích rozebereme funkcionalitu, zodpovědnosti a kontrakty
+jednotlivých modulů. Zároveň i konkrétní důvody rozdělení do podadresářů. Kromě
+toho na místech vyžadujících to osvětlíme důvody použití maker, práci s pamětí a
+extenzivního (vhodného) využití volání \command{goto}.
 
 \section{Core}
 
