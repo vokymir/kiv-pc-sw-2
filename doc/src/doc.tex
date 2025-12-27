@@ -74,8 +74,41 @@ místa obsahující symboly a doplnit je všechny až po projití celého soubor
 
 \end{figure}
 
+Jiným řešením je víceprůchodový algoritmus, který v prvních průchodech
+negeneruje binární kód, pouze zaznamenává pozice symbolů a teprve v dalším
+(posledním) průchodu přeloží JSA na strojový kód.
+
+\section{Instrukční sada}
 
 \chapter{Popis implementace}
+
+\section{Modularizace}
+
+Projekt je založen na standardní adresářové struktuře pro C/C++ projekty
+\footnote{Validační server pro odevzdávání práce se nedokázal s takto dodaným
+projektem úspěšně vypořádat. Konkrétně nástroj pro statickou analýzu kódu splint
+vyžadoval hlavičkové soubory ve stejném adresáři se zdrojovými soubory, jinak je
+nedokázal nalézt. Z toho důvodu byl vytvořen skript pro automatickou
+transformaci projektu na takový, který odpovídá požadavkům validačního serveru.
+Pro lepší přehlednost byl ale odevzdán i reverzní skript, který z dodaných
+souborů zrekonstruuje originální složkovou strukturu. Aplikování skriptu je
+výrazně doporučeno z důvodů přehlednosti a zajištění toho, že popis projektu
+odpovídá skutečné adresářové struktuře zdrojových a hlavičkových souborů. Pozor,
+dodaný makefile funguje pouze na strukturu vyžadovanou validačním serverem.
+Adaptace na standardní adresářovou strukturu je ponechána jako cvičení
+čtenáři.}. V adresáři \command{include} se nachází veřejné hlavičkové soubory
+pro jednotlivé části projektu, moduly. Implementace jednotlivých modulů se
+nachází v adresáři \command{src}
+
+\section{Core}
+
+\section{I/O}
+
+\section{Lexer}
+
+\section{Parser}
+
+\section{Assembler}
 
 \chapter{Uživatelská příručka}
 
