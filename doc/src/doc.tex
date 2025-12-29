@@ -271,6 +271,19 @@ obě operace (vklad a výběr) časovou složitost $O(1)$.
 
 \section{lexer}
 
+Účelem modulu \filename{lexer} je, pro jakoukoliv řádku, tedy pro libovoný
+řetězec znaků ukončený nulovým znakem (\command{\0}), vytvořit odpovídající pole
+tokenů. Token je struktura definovaná typem a hodnotou. Hodnota je vždy
+podřetězec, který odpovídá konkrétnímu tokenu. Uvedu příklad:
+
+Mějmě řetězec \command{swapped DB 2}. Po tokenizaci budou existovat čtyři
+tokeny: \command{(IDENTIFIER,"swapped")}, \command{(DATA_TYPE,"DB")},
+\command{(NUMBER,"2")}, \command{(EOF,"")}. Vždy typ tokenu jasně rozlišuje,
+jestli se jedná o proměnnou, datový typ, číslo, konec řádky nebo ještě něco
+dalšího, zatímco konkrétní hodnota (například jméno proměnné) ještě není známá.
+Není úkolem lexeru zjistit konkrétní hodnoty. Některé hodnoty jsou vždy stejné
+(\command{(LPAREN,"(")}), ale jedná se o menšinu.
+
 \section{parser}
 
 \section{assembler}
