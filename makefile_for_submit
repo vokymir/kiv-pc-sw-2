@@ -33,7 +33,7 @@ submit: clean
 	# copy makefile_for_kekstein as Makefile
 	cp $(MAKEFILE_SRC) $(TMPDIR)/makefile
 	# create Windows Makefile variant
-	sed 's/rm -f/del /' $(MAKEFILE_SRC) > $(TMPDIR)/makefile.win
+	sed 's/rm -f/erase /' $(MAKEFILE_SRC) > $(TMPDIR)/makefile.win
 	# create zip
 	cd $(TMPDIR) && zip -r ../$(ZIPNAME) *
 	@echo "✅ Created $(ZIPNAME)"

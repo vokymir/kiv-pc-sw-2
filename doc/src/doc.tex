@@ -130,12 +130,11 @@ Modul je zodpovědný za zpracování argumentů z příkazové řádky. Jejich 
 zpět do hlavního toku programu je pomocí datové struktury \command{Config},
 která obsahuje přepínače pro \textit{upovídaný} výstup, výpis jednotlivých
 zpracovaných instrukcí, zdrojovou a cílovou cestu \footnote{Použití programu z
-příkazové řádky je podrobně popsáno v kapitole uzivatelska prirucka..
-% TODO: kde presne??? nahradit natvrdo napsane nejakym odkazem
-}. Modul nabízí funkce pro inicializaci a deinicializaci této \textit{datové
-přepravky}, nikoliv však funkce pro de/alokaci, záměrně se snaží vynutit alokaci
-pouze na zásobníku. Modul využívá funkcionalitu z modulu pro práci se soubory,
-aby ověřil existenci uživateli zadaných souborů.
+příkazové řádky je podrobně popsáno v kapitole \ref{chp:manual} na straně
+\pageref{chp:manual}.}. Modul nabízí funkce pro inicializaci a deinicializaci
+této \textit{datové přepravky}, nikoliv však funkce pro de/alokaci, záměrně se
+snaží vynutit alokaci pouze na zásobníku. Modul využívá funkcionalitu z modulu
+pro práci se soubory, aby ověřil existenci uživateli zadaných souborů.
 
 \subsection{common}
 
@@ -277,7 +276,7 @@ tokenů. Token je struktura definovaná typem a hodnotou. Hodnota je vždy
 podřetězec, který odpovídá konkrétnímu tokenu. Uvedu příklad:
 
 Mějmě řetězec \command{swapped DB 2}. Po tokenizaci budou existovat čtyři
-tokeny: \command{(IDENTIFIER,"swapped")}, \command{(DATA_TYPE,"DB")},
+tokeny: \\\command{(IDENTIFIER,"swapped")}, \command{(DATA_TYPE,"DB")},
 \command{(NUMBER,"2")}, \command{(EOF,"")}. Vždy typ tokenu jasně rozlišuje,
 jestli se jedná o proměnnou, datový typ, číslo, konec řádky nebo ještě něco
 dalšího, zatímco konkrétní hodnota (například jméno proměnné) ještě není známá.
@@ -288,7 +287,31 @@ Není úkolem lexeru zjistit konkrétní hodnoty. Některé hodnoty jsou vždy s
 
 \section{assembler}
 
-\chapter{Uživatelská příručka}
+\chapter{Uživatelská příručka}\label{chp:manual}
+
+Ujistěte se, že máte nainstalovaný a funkční nástroj \product{make}. Dále je
+zapotřebí překladač \product{gcc} ve verzi dostatečné pro přeložení \term{C99}
+programu. Pokud jste na \product{Windows}, preferujte použití \product{MinGW}.
+Lze použít i jiné překladače, dbejte však na takovou úpravu příslušného
+\filename{makefile}, aby do proměné \command{CC} byl přiřazen Váš překladač a
+aby v \command{CFLAGS} nebyly příznaky neshodné s Vaším překladačem. Pro
+přeložení otevřete terminál (příkazovou řádku) ve umístění kde je příslušný
+\filename{makefile} a přeložte pomocí příkazu \command{make}. Po přeložení
+vznikne spustitelný soubor \filename{kmas.exe}.
+
+\input{partials/run.tex}
+
+Při spuštění vyžaduje program minimálně jeden argument, cestu ke zdrojovému
+souboru obsahující JSA kód. Volitelně je možné přidat cestu výstupního binárního
+souboru a přepínače pro intenzivní výpis diagnostických informací a výpis všech
+zpracovaných instrukcí.
+
+Po spuštění programu neprobíhá žádná interakce s uživatelem. Program však na
+standardní výstup vypisuje diagnostické informace, zpracované instrukce - pokud
+byl spuštěn s příslušným přepínačem. Pokud by došlo k chybě, bude vypsána na
+\command{stderr} a program se ukončí s příslušnou návratovou hodnotou. Seznam
+všech návratových hodnot a jejich významů se nachází v zadání (příloha
+\ref{app:assignment} na straně \pageref{app:assignment}).
 
 \chapter{Závěr}
 
