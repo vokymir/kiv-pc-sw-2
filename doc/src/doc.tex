@@ -200,6 +200,75 @@ strojový kód.
 
 \section{data\_structures}
 
+Čtyři kriticky důležité datové struktury mají každá svůj modul, pro lepší
+přehlednost a udržitelnost. Ač jsou některé z nich vnitřní implementací velmi
+podobné jiným, bylo lepší je nechat oddělené pro případ, že by vyvstaly nové
+požadavky a bylo třeba jednu konkrétní upravit.
+
+\subsection{dataseg}
+
+Modul pro datový segment poskytuje funkce pro vytvoření (alokaci) a uvolnění z
+paměti. Dále umožňuje vkládat různá data: bajt, slovo, řetězec - podle definice
+KM stroje. Dokáže zjistit momentální velikost segmentu a nabízí možnost získat
+konstantní ukazatel na začátek dat, který je potřeba pro zápis do souboru.
+
+Kvůli použití dvouprůchodového algoritmu byly přidány další dvě funkce. Jedna,
+která pouze simuluje přidávání dat do datového segmentu - pouze zvyšuje
+počítadlo použitých bajtů (\command{advance}). V prvním průchodu je přesně toto
+použito, aby se odhalilo případné naplnění a přeplnění datového segmentu v KM
+stroji. Protipól funkce (\command{begin}) nastavuje čítač použitých bajtů na
+nulu a umožňuje tím ten samý datový segment použít jak v prvním, tak i v druhém
+průchodu.
+
+Datový segment se dynamicky zvětšuje, realokuje, podle násobitele definovaného v
+modulu \filename{common}. Tato hodnota byla nastavena na dva, aby bylo dosaženo
+amortizované časové složitosti přidání prvku do segmentu $O(1)$.
+
+\subsection{codeseg}
+
+Kódový segment se v mnohém podobá datovému, podlehlá struktura je stejná, nabízí
+funkce pro (de)alokaci i funkce \command{advance} a \command{begin}. Jinak ale
+místo vkládání datových typů umožňuje vkládat kód instrukce (op-kód), registr a
+nebo 32 bitovou hodnotu.
+
+\subsection{instruction}
+
+Modul pro instrukce obsahuje definici struktury
+\command{Instruction_Descriptor}, deskriptor instrukce. Deskriptor instrukce je
+popsán svým názvem (řetězec), kódem a typy operátorů. Všechny deskriptory jsou
+definované uvnitř zdrojového souboru, tedy neveřejné. Nepřímý přístup k nim
+nabízí funkce vyhledávající deskriptor podle názvu (\command{find}), která vrací
+bezpečnou konstantní referenci (bezpečnou proto, že nelze deskriptor smazat).
+
+Deskriptor instrukce představuje jakýsi vzor bez konkrétních hodnot. V
+následujícím příkladě budeme uvažovat deskriptor jako uspořádanou množinu
+sestávající z názvu, kódu, typů prvního a druhého operandu. Vezměme konkrétní
+instrukci \command{MOV A, 8}. Pro tu existuje deskriptor popsaný jako
+\command{("MOV", 10, registr, číslo)}. Všimněte si, že nikde v deskriptoru není
+uveden konkrétní registr ani hodnota. Díky tomu lze ten samý deskriptor použít i
+na například instrukci \command{MOV B, 5}, přestože hodnoty jsou jiné (ale typ
+instrukce je stejný).
+
+\subsection{symbol}
+
+Tabulka symbolů je nesmírně důležitá pro dvojprůchodoý algoritmus. V prvním
+průchodu se zaznamenávají jména všech symbolů společně s jejich adresami. V
+druhém průchodu je třeba adresy těchto symbolů získat pouze ze znalosti jejich
+jmen.
+
+Do jedné tabulky symbolů se v této implementaci vkládají symboly pro proměnné i
+návěští. Aby se ale při shodě jmen nepřekryly, ukládají se návěští společně s
+uvozovacím znakem @.
+
+Tabulka je implementována jako souvislé pole symbolů, tedy přidání symbolu
+(probíhající stejným způsobem jako v datovém a kódovém segmentu) je po
+amortizaci časové složitosti $O(1)$. Neprobíhá ovšem řazení symbolů,
+lexikografické ani jiné, proto je časová složitost hledání symbolu $O(n)$.
+Předpokládaná složitost programů používajících tento překladač je dostatečně
+malá. Pokud by se ale uvažovalo o využití na větších programech, bylo by vhodné
+zvážit reimplementaci tabulky symbolů jako hashovaci tabulky, která nabízí pro
+obě operace (vklad a výběr) časovou složitost $O(1)$.
+
 \section{lexer}
 
 \section{parser}
