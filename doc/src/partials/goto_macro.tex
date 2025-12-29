@@ -1,0 +1,11 @@
+\begin{code}{C}{Hlavní goto makro, které implementuje neúspěchem podmíněný úklid.}
+#define GOTO_IF_FAIL_OPTS(cond, label, print_err, ...)  \
+  do {                                                  \
+    if (!(cond)) {                                      \
+      if ((print_err)) {                                \
+        PRINT_ERR(__VA_ARGS__);                         \
+      }                                                 \
+      goto label;                                       \
+    }                                                   \
+  } while (0)
+\end{code}

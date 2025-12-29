@@ -147,9 +147,23 @@ mnoha případech dokonce stejné.
 
 \input{partials/function_macros.tex}
 
-\input{partials/function_macros2.tex}
+Nejlépe to jde poznat na funkcích, které alokují paměť, ale jsou atomické a v
+případě neúspěchu nesmějí způsobovat úniky paměti. Zároveň je vhodné vypsat
+chybové hlášení. Proto je implementované makro, které přijímá podmínku, návěští
+a chybovou zprávu. Pokud je podmínka nesplněna, vypíše chybovou zprávu a skočí
+na dané návěští. To celé je obalené v bezpečnostním \command{do{}while(0)}
+obale. Makro má mnoho obalujících maker, které jsou více specifické, například
+\command{CLEANUP_IF_FAIL(cond)} předpokládá existenci návěští \command{cleanup}.
 
-ahoj
+\input{partials/goto_macro.tex}
+
+Modul \filename{common} dále obsahuje globální chybové kódy, definici struktury
+\command{Config}, která se hojně používá v celém projektu, funkce a makra pro
+elegantní chybové výpisy, specifikace KM stroje, KMX binárního souboru, KMA
+datových typů dle zadání a makry definované konfigurační hodnoty pro jednotlivé
+části projektu.
+
+\input{partials/function_macros2.tex}
 
 \subsection{memory}
 
