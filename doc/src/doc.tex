@@ -234,18 +234,18 @@ nebo 32 bitovou hodnotu.
 \subsection{instruction}
 
 Modul pro instrukce obsahuje definici struktury
-\command{Instruction_Descriptor}, deskriptor instrukce. Deskriptor instrukce je
-popsán svým názvem (řetězec), kódem a typy operátorů. Všechny deskriptory jsou
+\command{Instruction_Descriptor}, popisovač instrukce. Popisovač instrukce je
+popsán svým názvem (řetězec), kódem a typy operátorů. Všechny popisovače jsou
 definované uvnitř zdrojového souboru, tedy neveřejné. Nepřímý přístup k nim
-nabízí funkce vyhledávající deskriptor podle názvu (\command{find}), která vrací
-bezpečnou konstantní referenci (bezpečnou proto, že nelze deskriptor smazat).
+nabízí funkce vyhledávající popisovač podle názvu (\command{find}), která vrací
+bezpečnou konstantní referenci (bezpečnou proto, že nelze popisovač smazat).
 
-Deskriptor instrukce představuje jakýsi vzor bez konkrétních hodnot. V
-následujícím příkladě budeme uvažovat deskriptor jako uspořádanou množinu
+Popisovač instrukce představuje jakýsi vzor bez konkrétních hodnot. V
+následujícím příkladě budeme uvažovat popisovač jako uspořádanou množinu
 sestávající z názvu, kódu, typů prvního a druhého operandu. Vezměme konkrétní
-instrukci \command{MOV A, 8}. Pro tu existuje deskriptor popsaný jako
-\command{("MOV", 10, registr, číslo)}. Všimněte si, že nikde v deskriptoru není
-uveden konkrétní registr ani hodnota. Díky tomu lze ten samý deskriptor použít i
+instrukci \command{MOV A, 8}. Pro tu existuje popisovač
+\command{("MOV",10,registr,číslo)}. Všimněte si, že nikde v popisovači není
+uveden konkrétní registr ani hodnota. Díky tomu lze ten samý popisovač použít i
 na například instrukci \command{MOV B, 5}, přestože hodnoty jsou jiné (ale typ
 instrukce je stejný).
 
