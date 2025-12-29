@@ -185,6 +185,19 @@ výkonostního pohledu lepší funkci \command{malloc}.
 
 \section{io}
 
+Veškerá práce s diskem probíhá v režii těchto modulů, které adresář obsahuje
+dva. Zásadnější z nich je modul \filename{fileutil}, který zajišťuje
+přenositelnou funkčnost při práci se soubory na strojích typu \product{linux} i
+\product{windows}. Přenositelnost je zajištěna pomocí podmíněného vkládání
+hlavičkových souborů (\command{#include}) podle existence preprocesorové
+proměnné \command{_WIN32}.
+
+Druhý modul, \filename{output}, využívá těchto a dalších funkcí k tomu, aby
+zapsal finální binární kód do souboru. Využívá znalosti o struktuře binárního
+souboru a společně se strukturou vzniklou průchodem JSA kódu, předanou jako
+argument, je schopen krok po kroku zapsat jednotlivé části algoritmu jako
+strojový kód.
+
 \section{data\_structures}
 
 \section{lexer}
