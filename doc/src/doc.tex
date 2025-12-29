@@ -167,6 +167,22 @@ datových typů dle zadání a makry definované konfigurační hodnoty pro jedn
 
 \subsection{memory}
 
+Práce s pamětí v celém projektu probíhá pouze skrze volání funkcí tohoto modulu.
+Aby se nepletl se standardními funkcemi, je první písmeno všech funkcí nahrazeno
+písmenem j, například místo \command{free} je \command{jree}. Modul obsahuje
+soukromé počítadlo alokací a na konci funkce \command{main} je asertován nulový
+počet alokací.
+
+Při implementaci projektu vyvstala potřeba implementovat funkce, které jsou
+součástí \product{POSIX}ového světa, jmenovitě \command{strdup} a
+\command{strndup}. Jelikož tyto funkce pracují s pamětí, byly přidány do tohoto
+modulu.
+
+Veškerá alokace interně probíhá pomocí funkce \command{calloc}, která nuluje
+získanou paměť a tím způsobem chrání uživatele. V projektu se na toto chování
+ale obecně nespoléhá, aby se zabránilo fatálním následům záměny za například z
+výkonostního pohledu lepší funkci \command{malloc}.
+
 \section{io}
 
 \section{data\_structures}
