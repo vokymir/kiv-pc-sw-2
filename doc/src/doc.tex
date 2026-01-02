@@ -8,8 +8,6 @@
 
 % 3. ze pouzivam c99 do implementace?
 
-% 4. impl: parser, assembler
-
 % 5. zaver
 
 \usepackage{pdfpages}
@@ -150,7 +148,7 @@ této \textit{datové přepravky}, nikoliv však funkce pro de/alokaci, záměrn
 snaží vynutit alokaci pouze na zásobníku. Modul využívá funkcionalitu z modulu
 pro práci se soubory, aby ověřil existenci uživateli zadaných souborů.
 
-\subsection{common}
+\subsection{common}\label{sec:common}
 
 Tento modul definuje mnoho maker, které využívají jazykové konstrukce
 \command{goto}. Přestože makra mohou být zneužita, záměr je bezpečný. Předpoklad
@@ -507,6 +505,48 @@ všech návratových hodnot a jejich významů se nachází v zadání (příloh
 \ref{app:assignment} na straně \pageref{app:assignment}).
 
 \chapter{Závěr}
+
+Při implementaci jsem se snažil dbát na dekompozici, nejen funkcí a algoritmů,
+ale i souborů. Proto je projekt dělen do více adresářů\footnote{Myslím
+originální projekt, který není upraven pro validační server.}, podle mě známých
+projektových adresářových struktur.
+
+Dekompozice (a doufám, že je to opravdu ten důvod) způsobila, že při jednoduchém
+porovnání mám i třikrát více řádek (kódu i komentářů) než mí přátelé (jiná
+zadání, stejný předmětú), o počtu souborů nemluvě. Měl jsem snahu vytvořit na
+sobě nezávislé moduly (kromě funkcí v modulech \filename{memory},
+\filename{common} a možná \filename{io}), které by bylo možné použít i v
+budoucnosti při práci na jiných projektech.
+
+Při práci mi dělalo radost vytvářet makra a nejen pomocí nich se snažit
+přiblížit vyšším programovacím jazykům. Například pro struktury vytvářet funkce
+snažící se být konstruktor či destruktor. Ty se pak za použití makra
+\command{CLEANUP_IF_FAIL} (vize kapitolu \ref{sec:common} na straně
+\pageref{sec:common}) používají na konci funkcí, čímž se snaží napodobit
+\term{RAII} techniku, hojně využívanou například v \term{C++}.
+
+Samostatná výzva byla zprovoznit projekt na validačním serveru. Problém byl s
+programem \term{Splint} a pokud správně rozumím chybovým hlášením, tak očekává,
+že hlavičkové soubory se budou nacházet buď v systémové cestě (\command{PATH})
+anebo v aktuální cestě (vedle zdrojového souboru). Nejjednodušším čistým řešením
+bylo vytvořit skript, který převede mojí adresářovou strukturu na prostou
+jednoúrovňovou. Aby se zabránilo jmenným kolizím, upravuje se název souboru
+podle adresářů, ve kterých se nachází. Tímto se omlouvám za způsobené vrásky při
+kontrole, přibalil jsem skript, který obnoví mojí (rozumně vypadající)
+adresářovou strukturu (případně není problém poslat ZIP archiv).
+
+Po zjištění, že přepínač kompilátoru \command{-Wall} neaktivuje všechna varování
+jsem se pokusil je dodat manuálně, ale nejsem si jistý, zda jsem některý omylem
+nevynechal. Přestože to vypadá jako možná až příliš paranoidní přístup,
+několikrát se stalo, že mě před katastrofou (kterou bych se snažil odhalit dny)
+zachránil jeden nenápadný přepínač.
+
+Programování v jazyku C má své kouzlo, až překvapivě moc mě to baví.
+Nízkoúrovňová manipulace s pamětí, kde všechno je jenom číslo bez vyšší
+abstrakce je přitažlivé. Ale doplatil jsem na to, když jsem se loni snažil
+reimplementovat všechny možné algoritmy a pomocí maker je udělat
+\textit{generické} a pustil ze zřetele cíl semestrální práce a pak ji nestihl
+odevzdat.
 
 \appendix
 
