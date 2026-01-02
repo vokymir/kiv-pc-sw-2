@@ -307,13 +307,13 @@ podle typu se přistupuje ke zbytku struktury.
 
 \subsection{Použité struktury}
 
-\subsubsection{Label_Definition}
+\subsubsection{Label\_Definition}
 
 Struktura udávající, že se jedná o definici návěští. Obsahuje řetězec udávající
 jméno návěští. Přes jednoduchost této struktury byla použita pro lepší
 semantické pochopení kódu.
 
-\subsubsection{Instruction_Statement}
+\subsubsection{Instruction\_Statement}
 
 Popisuje libovolnou instrukci pomocí popisovače instrukce (vizte kapitolu
 \ref{sec:instruction} na straně \pageref{sec:instruction}) a konkrétních
@@ -324,18 +324,19 @@ hodnotu závislou na typu. Typ je \command{enum Operand_Type} z modulu
 \filename{instruction}. Pokud je operand v popisovači instrukce udán jako
 \command{OP_IMM32}, tedy 32 bitová číselná hodnota, může se jednat o pozici
 návěští v kódovém segmentu, pozici proměnné v datovém segmentu, anebo opravdu o
-konkrétní číslo. Tato nejasnost je upřesněna specifikací, \command{enum
-Operand_Specifier}. Hodnotou v operandu je pak v závislosti na typu a
-specifikaci jméno registru, číselná hodnota nebo název návěští či proměnné.
+konkrétní číslo. Tato nejasnost je upřesněna specifikací, pomocí hodnoty
+\command{enum Operand_Specifier}. Hodnotou v operandu je pak v závislosti na
+typu a specifikaci jméno registru, číselná hodnota nebo název návěští či
+proměnné.
 
-\subsubsection{Data_Declaration}
+\subsubsection{Data\_Declaration}
 
 Použitý jazyk symbolických adres umožňuje do jedné proměnné uložit více různých
-datový typů za sebe, respektive je umožněno například toto: \command{msg DB "
-Hello , world !" , 13 , 10 , 0}, tedy pole bajtů, kde část je deklarována pomocí
-řetězce a část pomocí numerických hodnot. Tento problém byl vyřešen pomocí
-oddělení jednotlivých segmentů deklarace. Za segment deklarace je považován
-výraz oddělený čárkou.
+datový typů za sebe, respektive je umožněna deklarace vypadající například
+takto: \command{msg DB "Hello, world!",13,10,0}, tedy pole bajtů, kde část je
+deklarována pomocí řetězce a část pomocí numerických hodnot. Tento problém byl
+vyřešen pomocí oddělení jednotlivých segmentů deklarace. Za segment deklarace je
+považován výraz oddělený čárkou.
 
 Struktura obsahuje název proměnné, datový typ, pole segmentů a příznak, jsou-li
 všechny segmenty neinicializované (použit symbol \command{?} v JSA). Každý
