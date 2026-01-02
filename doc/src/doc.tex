@@ -452,6 +452,34 @@ dealokaci paměti, jelikož ještě neexistuje.
 
 \section{assembler}
 
+Pro názornost procesu překladu JSA na binární kód byla zvolena víceprůchodová
+metoda, konkrétně dvouprůchodová. Struktura \command{Assembler_Processing} se
+předává mezi průchody a uchovává získané informace. Úlohou modulu
+\filename{assembler} je spojit funkcionalitu všech předchozích modulů a přeložit
+předaný soubor. Trochu konkrétněji, modul musí mít povědomí o celém překládaném
+souboru (všechny předchozí moduly se zabývaly nanejvýš řádkou).
+
+Funkce sloužící pro průchod souboru jsou téměř totožné, proto byly
+implementovány s přepínačem pro první či druhý průchod, aby se zabránilo
+přílišnému opakování kódu (byly ale vytvořeny obalové funkce, pro lepší
+sémantické pochopení kódu).
+
+První průchod je méně náročný na implementaci a údržbu, jelikož jeho úkolem je
+pouze projít kód, zkontrolovat případné syntaktické chyby, ale hlavně naplnit
+tabulku symbolů. Druhý průchod již musí informace z tabulky použít pro naplnění
+datového i kódového segmentu
+
+Celý modul stále operuje nad jednotlivými řádky, uchovává si ale informaci o již
+zpracovaných řádcích a na základě této informace kontroluje i strukturu souboru.
+Například odhalí nepovolenou deklaraci proměnné mimo datový segment.
+
+Do tohoto modulu byla soustředěna většina diagnostických výpisů. Důvodem je
+vyšší abstrakce a lepší povědomí o pozici v souboru a tudíž i pro uživatele lépe
+pochopitelné chybové hlášky. Například výpis: \command{Neexistující token.}
+nepředává uživateli téměř žádnou informaci, zato výpis obsahující pozici v
+procházeném souboru, např.: \command{3,12 lexer error: ...} již pomáhá odhalit
+chyby.
+
 \chapter{Uživatelská příručka}\label{chp:manual}
 
 Ujistěte se, že máte nainstalovaný a funkční nástroj \product{make}. Dále je
