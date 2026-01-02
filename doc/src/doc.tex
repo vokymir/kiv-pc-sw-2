@@ -417,6 +417,39 @@ symbolů byla zde upravena.
 
 \end{center}
 
+Modul \filename{parser} nad získanou tokenizovanou řádkou volá funkci
+\\\command{grammar_line(pstmt,tokens)}, která z informace uschované v tokenech
+naplní strukturu \command{Parsed_Statement} (pstmt). Tato funkce patří do
+\textit{rodiny funkcí}, které jsou v názvu uvozeny prefixem \command{grammar_}.
+Všechny tyto funkce fungují na podobném principu: na základě prvního tokenu (v
+některých případech je to několik tokenů ze začátku) se rozhodnou, jestli se
+jich předané tokeny týkají. Pokud usoudí že ano, buď zavolají další funkci a
+předají jí tokeny bez prvního, anebo se jedná už o poslední. Funkce vracejí
+\command{enum Err_Grm}, jednu ze tří hodnot: \command{MATCH} pokud byly tokeny
+určené pro tuto funkci, a zároveň všechny volané funkce také vrátily
+\command{MATCH}, tedy pokud nikde nenastala žádná chyba. Vrací
+\command{NO_MATCH} pokud tokeny neodpovídají tomu, co funkce očekává. A může
+vrátit \command{ERROR}, pokud například selhala alokace nebo nastala syntaktická
+chyba.
+
+Všechny funkce z \textit{rodiny Grammar} odpovídají některému z přepisovacích
+pravidel. Kontrolují, zda jim předané tokeny odpovídají gramatice. Pokud pravá
+strana přepisovacího pravidla obsahuje neterminální výraz, příslušná funkce je
+zavolána na evaluaci předaných tokenů.
+
+Funkce si předávají tokeny a strukturu \command{Parsed_Statement}, kterou
+naplňují odpovídajícím způsobem. Vše kromě datové deklarace má předalokované
+místo přímo v odpovídající struktuře (například ve struktuře pro instrukci je
+již připravené místo pro dva operandy). Kvůli dynamickému charakteru datové
+deklarace však program dopředu neví, kolik segmentů je třeba alokovat.
+
+V průběhu datové deklarace se při zpracování každého segmentu pouze zvedá
+počítadlo datových segmentů. Po zpracování posledního segmentu se na základě
+počítadla právě jednou alokuje dostatečně velký blok paměti a při procesu
+vynořování se, se do již připravené paměti zapisují informace o segmentech. To
+zároveň znamená, že při syntaktické chybě není při vynořování třeba řešit
+dealokaci paměti, jelikož ještě neexistuje.
+
 \section{assembler}
 
 \chapter{Uživatelská příručka}\label{chp:manual}
