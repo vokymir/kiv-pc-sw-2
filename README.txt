@@ -5,7 +5,7 @@ Assignment PDF in `doc/`
 
 ## How to submit
 
-1. Run `make -f makefile_for_submit`
+1. Run `./submit.bash`
 2. Submit the new `assembler.zip`
 
 ## How it works
@@ -28,6 +28,5 @@ restart LSP in nvim via `:LspRestart`
 
 ## Documentation
 
-`doc/sw2025-01.pdf` is the assignment
+`doc/doc.pdf` look there, or the src is in `doc/src/doc.tex`
 
-TODO: the documentation is on the way
