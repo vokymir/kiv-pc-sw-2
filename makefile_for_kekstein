@@ -19,4 +19,4 @@ $(TARGET): $(SRC_FILES)
 	$(CC) $(CFLAGS) $(SRC_FILES) -o $@
 
 clean:
-	rm -f $(TARGET)
+	$(RM) $(TARGET)
