@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# -----------------------------
-# Configuration
-# -----------------------------
-FLAT_ROOT="."
-DEST_ROOT="orig"
+# config
 
-echo "📂 Reconstructing directory tree in '$DEST_ROOT'..."
-rm -rf "$DEST_ROOT"
-mkdir -p "$DEST_ROOT"
+SRC_DIR=$(realpath .)
+TMP_DIR=$(mktemp -d)
 
-# -----------------------------
-# Lists of files per directory
-# -----------------------------
+echo "reconstructing in '$TMP_DIR'..."
+rm -rf "$TMP_DIR"
+mkdir -p "$TMP_DIR"
+
+# where to put which file
 
 ROOT_FILES=(
     makefile
@@ -41,6 +38,8 @@ INCLUDE_FILES=(
     symbol.h
 )
 
+# some headers belong to a directory
+
 ASSEMBLER_HEADERS=(
     assembler_convert.h
     assembler_pass_1.h
@@ -61,6 +60,8 @@ PARSER_HEADERS=(
     parser_segment.h
     parser_token.h
 )
+
+# source files
 
 ASSEMBLER_SRC=(
     src_assembler_assembler.c
@@ -107,52 +108,51 @@ MAIN_SRC=(
     src_main.c
 )
 
-# -----------------------------
-# Helper function to copy files to destination, optionally removing a prefix
-# -----------------------------
+# copy to destination, remove prefix
+# 1=where, 2=prefix, 3=files
 copy_files() {
     local dest_dir="$1"
     local prefix="${2:-}"
+
+    # forget 2 first args, so the for-loop is nicer
     shift 2
     for f in "$@"; do
-        src="$FLAT_ROOT/$f"
+        src="$SRC_DIR/$f"
         if [[ ! -f "$src" ]]; then
-            echo "⚠️  File not found: $f" >&2
+            echo "ER: File not found: $f" >&2
             continue
         fi
-        mkdir -p "$DEST_ROOT/$dest_dir"
+        mkdir -p "$TMP_DIR/$dest_dir"
 
-        # Remove prefix if given
-        local filename="${f#$prefix}"
+        # remove prefix if given, handle root files
+        local dest_path
+        # root
+        if [[ -z "$dest_dir" ]]; then
+            dest_path="$TMP_DIR/${f#$prefix}"
+        else
+            mkdir -p "$TMP_DIR/$dest_dir"
+            dest_path="$TMP_DIR/$dest_dir/${f#$prefix}"
+        fi
 
-        cp "$src" "$DEST_ROOT/$dest_dir/$filename"
+        cp "$src" "$dest_path"
         rm "$src"
-        echo "✅ $f → $DEST_ROOT/$dest_dir/$filename"
+        echo "OK: $f -> $dest_path"
     done
 }
 
-# -----------------------------
-# Process all lists
-# -----------------------------
+# actual work
 
-# Root files
-for f in "${ROOT_FILES[@]}"; do
-    src="$FLAT_ROOT/$f"
-    [[ -f "$src" ]] || continue
-    cp "$src" "$DEST_ROOT/"
-    rm "$src"
-    echo "✅ $f → $DEST_ROOT/"
-done
+copy_files "" "" "${ROOT_FILES[@]}"
+copy_files "doc" "" "${DOC_FILES[@]}"
 
-# Include headers
 copy_files "include" "" "${INCLUDE_FILES[@]}"
 
-# Module headers
+# headers in src
 copy_files "src/assembler" "" "${ASSEMBLER_HEADERS[@]}"
 copy_files "src/lexer" "" "${LEXER_HEADERS[@]}"
 copy_files "src/parser" "" "${PARSER_HEADERS[@]}"
 
-# Source files with prefix removal
+# src
 copy_files "src/assembler" "src_assembler_" "${ASSEMBLER_SRC[@]}"
 copy_files "src/core" "src_core_" "${CORE_SRC[@]}"
 copy_files "src/data_structures" "src_data_structures_" "${DATA_STRUCTURES_SRC[@]}"
@@ -161,7 +161,12 @@ copy_files "src/lexer" "src_lexer_" "${LEXER_SRC[@]}"
 copy_files "src/parser" "src_parser_" "${PARSER_SRC[@]}"
 copy_files "src" "src_" "${MAIN_SRC[@]}"
 
-# doc
-copy_files "doc" "" "${DOC_FILES[@]}"
+echo "OK: all files reconstructed in '$TMP_DIR'"
 
-echo "🎉 All files reconstructed in '$DEST_ROOT'"
+# move from temporary dir to src
+
+rsync -a "$TMP_DIR"/ "$SRC_DIR"/
+
+rm -rf "$TMP_DIR"
+
+echo "OK: all files nice and back in '$SRC_DIR'"
