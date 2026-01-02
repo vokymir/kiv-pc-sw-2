@@ -346,6 +346,57 @@ hodnotou k opakování a počtem opakování).
 
 \subsection{Gramatika}
 
+Modul \filename{parser} používá jednoduchou gramatiku, pomocí které rozpoznává
+typ řádku a kontroluje syntaktické chyby. V tabulce \ref{tab:grammar} je tato
+gramatika rozepsána. Pracovní verze této gramatiky se nachází i v kódu, jména
+symbolů byla zde upravena.
+
+\begin{center}
+
+  \begin{longtable}{llrl}
+
+    \caption{Gramatika použitá ke kategorizaci a syntaktické kontrole řádků.
+    Terminální symboly jsou psané velkými písmeny. Symbol EOF je ukočovací
+    symbol, symbol {\texttt{line}} je počáteční.} \label{tab:grammar}\\
+
+    \toprule[1.5pt]
+
+    \textbf{index} & \textbf{Popis symbolu} & \textbf{levá strana} &
+    \textbf{pravá strana}\\
+
+    \midrule
+
+    \endfirsthead
+
+    \multicolumn{4}{c}{\tablename{}~\thetable{} \textit{(pokračování z~předchozí
+    stránky)}}\\
+
+    \midrule
+
+    \textbf{index} & \textbf{Popis symbolu} & \textbf{levá strana} &
+    \textbf{pravá strana}\\
+
+    \midrule
+
+    \endhead
+
+    \midrule
+
+    \multicolumn{4}{r}{ \textit{(tabulka pokračuje na další stránce)}}\\
+
+    \endfoot
+
+    \bottomrule[1.5pt]
+
+    \endlastfoot
+
+    1 & Celá řádka. & line & l-kma | l-code | l-data | l-label | l-id | l-instr
+    | EOF\\
+
+  \end{longtable}
+
+\end{center}
+
 \section{assembler}
 
 \chapter{Uživatelská příručka}\label{chp:manual}
