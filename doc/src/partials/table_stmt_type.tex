@@ -1,0 +1,39 @@
+\begin{center}
+
+  \begin{longtable} {>{\raggedright\arraybackslash}p{3cm}
+    >{\raggedright\arraybackslash}p{10cm}}
+
+    \caption{Typy řádků.}
+    \label{tab:stmt_type}\\
+
+    \toprule[1.5pt] \textbf{Statement\_Type} & \textbf{význam} \\ \midrule
+    \endfirsthead
+
+    \multicolumn{2}{c}{\tablename{}~\thetable{} \textit{(pokračování z~předchozí
+    stránky)}}\\ \midrule \textbf{levá strana} & \textbf{pravá strana} \\
+    \midrule \endhead
+
+    \midrule \multicolumn{2}{r}{\textit{(tabulka pokračuje na další stránce)}}\\
+    \endfoot
+
+    \bottomrule[1.5pt] \endlastfoot
+
+    NONE & Prázdná řádka, popřípadě komentář.\\
+
+    KMA & Uvozovací direktiva na začátku souboru.\\
+
+    SECTION\_DATA & Uvozovací direktiva před deklarací dat.\\
+
+    SECTION\_CODE & Uvozovací direktiva před kódovým segmentem.\\
+
+    LABEL\_DEF & Definice návěští.\\
+
+    DATA\_DECL & Deklarace dat.\\
+
+    INSTRUCTION & Instrukce.\\
+
+    ERROR & Cokoliv se nepovedlo.\\
+
+  \end{longtable}
+
+\end{center}

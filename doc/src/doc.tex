@@ -1,20 +1,12 @@
 \documentclass[czech, kiv, he, sem, pdf, viewonly]{fasthesis}
 
-%TODO:
+\usepackage{pdfpages} % include assignment
 
-% 1. analyse kapku
+\usepackage{dirtree} % directory tree
 
-% 2. dir structure
+\usepackage{float} % table
 
-% 3. ze pouzivam c99 do implementace?
-
-% 5. zaver
-
-\usepackage{pdfpages}
-
-\usepackage{float}
-
-\usepackage{array}
+\usepackage{array} % table
 
 \title{Assembler procesoru architektury MISC}
 
@@ -93,10 +85,6 @@ paměti RAM, jelikož není potřeba si pamatovat všechny výskyty symbolů. L�
 ilustruje rozdělení analýzy a generace kódu. Nevýhodou je nutnost vícenásobného
 čtení zdrojového souboru, což může prodloužit dobu kompilace.
 
-\section{Instrukční sada}
-
-\section{Lexikální analýza}
-
 \chapter{Popis implementace}
 
 Projekt je založen na standardní adresářové struktuře pro \term{C/C++} projekty
@@ -119,7 +107,7 @@ podadresáře v některých případech vyžadují navíc své privátní hlavi�
 - takové, které obsahují funkcionalitu společnou pro všechny zdrojové soubory v
 podadresáři.
 
-% TODO: nástin adresářové struktury - viz doc kiv-web
+\input{partials/dirtree.tex}
 
 Pravidlem v tomto projektu je jasné oddělení funkcí soukromých, vytvořených i
 používaných v jediném zdrojovém souboru, od funkcí veřejných. Soukromé funkce
@@ -303,7 +291,7 @@ modulu \filename{parser} je transformovat pole tokenů do struktury nazvané
 \command{Parsed_Statement}. Tato struktura obsahuje \command{Statement_Type} a
 podle typu se přistupuje ke zbytku struktury.
 
-% TODO: tabulka vsech statement type
+\input{partials/table_stmt_type.tex}
 
 \subsection{Použité struktury}
 
@@ -351,69 +339,7 @@ typ řádku a kontroluje syntaktické chyby. V tabulce \ref{tab:grammar} je tato
 gramatika rozepsána. Pracovní verze této gramatiky se nachází i v kódu, jména
 symbolů byla zde upravena.
 
-\begin{center}
-
-  \begin{longtable} {>{\raggedright\arraybackslash}p{3cm}
-    >{\raggedright\arraybackslash}p{10cm}}
-
-    \caption{Gramatika použitá ke kategorizaci a syntaktické kontrole řádků.
-    Terminální symboly jsou psané velkými písmeny. Symbol EOF je ukočovací
-    symbol. Novými řádky jsou oddělena různá přepisovací pravidla.}
-    \label{tab:grammar}\\
-
-    \toprule[1.5pt] \textbf{levá strana} & \textbf{pravá strana} \\ \midrule
-    \endfirsthead
-
-    \multicolumn{2}{c}{\tablename{}~\thetable{} \textit{(pokračování z~předchozí
-    stránky)}}\\ \midrule \textbf{levá strana} & \textbf{pravá strana} \\
-    \midrule \endhead
-
-    \midrule \multicolumn{2}{r}{\textit{(tabulka pokračuje na další stránce)}}\\
-    \endfoot
-
-    \bottomrule[1.5pt] \endlastfoot
-
-    line & l-kma\newline l-code\newline l-data\newline l-label\newline
-    l-id\newline l-instr\newline EOF \\
-
-    l-kma & KMA\newline EOF \\
-
-    l-code & CODE\newline EOF \\
-
-    l-data & DATA\newline EOF \\
-
-    l-label & LABEL\newline EOF \\
-
-    l-id & IDENTIFIER\newline id-def \\
-
-    id-def & DW, id-dec-dw\newline DB, id-dec-db \\
-
-    id-dec-dw & QUESTION, id-dec-dw-2\newline NUM, id-dec-dw-2\newline id-dup-dw
-    \\
-
-    id-dec-dw-2 & COMMA, id-dec-dw\newline EOF \\
-
-    id-dup-dw & NUM, DUP, LPAREN, NUM, RPAREN, id-dec-dw-2\newline NUM, DUP,
-    LPAREN, QUESTION, RPAREN, id-dec-dw-2 \\
-
-    id-dec-db & QUESTION, id-dec-db-2\newline NUM, id-dec-db-2\newline STRING,
-    id-dec-db-2\newline id-dup-db \\
-
-    id-dec-db-2 & COMMA, id-dec-db\newline EOF \\
-
-    id-db-dup & NUM, DUP, LPAREN, NUM, RPAREN, id-dec-db-2\newline NUM, DUP,
-    LPAREN, QUESTION, RPAREN, id-dec-db-2 \\
-
-    l-instr & INSTUCTION, instr-rhs \\
-
-    instr-rhs & EOF\newline LABEL, EOF\newline REG, EOF\newline NUM, EOF\newline
-    REG, COMMA, instr-rhs-2 \\
-
-    instr-rhs-2 & REG, EOF\newline NUM, EOF\newline OFFSET, IDENTIFIER, EOF \\
-
-  \end{longtable}
-
-\end{center}
+\input{partials/table_grammar.tex}
 
 Modul \filename{parser} nad získanou tokenizovanou řádkou volá funkci
 \\\command{grammar_line(pstmt,tokens)}, která z informace uschované v tokenech
