@@ -242,7 +242,7 @@ funkce pro (de)alokaci i funkce \command{advance} a \command{begin}. Jinak ale
 místo vkládání datových typů umožňuje vkládat kód instrukce (op-kód), registr a
 nebo 32 bitovou hodnotu.
 
-\subsection{instruction}
+\subsection{instruction}\label{sec:instruction}
 
 Modul pro instrukce obsahuje definici struktury
 \command{Instruction_Descriptor}, popisovač instrukce. Popisovač instrukce je
@@ -297,6 +297,54 @@ Není úkolem lexeru zjistit konkrétní hodnoty. Některé hodnoty jsou vždy s
 
 \section{parser}
 
+Každý řádek v JSA (respektive jeho reprezentace polem tokenů) patří do jedné z
+kategorií, které jsou v kódu nazvané \command{enum Statement_Type}. Úlohou
+modulu \filename{parser} je transformovat pole tokenů do struktury nazvané
+\command{Parsed_Statement}. Tato struktura obsahuje \command{Statement_Type} a
+podle typu se přistupuje ke zbytku struktury.
+
+% TODO: tabulka vsech statement type
+
+\subsection{Použité struktury}
+
+\subsubsection{Label_Definition}
+
+Struktura udávající, že se jedná o definici návěští. Obsahuje řetězec udávající
+jméno návěští. Přes jednoduchost této struktury byla použita pro lepší
+semantické pochopení kódu.
+
+\subsubsection{Instruction_Statement}
+
+Popisuje libovolnou instrukci pomocí popisovače instrukce (vizte kapitolu
+\ref{sec:instruction} na straně \pageref{sec:instruction}) a konkrétních
+operandů.
+
+Pomocná struktura \command{Operand} je popsána typem a specifikací a obsahuje
+hodnotu závislou na typu. Typ je \command{enum Operand_Type} z modulu
+\filename{instruction}. Pokud je operand v popisovači instrukce udán jako
+\command{OP_IMM32}, tedy 32 bitová číselná hodnota, může se jednat o pozici
+návěští v kódovém segmentu, pozici proměnné v datovém segmentu, anebo opravdu o
+konkrétní číslo. Tato nejasnost je upřesněna specifikací, \command{enum
+Operand_Specifier}. Hodnotou v operandu je pak v závislosti na typu a
+specifikaci jméno registru, číselná hodnota nebo název návěští či proměnné.
+
+\subsubsection{Data_Declaration}
+
+Použitý jazyk symbolických adres umožňuje do jedné proměnné uložit více různých
+datový typů za sebe, respektive je umožněno například toto: \command{msg DB "
+Hello , world !" , 13 , 10 , 0}, tedy pole bajtů, kde část je deklarována pomocí
+řetězce a část pomocí numerických hodnot. Tento problém byl vyřešen pomocí
+oddělení jednotlivých segmentů deklarace. Za segment deklarace je považován
+výraz oddělený čárkou.
+
+Struktura obsahuje název proměnné, datový typ, pole segmentů a příznak, jsou-li
+všechny segmenty neinicializované (použit symbol \command{?} v JSA). Každý
+segment je specifikován typem a v závislosti na něm se přistupuje buď k číselné
+hodnotě, řetězci, nebo duplikační struktuře (vizte zadání, specifikována
+hodnotou k opakování a počtem opakování).
+
+\subsection{Gramatika}
+
 \section{assembler}
 
 \chapter{Uživatelská příručka}\label{chp:manual}
@@ -305,7 +353,7 @@ Ujistěte se, že máte nainstalovaný a funkční nástroj \product{make}. Dál
 zapotřebí překladač \product{gcc} ve verzi dostatečné pro přeložení \term{C99}
 programu. Pokud jste na \product{Windows}, preferujte použití \product{MinGW}.
 Lze použít i jiné překladače, dbejte však na takovou úpravu příslušného
-\filename{makefile}, aby do proměné \command{CC} byl přiřazen Váš překladač a
+\filename{makefile}, aby do proměnné \command{CC} byl přiřazen Váš překladač a
 aby v \command{CFLAGS} nebyly příznaky neshodné s Vaším překladačem. Pro
 přeložení otevřete terminál (příkazovou řádku) ve umístění kde je příslušný
 \filename{makefile} a přeložte pomocí příkazu \command{make}. Po přeložení
